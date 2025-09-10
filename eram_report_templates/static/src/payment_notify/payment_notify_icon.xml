@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Template for the Search Bar in the Systray -->
+<templates xml:space="preserve">
+    <t t-name="eram_report_templates.PaymentAlertSystray" owl="1">
+        <Dropdown position="'bottom-end'" state="dropdown" menuClass="discussSystray.menuClass">
+            <button>
+                <i class="fa fa-lg fa-bell-o" role="img" aria-label="Alerts" t-att-style="state.hasOverduePayments? 'color:red':''"/>
+                <t t-if="state.alerts.length > 0">
+                    <span class="badge rounded-pill bg-danger">
+                        <t t-esc="state.alerts.length"/>
+                    </span>
+                </t>
+            </button>
+            <t t-set-slot="content">
+                <div class="payment-alert-dropdown">
+                    <div class="dropdown-header px-3 py-2 border-bottom">
+                        <strong>Overdue Invoices</strong>
+                    </div>
+                    <div class="d-flex flex-column overflow-auto flex-grow-1 list-group list-group-flush px-2 py-1 gap-1">
+                        <t t-foreach="state.alerts" t-as="alert" t-key="alert_index">
+                            <button class="list-group-item d-flex cursor-pointer align-items-center w-100 gap-2 position-relative border rounded o-important"
+                                    t-on-click="() => this.openInvoice(alert.id)">
+                                <div class="d-flex flex-column w-100">
+                                    <span class="fw-bold text-info" t-esc="alert.name"/>
+                                    <small class="text-danger" t-esc="'Due: ' + alert.invoice_date_due"/>
+                                </div>
+                            </button>
+                        </t>
+                        <t t-if="state.alerts.length === 0">
+                            <div class="text-center p-3 text-muted">
+                                No overdue invoices
+                            </div>
+                        </t>
+                    </div>
+                </div>
+            </t>
+        </Dropdown>
+    </t>
+</templates>

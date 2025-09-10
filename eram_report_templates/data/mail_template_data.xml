@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+       <record id="eram_email_template_invoice_overdue" model="mail.template">
+            <field name="name">Invoice: Overdue Notification</field>
+            <field name="model_id" ref="account.model_account_move"/>
+            <field name="email_from">{{ (object.invoice_user_id.email_formatted or object.company_id.email_formatted or user.email_formatted) }}</field>
+            <field name="email_to">{{ object.invoice_user_id.email_formatted or object.create_uid.email_formatted or user.email_formatted }}</field>
+           <field name="email_cc">{{ ','.join([user.email_formatted for user in object.company_id.alert_user_ids if user.email_formatted]) }}</field>
+            <field name="partner_to">{{ object.invoice_user_id.partner_id.id or object.create_uid.partner_id.id or False }}</field>
+            <field name="subject">{{ object.company_id.name }} Overdue Invoice (Ref {{ object.name or 'n/a' }})</field>
+            <field name="description">Sent to internal users for overdue invoices</field>
+            <field name="body_html" type="html">
+        <div style="margin: 0px; padding: 0px;">
+            <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                Dear
+                <t t-if="object.invoice_user_id">
+                    <t t-out="object.invoice_user_id.name or ''">John Smith</t>,
+                </t>
+                <t t-else="">
+                    <t t-out="object.create_uid.name or ''">John Smith</t>,
+                </t>
+                <br /><br />
+                This is to notify you that the
+                <t t-if="object.name">
+                    invoice <span style="font-weight:bold; color: #dc3545;" t-out="object.name or ''">INV/2021/05/0005</span>
+                </t>
+                <t t-else="">
+                    invoice
+                </t>
+                for <t t-out="object.partner_id.name or ''">Customer Name</t>
+                <t t-if="object.invoice_origin">
+                    (with reference: <t t-out="object.invoice_origin or ''">SUB003</t>)
+                </t>
+                is now <span style="font-weight:bold; color: #dc3545;">OVERDUE</span>.
+                <br /><br />
+                <strong>Invoice Details:</strong>
+                <ul style="margin: 5px 0; padding-left: 15px;">
+                    <li>Due Date: <span style="color: #dc3545;" t-out="object.invoice_date_due or ''">2023-12-01</span></li>
+                    <li>Amount Due: <span style="font-weight:bold;" t-out="format_amount(object.amount_total, object.currency_id) or ''">$ 143,750.00</span></li>
+                    <li>Days Overdue: <span style="color: #dc3545;" t-out="(datetime.date.today() - object.invoice_date_due).days or ''">25</span> days</li>
+                    <li>Customer: <t t-out="object.partner_id.name or ''">Customer Name</t></li>
+                </ul>
+                <t t-if="object.payment_state in ('paid', 'in_payment')">
+                    <span style="color: #28a745; font-weight: bold;">
+                        Note: This invoice appears to be paid, but the due date has passed. Please verify payment status.
+                    </span>
+                    <br /><br />
+                </t>
+                <t t-else="">
+                    <span style="color: #dc3545; font-weight: bold;">
+                        Immediate action is required to follow up for payment.
+                    </span>
+                    <br /><br />
+                    <t t-if="object.payment_reference">
+                        Invoice reference: <strong t-out="object.payment_reference or ''">INV/2021/05/0005</strong>
+                        <t t-if="object.partner_bank_id">
+                            on account <strong t-out="object.partner_bank_id.acc_number or ''"/>
+                        </t>
+                        <br />
+                    </t>
+                </t>
+                Please take appropriate action to contact the customer and resolve this overdue invoice.
+                <br /><br />
+                You can review the invoice details <a t-att-href="object.get_base_url() + '/web#id=' + str(object.id) + '&amp;model=account.move&amp;view_type=form'" style="color: #007bff; text-decoration: underline;">here</a>.
+                <br /><br />
+                <t t-if="not is_html_empty(object.invoice_user_id.signature)">
+                    <t t-out="object.invoice_user_id.signature or ''">--<br/>Mitchell Admin</t>
+                </t>
+                <t t-else="">
+                    <t t-if="not is_html_empty(object.create_uid.signature)">
+                        <t t-out="object.create_uid.signature or ''">--<br/>Mitchell Admin</t>
+                    </t>
+                </t>
+            </p>
+        </div>
+            </field>
+            <field name="report_template_ids" eval="[]"/>
+            <field name="lang">en_US</field>
+            <field name="auto_delete" eval="True"/>
+        </record>
+    </data>
+</odoo>

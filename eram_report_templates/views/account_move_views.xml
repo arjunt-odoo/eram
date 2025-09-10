@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_move_form_inherit_eram" model="ir.ui.view">
+        <field name="name">account.move.form.inherit_eram</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@id='header_left_group']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//group[@id='header_right_group']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//notebook" position="before">
+                <group>
+                    <group>
+                        <field name="invoice_date" string="Invoice Date" invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
+                        <field name="e_reverse_charge" invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
+                        <field name="l10n_in_state_id" string="State" invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
+                        <field name="currency_id" invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
+                    </group>
+                    <group>
+                        <field name="e_transport_mode" invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
+                        <field name="invoice_payment_term_id" invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
+                        <field name="e_buyer_order_no" invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
+                        <field name="e_shipment_terms" invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
+                    </group>
+                </group>
+                <div class="row mx-1" style="gap: 10px;">
+                    <div class="col" style="background-color:#74a2f7">
+                        <h5><strong>Bill To Party</strong></h5>
+                    </div>
+                    <div class="col" style="background-color:#74a2f7">
+                        <h5><strong>Ship To Party</strong></h5>
+                    </div>
+                </div>
+                <group>
+                    <group>
+                        <label for="partner_id" string="Name"/>
+                        <field name="partner_id" widget="res_partner_many2one" nolabel="1"
+                               context="{'res_partner_search_mode': (context.get('default_move_type', 'entry') in ('out_invoice', 'out_refund', 'out_receipt') and 'customer') or (context.get('default_move_type', 'entry') in ('in_invoice', 'in_refund', 'in_receipt') and 'supplier') or False, 'show_address': 1, 'default_is_company': True, 'show_vat': True}"
+                               domain="[('company_id', 'in', (False, company_id))]"
+                               options="{&quot;no_quick_create&quot;: True}"
+                               invisible="move_type not in ('out_invoice', 'out_refund', 'in_invoice', 'in_refund', 'out_receipt', 'in_receipt')"
+                               placeholder="Search a name or Tax ID..." readonly="state != 'draft'"/>
+                        <field name="e_bill_tel" invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
+                        <field name="e_bill_email" invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
+                        <field name="e_bill_vat" invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
+                    </group>
+                    <group>
+                        <label for="e_ship_to_party" string="Name"/>
+                        <field name="e_ship_to_party" widget="res_partner_many2one" nolabel="1"
+                               context="{'res_partner_search_mode': (context.get('default_move_type', 'entry') in ('out_invoice', 'out_refund', 'out_receipt') and 'customer') or (context.get('default_move_type', 'entry') in ('in_invoice', 'in_refund', 'in_receipt') and 'supplier') or False, 'show_address': 1, 'default_is_company': True, 'show_vat': True}"
+                               domain="[('company_id', 'in', (False, company_id))]"
+                               options="{&quot;no_quick_create&quot;: True}"
+                               invisible="move_type not in ('out_invoice', 'out_refund', 'in_invoice', 'in_refund', 'out_receipt', 'in_receipt')"
+                               placeholder="Search a name or Tax ID..." readonly="state != 'draft'"/>
+                        <field name="e_ship_tel" invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
+                        <field name="e_ship_email" invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
+                        <field name="e_ship_vat" invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
+                    </group>
+                </group>
+            </xpath>
+            <xpath expr="//notebook//field[@name='invoice_line_ids']/list/field[@name='sequence']" position="after">
+                <field name="e_line_index"/>
+            </xpath>
+            <xpath expr="//notebook//field[@name='invoice_line_ids']/list/field[@name='product_id']" position="after">
+                <field name="e_description"/>
+            </xpath>
+            <xpath expr="//notebook//field[@name='invoice_line_ids']/list/field[@name='price_subtotal']" position="replace">
+                <field name="price_total" string="Total Amount"/>
+            </xpath>
+            <xpath expr="//notebook//field[@name='invoice_line_ids']/list/field[@name='price_unit']" position="after">
+                <field name="price_subtotal" string="Total Price"/>
+            </xpath>
+            <xpath expr="//group[hasclass('oe_invoice_lines_tab')]" position="before">
+                <group>
+                    <field name="amount_total_words"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

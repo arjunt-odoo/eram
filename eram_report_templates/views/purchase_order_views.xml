@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="purchase_order_form_inherit_eram" model="ir.ui.view">
+        <field name="name">purchase.order.form.inherit_eram</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+            <field name="partner_id" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </field>
+            <field name="partner_id" position="after">
+                <field name="e_supplier_code" readonly="state == 'purchase'"/>
+                <field name="partner_id" widget="res_partner_many2one" context="{'res_partner_search_mode': 'supplier', 'show_vat': True}"
+                                placeholder="Name, TIN, Email, or Reference" string="Supplier"
+                             readonly="state in ['cancel', 'done', 'purchase']"/>
+                <label for="street" string="Address"/>
+                <div class="o_address_format">
+                    <field name="street" placeholder="Street..." class="o_address_street"/>
+                    <field name="street2" placeholder="Street 2..." class="o_address_street"/>
+                    <field name="city" placeholder="City" class="o_address_city"/>
+                    <field name="state_id" class="o_address_state" placeholder="State" options='{"no_open": True}'/>
+                    <field name="zip" placeholder="ZIP" class="o_address_zip"/>
+                    <field name="country_id" placeholder="Country" class="o_address_country" options='{"no_open": True, "no_create": True}'/>
+                </div>
+                <field name="e_gst_no"/>
+            </field>
+            <field name="partner_ref" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </field>
+            <field name="partner_ref" position="after">
+                <field name="email"/>
+            </field>
+<!--            <field name="currency_id" position="attributes">-->
+<!--                <attribute name="invisible">1</attribute>-->
+<!--            </field>-->
+            <field name="currency_id" position="before">
+                <field name="e_attn" readonly="state == 'purchase'"/>
+            </field>
+            <field name="date_order" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </field>
+            <xpath expr="//div[@name='date_approve']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//label[@for='date_approve']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <field name="date_order" position="after">
+                <field name="e_req_no" readonly="state == 'purchase'"/>
+                <field name="e_supplier_ref" readonly="state == 'purchase'"/>
+                <field name="e_ref_date" readonly="state == 'purchase'"/>
+            </field>
+            <xpath expr="//div[@name='date_planned_div']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//div[@name='date_planned_div']" position="after">
+                <field name="e_order_line_count"/>
+                <field name="payment_term_id" readonly="state == 'purchase'"/>
+                <field name="e_mode_of_shipment" readonly="state == 'purchase'"/>
+                <field name="e_delivery_terms" readonly="state == 'purchase'"/>
+                <field name="e_ship_to" readonly="state == 'purchase'"/>
+                <field name="e_delivery_period" readonly="state == 'purchase'"/>
+                <field name="e_charge_code" readonly="state == 'purchase'"/>
+            </xpath>
+            <xpath expr="//label[@for='date_planned']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//label[@for='receipt_reminder_email']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//div[@name='reminder']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//notebook//field[@name='sequence']" position="after">
+                <field name="e_line_index"/>
+            </xpath>
+            <xpath expr="//notebook//field[@name='product_id']" position="after">
+                <field name="e_charge_code"/>
+                <field name="e_description"/>
+                <field name="product_uom"/>
+            </xpath>
+            <xpath expr="//notebook//field[@name='price_subtotal']" position="attributes">
+                <attribute name="string">THE TOTAL PRICE</attribute>
+            </xpath>
+            <xpath expr="//field[@name='tax_totals']" position="after">
+                <field name="amount_total_words"/>
+            </xpath>
+            <xpath expr="//notebook/page[@name='purchase_delivery_invoice']//field[@name='payment_term_id']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//notebook/page[@name='purchase_delivery_invoice']//field[@name='payment_term_id']" position="after">
+                <field name="purchase_cash_rounding_id"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

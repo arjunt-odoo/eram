@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="eram_report_saleorder_document"
+              name="Eram Sale Order Template">
+<!--        <xpath expr="//t[@t-call='web.external_layout']" position="replace">-->
+         <t t-call="web.html_container">
+             <t t-foreach="docs" t-as="doc">
+                <t t-call="web.external_layout">
+                    <t t-call="web.internal_layout">
+                        <t t-set="doc" t-value="doc.with_context(lang=doc.partner_id.lang)"/>
+                        <style>
+                            table {
+                                page-break-inside: auto;
+                            }
+                            tr {
+                                page-break-inside: avoid;
+                                page-break-after: auto;
+                            }
+                            thead {
+                                display: table-header-group;
+                            }
+                            .table-bordered {
+                                border: 1px solid black;
+                                border-collapse: collapse;
+                                width: 100%;
+                            }
+                            .table-bordered th,
+                            .table-bordered td {
+                                border: 1px solid black;
+                                padding: 5px;
+                            }
+                            .table-bordered tr {
+                                break-inside: avoid;
+                            }
+                        </style>
+                    </t>
+                    <t t-set="doc" t-value="doc.with_context(lang=doc.partner_id.lang)" />
+                    <div class="page">
+                        <div class="text-center">
+                            <h1>QUOTATION</h1>
+                        </div>
+
+                        <!-- Header Information -->
+                        <div class="row mb-4">
+                            <div class="col-6">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>Quotation No</strong></td>
+                                        <td>:</td>
+                                        <td><span t-field="doc.name"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Revision</strong></td>
+                                        <td>:</td>
+                                        <td><span t-field="doc.e_revision"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Place</strong></td>
+                                        <td>:</td>
+                                        <td><span t-field="doc.e_place"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Date</strong></td>
+                                        <td>:</td>
+                                        <td><span t-field="doc.date_order" t-options='{"widget": "date"}'/></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Bill To</strong></td>
+                                        <td>:</td>
+                                        <td><span t-field="doc.partner_id.name"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Attn</strong></td>
+                                        <td>:</td>
+                                        <td><span t-field="doc.e_attn"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Sub</strong></td>
+                                        <td>:</td>
+                                        <td><span t-field="doc.e_subject"/></td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-6">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>REF # </strong></td>
+                                        <td>:</td>
+                                        <td><span t-field="doc.e_purchase_order_id"/></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Introduction Text -->
+                        <div class="mb-4">
+                            <p>We trust you would find our offer in line with your requirement and should you require any further details/clarification, please feel free to contact as follows.</p>
+                            <span>Sneha V John, Project Manager @ sneha.john@eramelectronics.com , Mobile # +91 98867 80379.</span><br/>
+                            <span>Basil Issac, V-P R&amp;D @ basil.issac@eramelectronics.com , Mobile # +91 98860 68175.</span><br/>
+                            <p>Our Offer consists of the following:</p>
+                            <div class="row mb-4">
+                                <div class="col-2"/>
+                                <div class="col-10">
+                                    <p>Annexure 1 - Priced Schedule</p>
+                                    <p>Annexure 2 - Commercial Terms &amp; Conditions</p>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                            <p>Thanking you and assuring you of our best services always.</p>
+                            <span>Yours truly,</span><br/>
+                            <p><b><strong>Eram Power Electronics Pvt Ltd.</strong></b></p>
+                        </div>
+
+                        <!-- Signature Section -->
+                        <div class="row mt-4">
+                            <div class="col-4 text-center">
+                                <p><strong>PREPARED BY</strong></p>
+                                <br/>
+                                <br/>
+                                <div style="width: 50%; margin: 0 auto; border-top: 1px solid black;"/>
+                                <p><strong>SNEHA V JOHN</strong></p>
+                                <p><strong>PROJECT MANAGER</strong></p>
+                            </div>
+                            <div class="col-4 text-center">
+                                <p><strong>VERIFIED BY</strong></p>
+                                <br/>
+                                <br/>
+                                <div style="width: 50%; margin: 0 auto; border-top: 1px solid black;"/>
+                                <p><strong>MOHAMMED SIRAJUDHEEN K</strong></p>
+                                <p><strong>SENIOR ACCOUNTANT</strong></p>
+                            </div>
+                            <div class="col-4 text-center">
+                                <p><strong>APPROVED BY</strong></p>
+                                <br/>
+                                <br/>
+                                <div style="width: 50%; margin: 0 auto; border-top: 1px solid black;"/>
+                                <p><strong>BASIL ISSAC</strong></p>
+                                <p><strong>VP-R&amp;D</strong></p>
+                            </div>
+                        </div>
+                        </div>
+                        <t t-set="currency" t-value="doc.currency_id"/>
+                        <!-- Priced Schedule (Annexure 1) -->
+                        <div class="mb-4" style="page-break-inside: avoid;">
+                            <h5 class="text-center"><strong>ANNEXURE - 1</strong></h5>
+                            <h5><strong><u>PRICED SCHEDULE:</u></strong></h5>
+
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>S.I.NO</th>
+                                        <th>ITEM</th>
+                                        <th>PRODUCT DESCRIPTION</th>
+                                        <th>UOM</th>
+                                        <th>QTY</th>
+                                        <th>UNIT PRICE (<span t-field="currency.name"/>)</th>
+                                        <th>TOTAL (<span t-field="currency.name"/>)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="doc.order_line" t-as="line">
+                                        <tr t-if="not line.display_type">
+                                            <td><span t-esc="line_index + 1"/></td>
+                                            <td><span t-field="line.product_id"/></td>
+                                            <td><span t-field="line.e_description"/></td>
+                                            <td><span t-field="line.product_uom.name"/></td>
+                                            <td class="text-end"><span t-field="line.product_uom_qty"/></td>
+                                            <td class="text-end"><span t-field="line.price_unit"/></td>
+                                            <td class="text-end"><span t-field="line.price_subtotal"/></td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                                <!-- TOTALS (appear only once at the end) -->
+                                <tr style="page-break-inside: avoid;">
+                                    <td colspan="6" class="text-end"><strong>TOTAL VALUE : (<span t-field="currency.name"/>)</strong></td>
+                                    <td class="text-end"><span t-field="doc.amount_untaxed"/></td>
+                                </tr>
+                                <tr style="page-break-inside: avoid;">
+                                    <t t-set="same_tax_base" t-value="doc.tax_totals['same_tax_base']"/>
+                                    <t t-foreach="doc.tax_totals['subtotals']" t-as="subtotal">
+                                        <t t-foreach="subtotal['tax_groups']" t-as="tax_group">
+                                            <tr class="o_taxes">
+                                                <t t-if="same_tax_base or tax_group['display_base_amount_currency'] is None">
+                                                    <td colspan="6" class="text-end">
+                                                        <span class="text-nowrap" t-out="tax_group['group_name']">Tax 15%</span>
+                                                    </td>
+                                                    <td class="text-end o_price_total">
+                                                        <span class="text-nowrap"
+                                                              t-out="tax_group['tax_amount_currency']"
+                                                              t-options='{"widget": "monetary", "display_currency": currency}'
+                                                        >1.05</span>
+                                                    </td>
+                                                </t>
+                                                <t t-else="">
+                                                    <td colspan="6" class="text-end">
+                                                        <span t-out="tax_group['group_name']">Tax 15%</span>
+                                                    </td>
+                                                    <td class="text-end o_price_total">
+                                                        <span class="text-nowrap"
+                                                              t-out="tax_group['tax_amount_currency']"
+                                                              t-options='{"widget": "monetary", "display_currency": currency}'
+                                                        >4.05</span>
+                                                    </td>
+                                                </t>
+                                            </tr>
+                                        </t>
+                                    </t>
+                                </tr>
+                                <tr style="page-break-inside: avoid;">
+                                    <td colspan="6" class="text-end"><strong>TOTAL QUOTE VALUE : (<span t-field="currency.name"/>)</strong></td>
+                                    <td class="text-end"><span t-field="doc.amount_total"/></td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- Commercial Terms (Annexure 2) -->
+                        <div class="mb-4">
+                            <h5 class="text-center"><strong>ANNEXURE - 2</strong></h5>
+                            <h5><strong><u>COMMERCIAL TERMS AND CONDITIONS:</u></strong></h5>
+
+                            <ol>
+                                <li>The quoted prices are in INR.</li>
+                                <li>The considered mode of shipment is by Courier</li>
+                                <li>Since the associated expenses are estimated based on the quoted quantity, the partial purchase order shall need a price revision.</li>
+                                <li>Delivery: 4-6 weeks from the date of the PO.</li>
+                                <li>Payment Terms: 100% Against the Invoice.</li>
+                                <li>
+                                    <div class="row">
+                                        <div class="col-4">
+                                            Payment Details:
+                                        </div>
+                                        <div class="col-8">
+                                            <span>ERAM POWER ELECTRONICS PVT LTD<br/>
+                                            HDFC BANK LIMITED.<br/>
+                                            ACC# 50200064073923.<br/>
+                                            RTGs/NEFT IFSC: HDFC0000549.</span>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li>Warranty: Standard warranty terms as provided by the manufacturer.</li>
+                                <li>Validity: Our offer is firm and valid for your acceptance until 30 days from the date of this offer and subject to our written confirmation thereafter. If an order does not result till this period, we shall be pleased to review our proposal in an effort to extend the pricing and the offered delivery.</li>
+                                <li>Packing: Manufacturer Standard Packing Extra.</li>
+                                <li>Country of Origin: India</li>
+                                <li>Apart from above terms and conditions specific to this quotation, our offer / quote is subject to our standard terms and conditions of sale, which is applicable without exceptions, so far as not contrary to any of the terms and conditions modified above.</li>
+                            </ol>
+                        </div>
+                    </div>
+                    <div name="expiration_date" class="d-none"/>
+                </t>
+             </t>
+         </t>
+<!--        </xpath>-->
+    </template>
+</odoo>
