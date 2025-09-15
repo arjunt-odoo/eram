@@ -56,4 +56,24 @@
             </field>
         </field>
     </record>
+    <record id="view_order_quote_list_inherit_eram" model="ir.ui.view">
+        <field name="name">sale.order.list.inherit.eram</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_quotation_tree"/>
+        <field name="arch" type="xml">
+            <field name="create_date" position="attributes">
+                <attribute name="column_invisible">1</attribute>
+            </field>
+        </field>
+    </record>
+    <record id="view_order_list_inherit_eram" model="ir.ui.view">
+        <field name="name">sale.order.list.inherit.eram</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.sale_order_tree"/>
+        <field name="arch" type="xml">
+            <field name="name" position="after">
+                <field name="date_order"/>
+            </field>
+        </field>
+    </record>
 </odoo>

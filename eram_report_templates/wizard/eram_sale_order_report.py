@@ -205,7 +205,8 @@ class EramSaleOrderReport(models.TransientModel):
                         'payment_due': '-',
                         'payment_due_date': '-',
                         'buyer_order_no': '-',
-                        'is_overdue': False
+                        'is_overdue': False,
+                        'payment_terms': ''
                     }]
                 else:
                     invoice_data = []
