@@ -212,7 +212,7 @@
                                         </tr>
                                         <tr class="text-start">
                                             <td colspan="100%">
-                                                Total Invoice Amount In Words: <span t-field="o.amount_total_words"/>
+                                                Total Invoice Amount In Words: <span t-field="o.e_amount_total_words"/>
                                             </td>
                                         </tr>
                                     </tbody>

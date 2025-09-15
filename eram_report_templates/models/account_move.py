@@ -27,6 +27,9 @@ class AccountMove(models.Model):
         <span>Bank IFSC: HDFC0000549</span><br/>
         <span>Branch: Electronic City</span>""")
     invoice_date = fields.Date(default=fields.Date.context_today)
+    e_amount_total_words = fields.Char(
+        string="Total amount in words",
+    )
 
     def _compute_tax_totals(self):
         """Override to sort tax groups alphabetically by group_name"""

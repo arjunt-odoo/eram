@@ -27,8 +27,7 @@ class PurchaseOrder(models.Model):
                                         store=True, string="No. of Lines")
     e_ref_date = fields.Date(string="REF Date")
     amount_total_words = fields.Char(
-        string="TOTAL PURCHASE ORDER VALUE: (INR)",
-        compute="_compute_amount_total_words",
+        string="TOTAL PURCHASE ORDER VALUE:",
     )
     purchase_cash_rounding_id = fields.Many2one("account.cash.rounding")
 
@@ -36,12 +35,6 @@ class PurchaseOrder(models.Model):
     def _compute_e_order_line_count(self):
         for rec in self:
             rec.e_order_line_count = len(rec.order_line)
-
-    @api.depends('amount_total', 'currency_id')
-    def _compute_amount_total_words(self):
-        for order in self:
-            order.amount_total_words = order.currency_id.amount_to_text(
-                order.amount_total).replace(',', '')
 
     def _compute_tax_totals(self):
         """Override to sort tax groups alphabetically by group_name"""

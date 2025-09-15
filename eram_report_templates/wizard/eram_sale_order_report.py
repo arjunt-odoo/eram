@@ -15,6 +15,7 @@ except ImportError:
 
 class EramSaleOrderReport(models.TransientModel):
     _name = 'eram.sale.order.report'
+    _description = 'Eram Sale Order Report'
 
     from_date = fields.Date(string="From Date")
     to_date = fields.Date(string="To Date")
@@ -47,42 +48,59 @@ class EramSaleOrderReport(models.TransientModel):
             }
 
     def get_xlsx_report(self, data, response):
-        order_ids = self.env['sale.order'].browse(data.get('orders', []))
+        order_id_list = data.get('orders', [])
+        order_id_list.sort()
+        order_ids = self.env['sale.order'].browse(order_id_list)
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
         sheet = workbook.add_worksheet()
-
+        light_green = '#C6EFCE'
+        red = '#FF0000'
         heading_format = workbook.add_format({
             'bold': True,
             'align': 'center',
             'valign': 'vcenter',
-            'font_size': 36
+            'font_size': 36,
+            'bg_color': light_green,
+            'text_wrap': True
         })
-
-        bold = workbook.add_format({'bold': True, 'align': 'center'})
         header_format = workbook.add_format({
             'bold': True,
             'align': 'center',
             'valign': 'vcenter',
             'border': 1,
-            'bg_color': '#D3D3D3'
+            'bg_color': light_green,
+            'text_wrap': True
         })
         date_format = workbook.add_format(
-            {'num_format': 'yyyy-mm-dd', 'align': 'center'})
+            {'num_format': 'yyyy-mm-dd', 'align': 'center', 'text_wrap': True})
         currency_format = workbook.add_format(
-            {'num_format': '#,##0.00', 'align': 'center'})
-        center_format = workbook.add_format({'align': 'center'})
+            {'num_format': '#,##0.00', 'align': 'center', 'text_wrap': True})
+        center_format = workbook.add_format({'align': 'center', 'text_wrap': True})
         merge_format = workbook.add_format({
             'align': 'center',
-            'valign': 'vcenter'
+            'valign': 'vcenter',
+            'text_wrap': True
         })
         merge_date_format = workbook.add_format({
             'align': 'center',
             'valign': 'vcenter',
-            'num_format': 'yyyy-mm-dd'
+            'num_format': 'yyyy-mm-dd',
+            'text_wrap': True
+        })
+        red_format = workbook.add_format({
+            'align': 'center',
+            'valign': 'vcenter',
+            'text_wrap': True,
+            'font_color': red
+        })
+        row_format = workbook.add_format({
+            'align': 'center',
+            'valign': 'vcenter',
+            'text_wrap': True
         })
 
-        col_widths = [15] * 23
+        col_widths = [15] * 22
 
         module_path = os.path.dirname(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -103,7 +121,6 @@ class EramSaleOrderReport(models.TransientModel):
             'img',
             'footer.png'
         )
-        total_width = sum(col_widths)
 
         if os.path.exists(logo_path):
             with Image.open(logo_path) as img:
@@ -119,45 +136,42 @@ class EramSaleOrderReport(models.TransientModel):
             })
 
         report_date = fields.Date.context_today(self)
-        sheet.merge_range('A2:W2', f'SALES ORDER REPORT-{report_date}',
-                          heading_format)
+        sheet.merge_range('A2:V2', f'SALES ORDER REPORT-{report_date}', heading_format)
 
         sheet.set_row(1, 45)
 
         headers = [
             'Full Name', 'Account Name', 'Product Name', 'Description',
             'Quantity', 'Quote No', 'Quote Date', 'Purchase Order No',
-            'Purchase Order Date', 'Invoice No', 'Invoice Date',
-            'Invoice Value', 'Payment Terms', 'Payment Status',
-            'Advance Payment Received/Not Received', 'Advance Payment Amount',
-            'Advance Payment Received Date', 'Balance Payment',
-            'Balance Payment Received Date', 'Payment Due',
+            'Invoice No', 'Invoice Date', 'Invoice Value', 'Payment Terms',
+            'Payment Status', 'Advance Payment Received/Not Received',
+            'Advance Payment Amount', 'Advance Payment Received Date',
+            'Balance Payment', 'Balance Payment Received Date', 'Payment Due',
             'Payment Due Date', 'Shipment Status', 'Remarks'
         ]
 
         for col, header in enumerate(headers):
             sheet.write(3, col, header, header_format)
-            col_widths[col] = max(col_widths[col],
-                                  len(header) + 2)
+            col_widths[col] = max(col_widths[col], len(header) + 2)
 
         row = 4
         grand_total_qty = 0
         grand_total_value = 0
 
-        def write_center(sheet, row, col, value, format=center_format):
+        def write_center(sheet, row, col, value, format=None, is_overdue=False):
+            # Use red format for overdue text, otherwise use standard row format
+            if format is None:
+                format = red_format if is_overdue else row_format
+
             sheet.write(row, col, value, format)
             if value is not None:
-                col_widths[col] = max(col_widths[col],
-                                      len(str(value)) + 2)
+                col_widths[col] = max(col_widths[col], len(str(value)) + 2)
 
         for order in order_ids:
             order_start_row = row
-            order_line_count = 0
             partner = order.partner_invoice_id or order.partner_id
             full_name = partner.name
             account_name = order.partner_id.name
-
-            # Track quantities for this order to avoid double-counting
             order_line_quantities = {}
 
             for line in order.order_line:
@@ -165,10 +179,9 @@ class EramSaleOrderReport(models.TransientModel):
                     ('sale_line_ids', 'in', line.ids),
                     ('parent_state', '!=', 'cancel')
                 ])
-                invoices = invoice_lines.mapped('move_id')
-                order_line_count += len(invoices) if invoices else 1
-                # Store the quantity for this line (will be used only once)
                 order_line_quantities[line.id] = line.product_uom_qty
+
+            shipment_status = ''
 
             for line in order.order_line:
                 invoice_lines = self.env['account.move.line'].search([
@@ -190,7 +203,9 @@ class EramSaleOrderReport(models.TransientModel):
                         'balance_payment': line.price_total,
                         'balance_date': '-',
                         'payment_due': '-',
-                        'payment_due_date': '-'
+                        'payment_due_date': '-',
+                        'buyer_order_no': '-',
+                        'is_overdue': False
                     }]
                 else:
                     invoice_data = []
@@ -203,13 +218,15 @@ class EramSaleOrderReport(models.TransientModel):
 
                         days_overdue = 0
                         payment_due_display = '-'
+                        is_overdue = False
+
                         if invoice.invoice_date_due:
                             today = date.today()
-                            due_date = fields.Date.from_string(
-                                invoice.invoice_date_due)
+                            due_date = fields.Date.from_string(invoice.invoice_date_due)
                             if today > due_date:
                                 days_overdue = (today - due_date).days
                                 payment_due_display = f"{days_overdue} days overdue"
+                                is_overdue = True
                             else:
                                 payment_due_display = '-'
                         else:
@@ -230,6 +247,7 @@ class EramSaleOrderReport(models.TransientModel):
                             balance_date = invoice.invoice_date_due
                             if days_overdue > 0:
                                 payment_due_display = f"{days_overdue} days overdue"
+                                is_overdue = True
                             else:
                                 payment_due_display = '-'
                         else:
@@ -240,8 +258,11 @@ class EramSaleOrderReport(models.TransientModel):
                             balance_date = invoice.invoice_date_due
                             if days_overdue > 0:
                                 payment_due_display = f"{days_overdue} days overdue"
+                                is_overdue = True
                             else:
                                 payment_due_display = '-'
+
+                        buyer_order_no = invoice.e_buyer_order_no or '-'
 
                         invoice_data.append({
                             'invoice_no': invoice.name,
@@ -254,9 +275,12 @@ class EramSaleOrderReport(models.TransientModel):
                             'balance_payment': balance_payment,
                             'balance_date': balance_date,
                             'payment_due': payment_due_display,
-                            'payment_due_date': invoice.invoice_date_due or '-'
+                            'payment_due_date': invoice.invoice_date_due or '-',
+                            'buyer_order_no': buyer_order_no,
+                            'is_overdue': is_overdue,
+                            'payment_terms': invoice.invoice_payment_term_id.name
                         })
-                shipment_status = ''
+
                 picking_ids = line.move_ids.picking_id.filtered(lambda p: p.state != 'cancel')
                 if picking_ids:
                     if all(picking.state == 'done' for picking in picking_ids):
@@ -275,59 +299,49 @@ class EramSaleOrderReport(models.TransientModel):
                         write_center(sheet, row, 0, full_name)
                         write_center(sheet, row, 1, account_name)
                         write_center(sheet, row, 2, line.product_id.name)
-                        write_center(sheet, row, 3, line.e_description)
-                        # Use the stored quantity from sale order line
+                        write_center(sheet, row, 3, line.e_description or "-")
                         line_quantity = order_line_quantities.get(line.id, line.product_uom_qty)
                         write_center(sheet, row, 4, line_quantity, center_format)
                         write_center(sheet, row, 5, order.name)
                         write_center(sheet, row, 6, order.date_order, date_format)
-                        write_center(sheet, row, 7, order.e_purchase_order_id.name or '-')
-                        if order.e_purchase_order_id and order.e_purchase_order_id.e_ref_date:
-                            write_center(sheet, row, 8, order.e_purchase_order_id.e_ref_date, date_format)
-                        else:
-                            write_center(sheet, row, 8, '-')
-                        write_center(sheet, row, 12, order.payment_term_id.name or '100% Against Delivery')
-                        write_center(sheet, row, 22, order.note or '-')
-
-                        # Add to grand total only once per line (first invoice)
-                        grand_total_qty += line_quantity
+                        write_center(sheet, row, 11, inv["payment_terms"] or '-')
+                        write_center(sheet, row, 20, shipment_status)
+                        write_center(sheet, row, 21, order.note or '-')
                     else:
-                        # For subsequent invoices, don't show quantity again
                         write_center(sheet, row, 4, '', center_format)
 
-                    write_center(sheet, row, 9, inv['invoice_no'])
-                    if inv['invoice_date'] != '-':
-                        write_center(sheet, row, 10, inv['invoice_date'], date_format)
-                    else:
-                        write_center(sheet, row, 10, inv['invoice_date'])
-                    write_center(sheet, row, 11, inv['invoice_value'], currency_format)
-                    write_center(sheet, row, 13, inv['payment_status'])
-                    write_center(sheet, row, 14, inv['advance_payment'])
+                    write_center(sheet, row, 7, inv['buyer_order_no'])
 
-                    write_center(sheet, row, 15, inv['advance_amount'], currency_format)
+                    write_center(sheet, row, 8, inv['invoice_no'])
+                    if inv['invoice_date'] != '-':
+                        write_center(sheet, row, 9, inv['invoice_date'], date_format)
+                    else:
+                        write_center(sheet, row, 9, inv['invoice_date'])
+                    write_center(sheet, row, 10, inv['invoice_value'], currency_format)
+                    write_center(sheet, row, 12, inv['payment_status'])
+                    write_center(sheet, row, 13, inv['advance_payment'])
+                    write_center(sheet, row, 14, inv['advance_amount'], currency_format)
 
                     if isinstance(inv['advance_date'], date) or (
                             isinstance(inv['advance_date'], str) and inv['advance_date'] != '-'):
-                        write_center(sheet, row, 16, inv['advance_date'], date_format)
+                        write_center(sheet, row, 15, inv['advance_date'], date_format)
                     else:
-                        write_center(sheet, row, 16, inv['advance_date'])
+                        write_center(sheet, row, 15, inv['advance_date'])
 
-                    write_center(sheet, row, 17, inv['balance_payment'], currency_format)
+                    write_center(sheet, row, 16, inv['balance_payment'], currency_format)
 
                     if isinstance(inv['balance_date'], date) or (
                             isinstance(inv['balance_date'], str) and inv['balance_date'] != '-'):
-                        write_center(sheet, row, 18, inv['balance_date'], date_format)
+                        write_center(sheet, row, 17, inv['balance_date'], date_format)
                     else:
-                        write_center(sheet, row, 18, inv['balance_date'])
+                        write_center(sheet, row, 17, inv['balance_date'])
 
-                    write_center(sheet, row, 19, inv['payment_due'])
+                    write_center(sheet, row, 18, inv['payment_due'], None, inv['is_overdue'])
 
                     if inv['payment_due_date'] != '-':
-                        write_center(sheet, row, 20, inv['payment_due_date'], date_format)
+                        write_center(sheet, row, 19, inv['payment_due_date'], date_format)
                     else:
-                        write_center(sheet, row, 20, inv['payment_due_date'])
-
-                    write_center(sheet, row, 21, shipment_status)
+                        write_center(sheet, row, 19, inv['payment_due_date'])
 
                     grand_total_value += inv['invoice_value']
 
@@ -338,7 +352,6 @@ class EramSaleOrderReport(models.TransientModel):
                 if line_end_row > line_start_row:
                     sheet.merge_range(line_start_row, 2, line_end_row, 2, line.product_id.name, merge_format)
                     sheet.merge_range(line_start_row, 3, line_end_row, 3, line.e_description, merge_format)
-                    # Only merge the first cell (where quantity is shown)
                     sheet.merge_range(line_start_row, 4, line_start_row, 4,
                                       order_line_quantities.get(line.id, line.product_uom_qty), merge_format)
 
@@ -352,21 +365,25 @@ class EramSaleOrderReport(models.TransientModel):
                     sheet.merge_range(order_start_row, 6, order_end_row, 6, order.date_order, merge_date_format)
                 else:
                     sheet.merge_range(order_start_row, 6, order_end_row, 6, '', merge_format)
-                sheet.merge_range(order_start_row, 7, order_end_row, 7, order.e_purchase_order_id.name or '-',
-                                  merge_format)
-                if order.e_purchase_order_id and order.e_purchase_order_id.e_ref_date:
-                    sheet.merge_range(order_start_row, 8, order_end_row, 8, order.e_purchase_order_id.e_ref_date,
-                                      merge_date_format)
-                else:
-                    sheet.merge_range(order_start_row, 8, order_end_row, 8, '-', merge_format)
-                sheet.merge_range(order_start_row, 12, order_end_row, 12,
+                sheet.merge_range(order_start_row, 11, order_end_row, 11,
                                   order.payment_term_id.name or '100% Against Delivery', merge_format)
-                sheet.merge_range(order_start_row, 22, order_end_row, 22, order.note or '-', merge_format)
+                sheet.merge_range(order_start_row, 20, order_end_row, 20, shipment_status, merge_format)
+                sheet.merge_range(order_start_row, 21, order_end_row, 21, order.note or '-', merge_format)
 
-        # Write grand totals
-        write_center(sheet, row, 0, 'Grand Total', header_format)
-        sheet.write(row, 4, grand_total_qty, center_format)
-        sheet.write(row, 11, grand_total_value, currency_format)
+            grand_total_qty += sum(order_line_quantities.values())
+
+        total_format = workbook.add_format({
+            'bold': True,
+            'align': 'center',
+            'valign': 'vcenter',
+            'border': 1,
+            'bg_color': light_green,
+            'text_wrap': True
+        })
+
+        write_center(sheet, row, 0, 'Grand Total', total_format)
+        sheet.write(row, 4, grand_total_qty, total_format)
+        sheet.write(row, 10, grand_total_value, total_format)
 
         for col, width in enumerate(col_widths):
             sheet.set_column(col, col, min(width, 50))

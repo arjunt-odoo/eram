@@ -75,7 +75,7 @@
             </xpath>
             <xpath expr="//group[hasclass('oe_invoice_lines_tab')]" position="before">
                 <group>
-                    <field name="amount_total_words"/>
+                    <field name="e_amount_total_words"/>
                 </group>
             </xpath>
         </field>

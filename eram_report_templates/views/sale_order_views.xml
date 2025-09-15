@@ -25,6 +25,7 @@
                 <field name="date_order"/>
                 <field name="partner_id" string="Bill To"/>
                 <field name="e_subject"/>
+                <field name="e_attn"/>
             </field>
             <xpath expr="//notebook//list//field[@name='sequence']" position="after">
                 <field name="e_line_index"/>

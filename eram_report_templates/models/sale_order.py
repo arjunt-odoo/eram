@@ -11,18 +11,11 @@ class SaleOrder(models.Model):
     e_ref_code = fields.Char(string="REF #")
     e_place = fields.Char(string="Place")
     amount_total_words = fields.Char(
-        string="TOTAL QUOTE VALUE: (INR)",
-        compute="_compute_amount_total_words",
+        string="TOTAL QUOTE VALUE:",
     )
     e_packing_and_forwarding = fields.Char(string="PACKING & FORWARDING")
     e_purchase_order_id = fields.Many2one("purchase.order",
                                           string="Ref#")
-
-    @api.depends('amount_total', 'currency_id')
-    def _compute_amount_total_words(self):
-        for order in self:
-            order.amount_total_words = order.currency_id.amount_to_text(
-                order.amount_total).replace(',', '')
 
     def _prepare_invoice(self):
         values = super()._prepare_invoice()
