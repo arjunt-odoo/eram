@@ -55,14 +55,18 @@ class EramSaleOrderReport(models.TransientModel):
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
         sheet = workbook.add_worksheet()
         light_green = '#C6EFCE'
+        light_blue = '#D9E1F2'
+        light_yellow = '#FFEB9C'
         red = '#FF0000'
+
         heading_format = workbook.add_format({
             'bold': True,
             'align': 'center',
             'valign': 'vcenter',
             'font_size': 36,
             'bg_color': light_green,
-            'text_wrap': True
+            'text_wrap': True,
+            'border': 1
         })
         header_format = workbook.add_format({
             'bold': True,
@@ -76,40 +80,47 @@ class EramSaleOrderReport(models.TransientModel):
             'num_format': 'dd-mm-yyyy',
             'align': 'center',
             'valign': 'vcenter',
-            'text_wrap': True
+            'text_wrap': True,
+            'border': 1
         })
         base_currency_format = workbook.add_format({
             'num_format': '#,##0.00',
             'align': 'center',
             'valign': 'vcenter',
-            'text_wrap': True
+            'text_wrap': True,
+            'border': 1
         })
         center_format = workbook.add_format({
             'align': 'center',
             'valign': 'vcenter',
-            'text_wrap': True
+            'text_wrap': True,
+            'border': 1
         })
         merge_format = workbook.add_format({
             'align': 'center',
             'valign': 'vcenter',
-            'text_wrap': True
+            'text_wrap': True,
+            'border': 1
         })
         merge_date_format = workbook.add_format({
             'align': 'center',
             'valign': 'vcenter',
             'num_format': 'dd-mm-yyyy',
-            'text_wrap': True
+            'text_wrap': True,
+            'border': 1
         })
         red_format = workbook.add_format({
             'align': 'center',
             'valign': 'vcenter',
             'text_wrap': True,
-            'font_color': red
+            'font_color': red,
+            'border': 1
         })
         row_format = workbook.add_format({
             'align': 'center',
             'valign': 'vcenter',
-            'text_wrap': True
+            'text_wrap': True,
+            'border': 1
         })
         base_total_format = workbook.add_format({
             'bold': True,
@@ -127,6 +138,68 @@ class EramSaleOrderReport(models.TransientModel):
             'border': 1,
             'bg_color': light_green,
             'text_wrap': True
+        })
+
+        even_row_format = workbook.add_format({
+            'align': 'center',
+            'valign': 'vcenter',
+            'text_wrap': True,
+            'bg_color': light_blue,
+            'border': 1
+        })
+        odd_row_format = workbook.add_format({
+            'align': 'center',
+            'valign': 'vcenter',
+            'text_wrap': True,
+            'border': 1
+        })
+
+        even_currency_format = workbook.add_format({
+            'num_format': '#,##0.00',
+            'align': 'center',
+            'valign': 'vcenter',
+            'text_wrap': True,
+            'bg_color': light_blue,
+            'border': 1
+        })
+        odd_currency_format = workbook.add_format({
+            'num_format': '#,##0.00',
+            'align': 'center',
+            'valign': 'vcenter',
+            'text_wrap': True,
+            'border': 1
+        })
+
+        even_date_format = workbook.add_format({
+            'num_format': 'dd-mm-yyyy',
+            'align': 'center',
+            'valign': 'vcenter',
+            'text_wrap': True,
+            'bg_color': light_blue,
+            'border': 1
+        })
+        odd_date_format = workbook.add_format({
+            'num_format': 'dd-mm-yyyy',
+            'align': 'center',
+            'valign': 'vcenter',
+            'text_wrap': True,
+            'border': 1
+        })
+
+        even_red_format = workbook.add_format({
+            'align': 'center',
+            'valign': 'vcenter',
+            'text_wrap': True,
+            'font_color': red,
+            'bg_color': light_blue,
+            'border': 1
+        })
+        odd_red_format = workbook.add_format({
+            'align': 'center',
+            'valign': 'vcenter',
+            'text_wrap': True,
+            'font_color': red,
+            'border': 1
         })
 
         col_widths = [8] + [15] * 22
@@ -190,35 +263,53 @@ class EramSaleOrderReport(models.TransientModel):
         si_no = 1
 
         def write_center(sheet, row, col, value, format=None, is_overdue=False):
+            is_even_order = ((row - 4) // max_rows_per_order) % 2 == 0
+
             if format is None:
-                format = red_format if is_overdue else row_format
+                if is_even_order:
+                    format = even_row_format
+                    if is_overdue:
+                        format = even_red_format
+                else:
+                    format = odd_row_format
+                    if is_overdue:
+                        format = odd_red_format
 
             sheet.write(row, col, value, format)
             if value is not None:
                 col_widths[col] = max(col_widths[col], len(str(value)) + 2)
 
-        def get_currency_format(workbook, currency, is_total=False):
-            """Create currency format based on currency position"""
+        def get_currency_format(workbook, currency, is_total=False, is_even=False):
             symbol = currency.symbol
             position = currency.position
 
             if position == 'after':
                 num_format = f'#,##0.00 "{symbol}"'
-            else:  # position == 'before'
+            else:
                 num_format = f'"{symbol}" #,##0.00'
+
+            if is_even:
+                bg_color = light_blue
+            else:
+                bg_color = None
 
             format_props = {
                 'num_format': num_format,
                 'align': 'center',
                 'valign': 'vcenter',
-                'text_wrap': True
+                'text_wrap': True,
+                'border': 1
             }
+
+            if bg_color:
+                format_props['bg_color'] = bg_color
 
             if is_total:
                 format_props.update({
                     'bold': True,
                     'border': 1,
-                    'bg_color': light_green
+                    'bg_color': light_green,
+                    'font_size': 14
                 })
 
             return workbook.add_format(format_props)
@@ -226,258 +317,241 @@ class EramSaleOrderReport(models.TransientModel):
         merged_ranges = set()
 
         def safe_merge(sheet, first_row, first_col, last_row, last_col, data, cell_format=None):
-            """Safely merge cells only if the range hasn't been merged before"""
             merge_key = f"{first_row}:{first_col}:{last_row}:{last_col}"
             if merge_key in merged_ranges:
                 return
 
+            is_even_order = ((first_row - 4) // max_rows_per_order) % 2 == 0
+
+            if cell_format is None:
+                if is_even_order:
+                    cell_format = even_row_format
+                else:
+                    cell_format = odd_row_format
+
             if first_row == last_row and first_col == last_col:
-                if cell_format:
-                    sheet.write(first_row, first_col, data, cell_format)
-                else:
-                    sheet.write(first_row, first_col, data)
+                sheet.write(first_row, first_col, data, cell_format)
             else:
-                if cell_format:
-                    sheet.merge_range(first_row, first_col, last_row, last_col, data, cell_format)
-                else:
-                    sheet.merge_range(first_row, first_col, last_row, last_col, data)
+                sheet.merge_range(first_row, first_col, last_row, last_col, data, cell_format)
 
             merged_ranges.add(merge_key)
 
-        for order in order_ids:
+        for order_idx, order in enumerate(order_ids):
             order_start_row = row
             partner = order.partner_invoice_id or order.partner_id
             full_name = partner.name
             account_name = order.partner_id.name
             current_si_no = si_no
-            line_invoice_data = {}
-            total_order_rows = 0
+
+            is_even_order = (order_idx % 2 == 0)
+
+            order_invoices = self.env['account.move'].search([
+                ('invoice_origin', '=', order.name),
+                ('state', '!=', 'cancel')
+            ])
+
+            order_lines = order.order_line
+
+            invoice_count = len(order_invoices)
+            product_count = len(order_lines)
+            max_rows_per_order = max(invoice_count, product_count, 1)
+
+            invoice_data = []
+            for invoice in order_invoices:
+                invoice_amount = invoice.amount_total
+                amount_residual = invoice.amount_residual
+
+                advance_amount = sum(invoice.matched_payment_ids.filtered(
+                    lambda p: p.state in ('in_process', 'paid')).mapped('amount'))
+
+                days_overdue = 0
+                payment_due_display = 'N/A'
+                is_overdue = False
+
+                if invoice.invoice_date_due:
+                    today = date.today()
+                    due_date = fields.Date.from_string(invoice.invoice_date_due)
+                    if today > due_date:
+                        days_overdue = (today - due_date).days
+                        payment_due_display = f"{days_overdue} days overdue"
+                        is_overdue = True
+                    else:
+                        payment_due_display = 'N/A'
+                else:
+                    payment_due_display = 'N/A'
+
+                if invoice.payment_state == 'paid':
+                    payment_status = 'RECEIVED'
+                    advance_payment = 'Received'
+                    advance_date = invoice.invoice_date
+                    balance_payment = 0.0
+                    balance_date = invoice.invoice_date
+                    payment_due_display = 'N/A'
+                elif invoice.payment_state == 'partial':
+                    payment_status = 'PARTIALLY RECEIVED'
+                    advance_payment = 'Received'
+                    advance_date = invoice.invoice_date
+                    balance_payment = amount_residual
+                    balance_date = invoice.invoice_date_due
+                    if days_overdue > 0:
+                        payment_due_display = f"{days_overdue} days overdue"
+                        is_overdue = True
+                    else:
+                        payment_due_display = 'N/A'
+                else:
+                    payment_status = 'NOT RECEIVED'
+                    advance_payment = 'Not Received'
+                    advance_date = 'N/A'
+                    balance_payment = amount_residual
+                    balance_date = invoice.invoice_date_due
+                    if days_overdue > 0:
+                        payment_due_display = f"{days_overdue} days overdue"
+                        is_overdue = True
+                    else:
+                        payment_due_display = 'N/A'
+
+                buyer_order_no = invoice.e_buyer_order_no or 'N/A'
+                payment_terms = invoice.invoice_payment_term_id.name or 'N/A'
+
+                invoice_data.append({
+                    'invoice_no': invoice.name or 'N/A',
+                    'invoice_date': invoice.invoice_date or 'N/A',
+                    'invoice_value': invoice_amount,
+                    'payment_status': payment_status,
+                    'advance_payment': advance_payment,
+                    'advance_amount': advance_amount,
+                    'advance_date': advance_date,
+                    'balance_payment': balance_payment,
+                    'balance_date': balance_date,
+                    'payment_due': payment_due_display,
+                    'payment_due_date': invoice.invoice_date_due or 'N/A',
+                    'buyer_order_no': buyer_order_no,
+                    'is_overdue': is_overdue,
+                    'payment_terms': payment_terms
+                })
+
+            picking_ids = order.picking_ids.filtered(lambda p: p.state != 'cancel')
+            if picking_ids:
+                if all(picking.state == 'done' for picking in picking_ids):
+                    shipment_status = 'Shipped'
+                elif all(picking.state != 'done' for picking in picking_ids):
+                    shipment_status = 'Not Shipped'
+                else:
+                    shipment_status = 'Partially Shipped'
+            else:
+                shipment_status = 'Nothing to Ship'
+
+            if is_even_order:
+                row_fmt = even_row_format
+                currency_fmt = even_currency_format
+                date_fmt = even_date_format
+                red_fmt = even_red_format
+            else:
+                row_fmt = odd_row_format
+                currency_fmt = odd_currency_format
+                date_fmt = odd_date_format
+                red_fmt = odd_red_format
 
             order_currency = order.currency_id
-            order_currency_format = get_currency_format(workbook, order_currency)
-            order_total_format = get_currency_format(workbook, order_currency, is_total=True)
+            order_currency_format = get_currency_format(workbook, order_currency, is_even=is_even_order)
 
-            for line in order.order_line:
-                invoice_lines = self.env['account.move.line'].search([
-                    ('sale_line_ids', 'in', line.ids),
-                    ('parent_state', '!=', 'cancel')
-                ])
-
-                invoices = invoice_lines.mapped('move_id')
-                line_invoice_data[line.id] = {
-                    'line_data': line,
-                    'invoices': [],
-                    'total_qty': 0
-                }
-                invoice_count = 0
-
-                if not invoices:
-                    line_invoice_data[line.id]['invoices'].append({
-                        'invoice_no': '-',
-                        'invoice_date': '-',
-                        'invoice_value': line.price_total,
-                        'payment_status': 'NOT RECEIVED',
-                        'advance_payment': 'Not Received',
-                        'advance_amount': 0.0,
-                        'advance_date': '-',
-                        'balance_payment': line.price_total,
-                        'balance_date': '-',
-                        'payment_due': '-',
-                        'payment_due_date': '-',
-                        'buyer_order_no': '-',
-                        'is_overdue': False,
-                        'payment_terms': '-',
-                        'qty': line.product_uom_qty
-                    })
-                    line_invoice_data[line.id]['total_qty'] = line.product_uom_qty
-                    invoice_count = 1
+            for i in range(max_rows_per_order):
+                if i == 0:
+                    write_center(sheet, row + i, 0, current_si_no, row_fmt)
+                    write_center(sheet, row + i, 1, full_name, row_fmt)
+                    write_center(sheet, row + i, 2, account_name, row_fmt)
+                    write_center(sheet, row + i, 6, order.name, row_fmt)
+                    write_center(sheet, row + i, 7, order.date_order, date_fmt)
+                    # Changed from order.note or 'N/A' to just 'N/A'
+                    write_center(sheet, row + i, 22, 'N/A', row_fmt)
                 else:
-                    for invoice in invoices:
-                        invoice_line = invoice_lines.filtered(lambda l: l.move_id.id == invoice.id)
-                        invoice_qty = sum(invoice_line.mapped('quantity'))
+                    write_center(sheet, row + i, 0, '', row_fmt)
+                    write_center(sheet, row + i, 1, '', row_fmt)
+                    write_center(sheet, row + i, 2, '', row_fmt)
+                    write_center(sheet, row + i, 6, '', row_fmt)
+                    write_center(sheet, row + i, 7, '', row_fmt)
+                    write_center(sheet, row + i, 22, 'N/A', row_fmt)  # Fill with N/A for all rows
 
-                        invoice_amount = invoice.amount_total
-                        amount_residual = invoice.amount_residual
+            for i, line in enumerate(order_lines):
+                if i < max_rows_per_order:
+                    write_center(sheet, row + i, 3, line.product_id.name, row_fmt)
+                    write_center(sheet, row + i, 4, line.e_description or "N/A", row_fmt)
+                    write_center(sheet, row + i, 5, line.product_uom_qty, row_fmt)
+                    grand_total_qty += line.product_uom_qty
 
-                        advance_amount = sum(invoice.matched_payment_ids.filtered(
-                            lambda p: p.state in ('in_process', 'paid')).mapped('amount'))
+            for i in range(len(order_lines), max_rows_per_order):
+                write_center(sheet, row + i, 3, '', row_fmt)
+                write_center(sheet, row + i, 4, '', row_fmt)
+                write_center(sheet, row + i, 5, '', row_fmt)
 
-                        days_overdue = 0
-                        payment_due_display = '-'
-                        is_overdue = False
+            for i, inv in enumerate(invoice_data):
+                if i < max_rows_per_order:
+                    write_center(sheet, row + i, 8, inv['buyer_order_no'], row_fmt)
+                    write_center(sheet, row + i, 9, inv['invoice_no'], row_fmt)
 
-                        if invoice.invoice_date_due:
-                            today = date.today()
-                            due_date = fields.Date.from_string(invoice.invoice_date_due)
-                            if today > due_date:
-                                days_overdue = (today - due_date).days
-                                payment_due_display = f"{days_overdue} days overdue"
-                                is_overdue = True
-                            else:
-                                payment_due_display = '-'
-                        else:
-                            payment_due_display = '-'
-
-                        if invoice.payment_state == 'paid':
-                            payment_status = 'RECEIVED'
-                            advance_payment = 'Received'
-                            advance_date = invoice.invoice_date
-                            balance_payment = 0.0
-                            balance_date = invoice.invoice_date
-                            payment_due_display = '-'
-                        elif invoice.payment_state == 'partial':
-                            payment_status = 'PARTIALLY RECEIVED'
-                            advance_payment = 'Received'
-                            advance_date = invoice.invoice_date
-                            balance_payment = amount_residual
-                            balance_date = invoice.invoice_date_due
-                            if days_overdue > 0:
-                                payment_due_display = f"{days_overdue} days overdue"
-                                is_overdue = True
-                            else:
-                                payment_due_display = '-'
-                        else:
-                            payment_status = 'NOT RECEIVED'
-                            advance_payment = 'Not Received'
-                            advance_date = '-'
-                            balance_payment = amount_residual
-                            balance_date = invoice.invoice_date_due
-                            if days_overdue > 0:
-                                payment_due_display = f"{days_overdue} days overdue"
-                                is_overdue = True
-                            else:
-                                payment_due_display = '-'
-
-                        buyer_order_no = invoice.e_buyer_order_no or '-'
-                        payment_terms = invoice.invoice_payment_term_id.name or '-'
-
-                        line_invoice_data[line.id]['invoices'].append({
-                            'invoice_no': invoice.name or '-',
-                            'invoice_date': invoice.invoice_date or '-',
-                            'invoice_value': invoice_amount,
-                            'payment_status': payment_status,
-                            'advance_payment': advance_payment,
-                            'advance_amount': advance_amount,
-                            'advance_date': advance_date,
-                            'balance_payment': balance_payment,
-                            'balance_date': balance_date,
-                            'payment_due': payment_due_display,
-                            'payment_due_date': invoice.invoice_date_due or '-',
-                            'buyer_order_no': buyer_order_no,
-                            'is_overdue': is_overdue,
-                            'payment_terms': payment_terms,
-                            'qty': invoice_qty
-                        })
-                        line_invoice_data[line.id]['total_qty'] += invoice_qty
-                        invoice_count += 1
-
-                total_order_rows += invoice_count if invoice_count > 0 else 1
-
-            for line in order.order_line:
-                line_data = line_invoice_data.get(line.id, {})
-                invoice_data = line_data.get('invoices', [])
-                total_line_qty = line_data.get('total_qty', 0)
-
-                picking_ids = line.move_ids.picking_id.filtered(lambda p: p.state != 'cancel')
-                if picking_ids:
-                    if all(picking.state == 'done' for picking in picking_ids):
-                        shipment_status = 'Shipped'
-                    elif all(picking.state != 'done' for picking in picking_ids):
-                        shipment_status = 'Not Shipped'
+                    if inv['invoice_date'] != 'N/A':
+                        write_center(sheet, row + i, 10, inv['invoice_date'], date_fmt)
                     else:
-                        shipment_status = 'Partially Shipped'
-                else:
-                    shipment_status = 'Nothing to Ship'
+                        write_center(sheet, row + i, 10, inv['invoice_date'], row_fmt)
 
-                line_start_row = row
-                invoice_count = len(invoice_data)
-
-                for i, inv in enumerate(invoice_data):
-                    if row == order_start_row:
-                        write_center(sheet, row, 0, current_si_no, center_format)
-                        write_center(sheet, row, 1, full_name)
-                        write_center(sheet, row, 2, account_name)
-                        write_center(sheet, row, 6, order.name)
-                        write_center(sheet, row, 7, order.date_order, date_format)
-                        write_center(sheet, row, 22, order.note or '-')
-                    else:
-                        write_center(sheet, row, 0, '', center_format)
-                        write_center(sheet, row, 1, '')
-                        write_center(sheet, row, 2, '')
-                        write_center(sheet, row, 6, '')
-                        write_center(sheet, row, 7, '')
-                        write_center(sheet, row, 22, '')
-
-                    if i == 0:
-                        write_center(sheet, row, 3, line.product_id.name)
-                        write_center(sheet, row, 4, line.e_description or "-")
-                        write_center(sheet, row, 5, total_line_qty, center_format)
-                    else:
-                        write_center(sheet, row, 3, '')
-                        write_center(sheet, row, 4, '')
-                        write_center(sheet, row, 5, '')
-
-                    write_center(sheet, row, 8, inv['buyer_order_no'])
-                    write_center(sheet, row, 9, inv['invoice_no'])
-
-                    if inv['invoice_date'] != '-':
-                        write_center(sheet, row, 10, inv['invoice_date'], date_format)
-                    else:
-                        write_center(sheet, row, 10, inv['invoice_date'])
-
-                    write_center(sheet, row, 11, inv['invoice_value'], order_currency_format)
-                    write_center(sheet, row, 12, inv['payment_terms'])
-                    write_center(sheet, row, 13, inv['payment_status'])
-                    write_center(sheet, row, 14, inv['advance_payment'])
-                    write_center(sheet, row, 15, inv['advance_amount'], order_currency_format)
+                    write_center(sheet, row + i, 11, inv['invoice_value'], order_currency_format)
+                    write_center(sheet, row + i, 12, inv['payment_terms'], row_fmt)
+                    write_center(sheet, row + i, 13, inv['payment_status'], row_fmt)
+                    write_center(sheet, row + i, 14, inv['advance_payment'], row_fmt)
+                    write_center(sheet, row + i, 15, inv['advance_amount'], order_currency_format)
 
                     if isinstance(inv['advance_date'], date) or (
-                            isinstance(inv['advance_date'], str) and inv['advance_date'] != '-'):
-                        write_center(sheet, row, 16, inv['advance_date'], date_format)
+                            isinstance(inv['advance_date'], str) and inv['advance_date'] != 'N/A'):
+                        write_center(sheet, row + i, 16, inv['advance_date'], date_fmt)
                     else:
-                        write_center(sheet, row, 16, inv['advance_date'])
+                        write_center(sheet, row + i, 16, inv['advance_date'], row_fmt)
 
-                    write_center(sheet, row, 17, inv['balance_payment'], order_currency_format)
+                    write_center(sheet, row + i, 17, inv['balance_payment'], order_currency_format)
 
                     if isinstance(inv['balance_date'], date) or (
-                            isinstance(inv['balance_date'], str) and inv['balance_date'] != '-'):
-                        write_center(sheet, row, 18, inv['balance_date'], date_format)
+                            isinstance(inv['balance_date'], str) and inv['balance_date'] != 'N/A'):
+                        write_center(sheet, row + i, 18, inv['balance_date'], date_fmt)
                     else:
-                        write_center(sheet, row, 18, inv['balance_date'])
+                        write_center(sheet, row + i, 18, inv['balance_date'], row_fmt)
 
-                    write_center(sheet, row, 19, inv['payment_due'], None, inv['is_overdue'])
-
-                    if inv['payment_due_date'] != '-':
-                        write_center(sheet, row, 20, inv['payment_due_date'], date_format)
+                    if inv['is_overdue']:
+                        write_center(sheet, row + i, 19, inv['payment_due'], red_fmt)
                     else:
-                        write_center(sheet, row, 20, inv['payment_due_date'])
+                        write_center(sheet, row + i, 19, inv['payment_due'], row_fmt)
 
-                    write_center(sheet, row, 21, shipment_status)
+                    if inv['payment_due_date'] != 'N/A':
+                        write_center(sheet, row + i, 20, inv['payment_due_date'], date_fmt)
+                    else:
+                        write_center(sheet, row + i, 20, inv['payment_due_date'], row_fmt)
+
+                    write_center(sheet, row + i, 21, shipment_status, row_fmt)
 
                     grand_total_value += inv['invoice_value']
-                    row += 1
 
-                line_end_row = row - 1
-                if line_end_row > line_start_row:
-                    safe_merge(sheet, line_start_row, 3, line_end_row, 3, line.product_id.name, merge_format)
-                    safe_merge(sheet, line_start_row, 4, line_end_row, 4, line.e_description or "-", merge_format)
-                    safe_merge(sheet, line_start_row, 5, line_end_row, 5, total_line_qty, merge_format)
+            for i in range(len(invoice_data), max_rows_per_order):
+                for col in range(8, 22):
+                    write_center(sheet, row + i, col, '', row_fmt)
 
-            order_end_row = row - 1
+            for i in range(max(invoice_count, product_count), max_rows_per_order):
+                for col in range(3, 22):
+                    if col not in [0, 1, 2, 6, 7, 22]:
+                        write_center(sheet, row + i, col, '', row_fmt)
+
+            order_end_row = row + max_rows_per_order - 1
             if order_end_row > order_start_row:
-                safe_merge(sheet, order_start_row, 0, order_end_row, 0, current_si_no, merge_format)
-                safe_merge(sheet, order_start_row, 1, order_end_row, 1, full_name, merge_format)
-                safe_merge(sheet, order_start_row, 2, order_end_row, 2, account_name, merge_format)
-                safe_merge(sheet, order_start_row, 6, order_end_row, 6, order.name, merge_format)
+                safe_merge(sheet, order_start_row, 0, order_end_row, 0, current_si_no, row_fmt)
+                safe_merge(sheet, order_start_row, 1, order_end_row, 1, full_name, row_fmt)
+                safe_merge(sheet, order_start_row, 2, order_end_row, 2, account_name, row_fmt)
+                safe_merge(sheet, order_start_row, 6, order_end_row, 6, order.name, row_fmt)
 
                 if order.date_order:
-                    safe_merge(sheet, order_start_row, 7, order_end_row, 7, order.date_order, merge_date_format)
+                    safe_merge(sheet, order_start_row, 7, order_end_row, 7, order.date_order, date_fmt)
                 else:
-                    safe_merge(sheet, order_start_row, 7, order_end_row, 7, '', merge_format)
+                    safe_merge(sheet, order_start_row, 7, order_end_row, 7, '', row_fmt)
 
-                safe_merge(sheet, order_start_row, 22, order_end_row, 22, order.note or '-', merge_format)
+                safe_merge(sheet, order_start_row, 22, order_end_row, 22, 'N/A', row_fmt)
 
-            grand_total_qty += sum(line_data.get('total_qty', 0) for line_data in line_invoice_data.values())
+            row += max_rows_per_order
             si_no += 1
 
         company_currency = self.env.company.currency_id
@@ -488,7 +562,8 @@ class EramSaleOrderReport(models.TransientModel):
             'valign': 'vcenter',
             'border': 1,
             'bg_color': light_green,
-            'text_wrap': True
+            'text_wrap': True,
+            'font_size': 14
         })
 
         write_center(sheet, row, 0, 'Grand Total', company_total_qty_format)
