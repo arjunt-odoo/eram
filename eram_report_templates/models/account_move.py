@@ -55,9 +55,10 @@ class AccountMove(models.Model):
             ('invoice_date_due', '<', today),
             ('state', '=', 'posted'),
             ('move_type','=', 'out_invoice'),
-            ('invoice_date_due', '!=', False)
+            ('invoice_date_due', '!=', False),
+            ('amount_residual', '>', 0)
         ])
-
+        overdue_invoices = overdue_invoices.filtered(lambda i: i.status_in_payment != 'paid')
         if overdue_invoices:
             overdue_invoices._send_due_date_alert_notification()
 
