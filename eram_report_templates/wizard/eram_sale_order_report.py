@@ -167,7 +167,6 @@ class EramSaleOrderReport(models.TransientModel):
             if value is not None:
                 col_widths[col] = max(col_widths[col], len(str(value)) + 2)
 
-        # Track merged ranges to avoid overlaps
         merged_ranges = set()
 
         def safe_merge(sheet, first_row, first_col, last_row, last_col, data, cell_format=None):
@@ -177,13 +176,11 @@ class EramSaleOrderReport(models.TransientModel):
                 return
 
             if first_row == last_row and first_col == last_col:
-                # Single cell, no need to merge
                 if cell_format:
                     sheet.write(first_row, first_col, data, cell_format)
                 else:
                     sheet.write(first_row, first_col, data)
             else:
-                # Multi-cell merge
                 if cell_format:
                     sheet.merge_range(first_row, first_col, last_row, last_col, data, cell_format)
                 else:
@@ -196,10 +193,7 @@ class EramSaleOrderReport(models.TransientModel):
             partner = order.partner_invoice_id or order.partner_id
             full_name = partner.name
             account_name = order.partner_id.name
-            order_line_quantities = {}
             current_si_no = si_no
-
-            # First pass: collect all invoice data for each line and count total rows for this order
             line_invoice_data = {}
             total_order_rows = 0
 
@@ -208,14 +202,17 @@ class EramSaleOrderReport(models.TransientModel):
                     ('sale_line_ids', 'in', line.ids),
                     ('parent_state', '!=', 'cancel')
                 ])
-                order_line_quantities[line.id] = line.product_uom_qty
 
                 invoices = invoice_lines.mapped('move_id')
-                line_invoice_data[line.id] = []
+                line_invoice_data[line.id] = {
+                    'line_data': line,
+                    'invoices': [],
+                    'total_qty': 0
+                }
                 invoice_count = 0
 
                 if not invoices:
-                    line_invoice_data[line.id].append({
+                    line_invoice_data[line.id]['invoices'].append({
                         'invoice_no': '-',
                         'invoice_date': '-',
                         'invoice_value': line.price_total,
@@ -229,11 +226,16 @@ class EramSaleOrderReport(models.TransientModel):
                         'payment_due_date': '-',
                         'buyer_order_no': '-',
                         'is_overdue': False,
-                        'payment_terms': '-'
+                        'payment_terms': '-',
+                        'qty': line.product_uom_qty
                     })
+                    line_invoice_data[line.id]['total_qty'] = line.product_uom_qty
                     invoice_count = 1
                 else:
                     for invoice in invoices:
+                        invoice_line = invoice_lines.filtered(lambda l: l.move_id.id == invoice.id)
+                        invoice_qty = sum(invoice_line.mapped('quantity'))
+
                         invoice_amount = invoice.amount_total
                         amount_residual = invoice.amount_residual
 
@@ -287,8 +289,9 @@ class EramSaleOrderReport(models.TransientModel):
                                 payment_due_display = '-'
 
                         buyer_order_no = invoice.e_buyer_order_no or '-'
+                        payment_terms = invoice.invoice_payment_term_id.name or '-'
 
-                        line_invoice_data[line.id].append({
+                        line_invoice_data[line.id]['invoices'].append({
                             'invoice_no': invoice.name or '-',
                             'invoice_date': invoice.invoice_date or '-',
                             'invoice_value': invoice_amount,
@@ -302,15 +305,18 @@ class EramSaleOrderReport(models.TransientModel):
                             'payment_due_date': invoice.invoice_date_due or '-',
                             'buyer_order_no': buyer_order_no,
                             'is_overdue': is_overdue,
-                            'payment_terms': invoice.invoice_payment_term_id.name
+                            'payment_terms': payment_terms,
+                            'qty': invoice_qty
                         })
+                        line_invoice_data[line.id]['total_qty'] += invoice_qty
                         invoice_count += 1
 
                 total_order_rows += invoice_count if invoice_count > 0 else 1
 
-            # Second pass: write data to spreadsheet
             for line in order.order_line:
-                invoice_data = line_invoice_data.get(line.id, [])
+                line_data = line_invoice_data.get(line.id, {})
+                invoice_data = line_data.get('invoices', [])
+                total_line_qty = line_data.get('total_qty', 0)
 
                 picking_ids = line.move_ids.picking_id.filtered(lambda p: p.state != 'cancel')
                 if picking_ids:
@@ -324,32 +330,33 @@ class EramSaleOrderReport(models.TransientModel):
                     shipment_status = 'Nothing to Ship'
 
                 line_start_row = row
+                invoice_count = len(invoice_data)
 
                 for i, inv in enumerate(invoice_data):
-                    # For the first row of each order, write the order-level data
                     if row == order_start_row:
                         write_center(sheet, row, 0, current_si_no, center_format)
                         write_center(sheet, row, 1, full_name)
                         write_center(sheet, row, 2, account_name)
                         write_center(sheet, row, 6, order.name)
                         write_center(sheet, row, 7, order.date_order, date_format)
-                        write_center(sheet, row, 12, order.payment_term_id.name or '-')
                         write_center(sheet, row, 22, order.note or '-')
                     else:
-                        # For subsequent rows of the same order, leave these cells empty
                         write_center(sheet, row, 0, '', center_format)
                         write_center(sheet, row, 1, '')
                         write_center(sheet, row, 2, '')
                         write_center(sheet, row, 6, '')
                         write_center(sheet, row, 7, '')
-                        write_center(sheet, row, 12, '')
                         write_center(sheet, row, 22, '')
 
-                    # Write line-specific data for all rows
-                    write_center(sheet, row, 3, line.product_id.name)
-                    write_center(sheet, row, 4, line.e_description or "-")
-                    line_quantity = order_line_quantities.get(line.id, line.product_uom_qty)
-                    write_center(sheet, row, 5, line_quantity, center_format)
+                    if i == 0:
+                        write_center(sheet, row, 3, line.product_id.name)
+                        write_center(sheet, row, 4, line.e_description or "-")
+                        write_center(sheet, row, 5, total_line_qty, center_format)
+                    else:
+                        write_center(sheet, row, 3, '')
+                        write_center(sheet, row, 4, '')
+                        write_center(sheet, row, 5, '')
+
                     write_center(sheet, row, 8, inv['buyer_order_no'])
                     write_center(sheet, row, 9, inv['invoice_no'])
 
@@ -359,6 +366,7 @@ class EramSaleOrderReport(models.TransientModel):
                         write_center(sheet, row, 10, inv['invoice_date'])
 
                     write_center(sheet, row, 11, inv['invoice_value'], currency_format)
+                    write_center(sheet, row, 12, inv['payment_terms'])  # Payment terms from invoice
                     write_center(sheet, row, 13, inv['payment_status'])
                     write_center(sheet, row, 14, inv['advance_payment'])
                     write_center(sheet, row, 15, inv['advance_amount'], currency_format)
@@ -389,9 +397,13 @@ class EramSaleOrderReport(models.TransientModel):
                     grand_total_value += inv['invoice_value']
                     row += 1
 
-            order_end_row = row - 1
+                line_end_row = row - 1
+                if line_end_row > line_start_row:
+                    safe_merge(sheet, line_start_row, 3, line_end_row, 3, line.product_id.name, merge_format)
+                    safe_merge(sheet, line_start_row, 4, line_end_row, 4, line.e_description or "-", merge_format)
+                    safe_merge(sheet, line_start_row, 5, line_end_row, 5, total_line_qty, merge_format)
 
-            # Merge order-level data across all rows of this order
+            order_end_row = row - 1
             if order_end_row > order_start_row:
                 safe_merge(sheet, order_start_row, 0, order_end_row, 0, current_si_no, merge_format)
                 safe_merge(sheet, order_start_row, 1, order_end_row, 1, full_name, merge_format)
@@ -403,11 +415,9 @@ class EramSaleOrderReport(models.TransientModel):
                 else:
                     safe_merge(sheet, order_start_row, 7, order_end_row, 7, '', merge_format)
 
-                safe_merge(sheet, order_start_row, 12, order_end_row, 12, order.payment_term_id.name or '-',
-                           merge_format)
                 safe_merge(sheet, order_start_row, 22, order_end_row, 22, order.note or '-', merge_format)
 
-            grand_total_qty += sum(order_line_quantities.values())
+            grand_total_qty += sum(line_data.get('total_qty', 0) for line_data in line_invoice_data.values())
             si_no += 1
 
         total_format = workbook.add_format({
