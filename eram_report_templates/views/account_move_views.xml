@@ -79,8 +79,12 @@
                 </group>
             </xpath>
             <field name="name" position="attributes">
+                <attribute name="invisible">0</attribute>
                 <attribute name="readonly">state == 'posted'</attribute>
             </field>
+            <xpath expr="//div[hasclass('oe_title')]//h1//span" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
         </field>
     </record>
 </odoo>
