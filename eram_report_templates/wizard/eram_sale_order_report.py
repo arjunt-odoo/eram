@@ -72,11 +72,23 @@ class EramSaleOrderReport(models.TransientModel):
             'bg_color': light_green,
             'text_wrap': True
         })
-        date_format = workbook.add_format(
-            {'num_format': 'dd-mm-yyyy', 'align': 'center', 'text_wrap': True})
-        currency_format = workbook.add_format(
-            {'num_format': '#,##0.00', 'align': 'center', 'text_wrap': True})
-        center_format = workbook.add_format({'align': 'center', 'text_wrap': True})
+        date_format = workbook.add_format({
+            'num_format': 'dd-mm-yyyy',
+            'align': 'center',
+            'valign': 'vcenter',
+            'text_wrap': True
+        })
+        base_currency_format = workbook.add_format({
+            'num_format': '#,##0.00',
+            'align': 'center',
+            'valign': 'vcenter',
+            'text_wrap': True
+        })
+        center_format = workbook.add_format({
+            'align': 'center',
+            'valign': 'vcenter',
+            'text_wrap': True
+        })
         merge_format = workbook.add_format({
             'align': 'center',
             'valign': 'vcenter',
@@ -97,6 +109,23 @@ class EramSaleOrderReport(models.TransientModel):
         row_format = workbook.add_format({
             'align': 'center',
             'valign': 'vcenter',
+            'text_wrap': True
+        })
+        base_total_format = workbook.add_format({
+            'bold': True,
+            'align': 'center',
+            'valign': 'vcenter',
+            'border': 1,
+            'bg_color': light_green,
+            'text_wrap': True,
+            'num_format': '#,##0.00'
+        })
+        total_qty_format = workbook.add_format({
+            'bold': True,
+            'align': 'center',
+            'valign': 'vcenter',
+            'border': 1,
+            'bg_color': light_green,
             'text_wrap': True
         })
 
@@ -168,6 +197,32 @@ class EramSaleOrderReport(models.TransientModel):
             if value is not None:
                 col_widths[col] = max(col_widths[col], len(str(value)) + 2)
 
+        def get_currency_format(workbook, currency, is_total=False):
+            """Create currency format based on currency position"""
+            symbol = currency.symbol
+            position = currency.position
+
+            if position == 'after':
+                num_format = f'#,##0.00 "{symbol}"'
+            else:  # position == 'before'
+                num_format = f'"{symbol}" #,##0.00'
+
+            format_props = {
+                'num_format': num_format,
+                'align': 'center',
+                'valign': 'vcenter',
+                'text_wrap': True
+            }
+
+            if is_total:
+                format_props.update({
+                    'bold': True,
+                    'border': 1,
+                    'bg_color': light_green
+                })
+
+            return workbook.add_format(format_props)
+
         merged_ranges = set()
 
         def safe_merge(sheet, first_row, first_col, last_row, last_col, data, cell_format=None):
@@ -197,6 +252,10 @@ class EramSaleOrderReport(models.TransientModel):
             current_si_no = si_no
             line_invoice_data = {}
             total_order_rows = 0
+
+            order_currency = order.currency_id
+            order_currency_format = get_currency_format(workbook, order_currency)
+            order_total_format = get_currency_format(workbook, order_currency, is_total=True)
 
             for line in order.order_line:
                 invoice_lines = self.env['account.move.line'].search([
@@ -366,11 +425,11 @@ class EramSaleOrderReport(models.TransientModel):
                     else:
                         write_center(sheet, row, 10, inv['invoice_date'])
 
-                    write_center(sheet, row, 11, inv['invoice_value'], currency_format)
-                    write_center(sheet, row, 12, inv['payment_terms'])  # Payment terms from invoice
+                    write_center(sheet, row, 11, inv['invoice_value'], order_currency_format)
+                    write_center(sheet, row, 12, inv['payment_terms'])
                     write_center(sheet, row, 13, inv['payment_status'])
                     write_center(sheet, row, 14, inv['advance_payment'])
-                    write_center(sheet, row, 15, inv['advance_amount'], currency_format)
+                    write_center(sheet, row, 15, inv['advance_amount'], order_currency_format)
 
                     if isinstance(inv['advance_date'], date) or (
                             isinstance(inv['advance_date'], str) and inv['advance_date'] != '-'):
@@ -378,7 +437,7 @@ class EramSaleOrderReport(models.TransientModel):
                     else:
                         write_center(sheet, row, 16, inv['advance_date'])
 
-                    write_center(sheet, row, 17, inv['balance_payment'], currency_format)
+                    write_center(sheet, row, 17, inv['balance_payment'], order_currency_format)
 
                     if isinstance(inv['balance_date'], date) or (
                             isinstance(inv['balance_date'], str) and inv['balance_date'] != '-'):
@@ -421,7 +480,9 @@ class EramSaleOrderReport(models.TransientModel):
             grand_total_qty += sum(line_data.get('total_qty', 0) for line_data in line_invoice_data.values())
             si_no += 1
 
-        total_format = workbook.add_format({
+        company_currency = self.env.company.currency_id
+        company_currency_format = get_currency_format(workbook, company_currency, is_total=True)
+        company_total_qty_format = workbook.add_format({
             'bold': True,
             'align': 'center',
             'valign': 'vcenter',
@@ -430,9 +491,15 @@ class EramSaleOrderReport(models.TransientModel):
             'text_wrap': True
         })
 
-        write_center(sheet, row, 0, 'Grand Total', total_format)
-        sheet.write(row, 5, grand_total_qty, total_format)
-        sheet.write(row, 11, grand_total_value, total_format)
+        write_center(sheet, row, 0, 'Grand Total', company_total_qty_format)
+        for col in range(1, 5):
+            write_center(sheet, row, col, '', company_total_qty_format)
+        write_center(sheet, row, 5, grand_total_qty, company_total_qty_format)
+        for col in range(6, 11):
+            write_center(sheet, row, col, '', company_total_qty_format)
+        write_center(sheet, row, 11, grand_total_value, company_currency_format)
+        for col in range(12, 23):
+            write_center(sheet, row, col, '', company_total_qty_format)
 
         for col, width in enumerate(col_widths):
             sheet.set_column(col, col, min(width, 50))
