@@ -46,6 +46,9 @@ class AccountMove(models.Model):
 
         return res
 
+    def _onchange_name_warning(self):
+        pass
+
     def eram_alert_invoice_overdue(self):
         today = date.today()
         overdue_invoices = self.search([

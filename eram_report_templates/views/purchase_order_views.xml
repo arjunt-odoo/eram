@@ -91,6 +91,9 @@
             <xpath expr="//notebook/page[@name='purchase_delivery_invoice']//field[@name='payment_term_id']" position="after">
                 <field name="purchase_cash_rounding_id"/>
             </xpath>
+            <field name="name" position="attributes">
+                <attribute name="readonly">state == 'purchase'</attribute>
+            </field>
         </field>
     </record>
 </odoo>

@@ -54,6 +54,9 @@
                     </group>
                 </group>
             </field>
+            <field name="name" position="attributes">
+                <attribute name="readonly">state == 'sale'</attribute>
+            </field>
         </field>
     </record>
     <record id="view_order_quote_list_inherit_eram" model="ir.ui.view">

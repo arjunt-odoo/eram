@@ -78,6 +78,9 @@
                     <field name="e_amount_total_words"/>
                 </group>
             </xpath>
+            <field name="name" position="attributes">
+                <attribute name="readonly">state == 'posted'</attribute>
+            </field>
         </field>
     </record>
 </odoo>
