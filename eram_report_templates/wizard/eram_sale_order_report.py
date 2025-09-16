@@ -136,7 +136,8 @@ class EramSaleOrderReport(models.TransientModel):
             })
 
         report_date = fields.Date.context_today(self)
-        sheet.merge_range('A2:W2', f'SALES ORDER REPORT-{report_date}', heading_format)
+        formatted_date = report_date.strftime('%d-%m-%Y') if report_date else ''
+        sheet.merge_range('A2:W2', f'SALES ORDER REPORT-{formatted_date}', heading_format)
 
         sheet.set_row(1, 45)
 
