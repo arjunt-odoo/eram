@@ -32,27 +32,28 @@ class EramSaleOrderReport(models.TransientModel):
                 domain.append(('date_order', '>=', self.from_date))
             elif not self.from_date and self.to_date:
                 domain.append(('date_order', '<=', self.to_date))
-
-            sale_domain = domain + [('state', '=', 'sale')]
-            sale_records = self.env['sale.order'].search_read(sale_domain, ['id'])
-
-            draft_domain = domain + [('state', '=', 'draft')]
-            draft_records = self.env['sale.order'].search_read(draft_domain, ['id'])
-
-            records = sale_records + draft_records
+            records = self.env['sale.order'].search_read(domain, ['id', 'state'])
             record_ids = [item.get('id', False) for item in records if item]
 
+            sale_orders = []
+            other_orders = []
+            for item in records:
+                if item.get('state') == 'sale':
+                    sale_orders.append(item.get('id'))
+                else:
+                    other_orders.append(item.get('id'))
+
+            sorted_record_ids = sale_orders + other_orders
             data = {
-                'orders': record_ids
+                'orders': sorted_record_ids
             }
             return {
                 'type': 'ir.actions.report',
-                'data': {
-                    'model': 'eram.sale.order.report',
-                    'options': json.dumps(data, default=json_default),
-                    'output_format': 'xlsx',
-                    'report_name': 'Sales Excel Report',
-                },
+                'data': {'model': 'eram.sale.order.report',
+                         'options': json.dumps(data, default=json_default),
+                         'output_format': 'xlsx',
+                         'report_name': 'Sales Excel Report',
+                         },
                 'report_type': 'xlsx',
             }
 
@@ -210,7 +211,8 @@ class EramSaleOrderReport(models.TransientModel):
             'border': 1
         })
 
-        col_widths = [8] + [15] * 22
+        # Increase column widths for better number display
+        col_widths = [8, 20, 20, 20, 25, 12, 15, 15, 20, 15, 15, 18, 20, 20, 25, 20, 20, 18, 20, 18, 18, 18, 20]
 
         module_path = os.path.dirname(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -286,8 +288,6 @@ class EramSaleOrderReport(models.TransientModel):
                         format = odd_red_format
 
             sheet.write(row, col, value, format)
-            if value is not None:
-                col_widths[col] = max(col_widths[col], len(str(value)) + 2)
 
         def get_currency_format(workbook, currency, is_total=False, is_even=False):
             symbol = currency.symbol
@@ -381,14 +381,10 @@ class EramSaleOrderReport(models.TransientModel):
             product_distribution = []
             invoice_distribution = []
 
-            if product_count > 0 or invoice_count > 0:
-                if invoice_count == 1:
-                    # Special handling for single invoice
-                    product_distribution = [1] * product_count if product_count > 0 else [1]
-                    invoice_distribution = [max_rows_per_order]
-                elif product_count >= invoice_count and invoice_count > 0:
-                    base_rows_per_invoice = max(product_count // invoice_count, 1)
-                    extra_rows = product_count % invoice_count if product_count >= invoice_count else 0
+            if product_count > 0 and invoice_count > 0:
+                if product_count >= invoice_count:
+                    base_rows_per_invoice = product_count // invoice_count
+                    extra_rows = product_count % invoice_count
 
                     for i in range(invoice_count):
                         rows_for_this_invoice = base_rows_per_invoice
@@ -397,9 +393,10 @@ class EramSaleOrderReport(models.TransientModel):
                         invoice_distribution.append(rows_for_this_invoice)
 
                     product_distribution = [1] * product_count
+
                 else:
-                    base_rows_per_product = max(invoice_count // product_count, 1) if product_count > 0 else 1
-                    extra_rows = invoice_count % product_count if product_count > 0 else 0
+                    base_rows_per_product = invoice_count // product_count
+                    extra_rows = invoice_count % product_count
 
                     for i in range(product_count):
                         rows_for_this_product = base_rows_per_product
@@ -407,7 +404,10 @@ class EramSaleOrderReport(models.TransientModel):
                             rows_for_this_product += 1
                         product_distribution.append(rows_for_this_product)
 
-                    invoice_distribution = [1] * invoice_count if invoice_count > 0 else []
+                    invoice_distribution = [1] * invoice_count
+            else:
+                product_distribution = [1] * product_count if product_count > 0 else []
+                invoice_distribution = [1] * invoice_count if invoice_count > 0 else []
 
             invoice_data = []
             for invoice in order_invoices:
@@ -544,7 +544,7 @@ class EramSaleOrderReport(models.TransientModel):
             current_row = 0
             if invoice_count > 0:
                 for invoice_idx, inv in enumerate(invoice_data):
-                    rows_for_this_invoice = invoice_distribution[invoice_idx] if invoice_distribution else max_rows_per_order
+                    rows_for_this_invoice = invoice_distribution[invoice_idx] if invoice_distribution else 1
 
                     for i in range(rows_for_this_invoice):
                         if current_row + i < max_rows_per_order:
@@ -677,10 +677,10 @@ class EramSaleOrderReport(models.TransientModel):
             write_center(sheet, row, col, '', company_total_qty_format)
 
         for col, width in enumerate(col_widths):
-            sheet.set_column(col, col, min(width, 50))
+            sheet.set_column(col, col, width)
 
         if os.path.exists(footer_path):
-            total_width_pixels = sum([min(w, 50) * 8.1 for w in col_widths])
+            total_width_pixels = sum([w * 8.1 for w in col_widths])
 
             with Image.open(footer_path) as img:
                 footer_width, footer_height = img.size
