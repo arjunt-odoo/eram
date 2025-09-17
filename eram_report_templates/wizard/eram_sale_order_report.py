@@ -355,10 +355,7 @@ class EramSaleOrderReport(models.TransientModel):
 
             is_even_order = (order_idx % 2 == 0)
 
-            order_invoices = self.env['account.move'].search([
-                ('invoice_origin', '=', order.name),
-                ('state', '!=', 'cancel')
-            ])
+            order_invoices = order.invoice_ids.filtered(lambda i: i.state == 'posted')
 
             order_lines = order.order_line
 
