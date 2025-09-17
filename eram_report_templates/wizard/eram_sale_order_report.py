@@ -373,10 +373,14 @@ class EramSaleOrderReport(models.TransientModel):
             product_distribution = []
             invoice_distribution = []
 
-            if product_count > 0 and invoice_count > 0:
-                if product_count >= invoice_count:
-                    base_rows_per_invoice = product_count // invoice_count
-                    extra_rows = product_count % invoice_count
+            if product_count > 0 or invoice_count > 0:
+                if invoice_count == 1:
+                    # Special handling for single invoice
+                    product_distribution = [1] * product_count if product_count > 0 else [1]
+                    invoice_distribution = [max_rows_per_order]
+                elif product_count >= invoice_count and invoice_count > 0:
+                    base_rows_per_invoice = max(product_count // invoice_count, 1)
+                    extra_rows = product_count % invoice_count if product_count >= invoice_count else 0
 
                     for i in range(invoice_count):
                         rows_for_this_invoice = base_rows_per_invoice
@@ -385,10 +389,9 @@ class EramSaleOrderReport(models.TransientModel):
                         invoice_distribution.append(rows_for_this_invoice)
 
                     product_distribution = [1] * product_count
-
                 else:
-                    base_rows_per_product = invoice_count // product_count
-                    extra_rows = invoice_count % product_count
+                    base_rows_per_product = max(invoice_count // product_count, 1) if product_count > 0 else 1
+                    extra_rows = invoice_count % product_count if product_count > 0 else 0
 
                     for i in range(product_count):
                         rows_for_this_product = base_rows_per_product
@@ -396,10 +399,7 @@ class EramSaleOrderReport(models.TransientModel):
                             rows_for_this_product += 1
                         product_distribution.append(rows_for_this_product)
 
-                    invoice_distribution = [1] * invoice_count
-            else:
-                product_distribution = [1] * product_count if product_count > 0 else []
-                invoice_distribution = [1] * invoice_count if invoice_count > 0 else []
+                    invoice_distribution = [1] * invoice_count if invoice_count > 0 else []
 
             invoice_data = []
             for invoice in order_invoices:
@@ -536,7 +536,7 @@ class EramSaleOrderReport(models.TransientModel):
             current_row = 0
             if invoice_count > 0:
                 for invoice_idx, inv in enumerate(invoice_data):
-                    rows_for_this_invoice = invoice_distribution[invoice_idx] if invoice_distribution else 1
+                    rows_for_this_invoice = invoice_distribution[invoice_idx] if invoice_distribution else max_rows_per_order
 
                     for i in range(rows_for_this_invoice):
                         if current_row + i < max_rows_per_order:
