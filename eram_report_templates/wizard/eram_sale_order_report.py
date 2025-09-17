@@ -32,24 +32,32 @@ class EramSaleOrderReport(models.TransientModel):
                 domain.append(('date_order', '>=', self.from_date))
             elif not self.from_date and self.to_date:
                 domain.append(('date_order', '<=', self.to_date))
-            records = self.env['sale.order'].search_read(domain, ['id'])
+
+            sale_domain = domain + [('state', '=', 'sale')]
+            sale_records = self.env['sale.order'].search_read(sale_domain, ['id'])
+
+            draft_domain = domain + [('state', '=', 'draft')]
+            draft_records = self.env['sale.order'].search_read(draft_domain, ['id'])
+
+            records = sale_records + draft_records
             record_ids = [item.get('id', False) for item in records if item]
+
             data = {
                 'orders': record_ids
             }
             return {
                 'type': 'ir.actions.report',
-                'data': {'model': 'eram.sale.order.report',
-                         'options': json.dumps(data, default=json_default),
-                         'output_format': 'xlsx',
-                         'report_name': 'Sales Excel Report',
-                         },
+                'data': {
+                    'model': 'eram.sale.order.report',
+                    'options': json.dumps(data, default=json_default),
+                    'output_format': 'xlsx',
+                    'report_name': 'Sales Excel Report',
+                },
                 'report_type': 'xlsx',
             }
 
     def get_xlsx_report(self, data, response):
         order_id_list = data.get('orders', [])
-        order_id_list.sort()
         order_ids = self.env['sale.order'].browse(order_id_list)
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
