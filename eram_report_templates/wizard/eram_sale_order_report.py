@@ -411,8 +411,17 @@ class EramSaleOrderReport(models.TransientModel):
                 invoice_amount = invoice.amount_total
                 amount_residual = invoice.amount_residual
 
-                advance_amount = sum(invoice.matched_payment_ids.filtered(
-                    lambda p: p.state in ('in_process', 'paid')).mapped('amount'))
+                matched_payments = invoice.matched_payment_ids.filtered(
+                    lambda p: p.state in ('in_process', 'paid')
+                )
+
+                advance_amount = sum(matched_payments.mapped('amount'))
+
+                if matched_payments:
+                    sorted_payments = matched_payments.sorted(key=lambda p: p.date, reverse=True)
+                    latest_payment_date = sorted_payments[0].date
+                else:
+                    latest_payment_date = None
 
                 days_overdue = 0
                 payment_due_display = 'N/A'
@@ -433,14 +442,14 @@ class EramSaleOrderReport(models.TransientModel):
                 if invoice.payment_state == 'paid':
                     payment_status = 'RECEIVED'
                     advance_payment = 'Received'
-                    advance_date = invoice.invoice_date
+                    advance_date = latest_payment_date or invoice.invoice_date
                     balance_payment = 0.0
-                    balance_date = invoice.invoice_date
+                    balance_date = 'N/A'
                     payment_due_display = 'N/A'
                 elif invoice.payment_state == 'partial':
                     payment_status = 'PARTIALLY RECEIVED'
                     advance_payment = 'Received'
-                    advance_date = invoice.invoice_date
+                    advance_date = latest_payment_date or 'N/A'
                     balance_payment = amount_residual
                     balance_date = invoice.invoice_date_due
                     if days_overdue > 0:
@@ -559,8 +568,7 @@ class EramSaleOrderReport(models.TransientModel):
                             write_center(sheet, row + current_row + i, 14, inv['advance_payment'], row_fmt)
                             write_center(sheet, row + current_row + i, 15, inv['advance_amount'], order_currency_format)
 
-                            if isinstance(inv['advance_date'], date) or (
-                                    isinstance(inv['advance_date'], str) and inv['advance_date'] != 'N/A'):
+                            if inv['advance_date'] and inv['advance_date'] != 'N/A':
                                 write_center(sheet, row + current_row + i, 16, inv['advance_date'], date_fmt)
                             else:
                                 write_center(sheet, row + current_row + i, 16, inv['advance_date'], row_fmt)
@@ -568,13 +576,12 @@ class EramSaleOrderReport(models.TransientModel):
                             write_center(sheet, row + current_row + i, 17, inv['balance_payment'],
                                          order_currency_format)
 
-                            if isinstance(inv['balance_date'], date) or (
-                                    isinstance(inv['balance_date'], str) and inv['balance_date'] != 'N/A'):
+                            if inv['balance_date'] and inv['balance_date'] != 'N/A':
                                 write_center(sheet, row + current_row + i, 18, inv['balance_date'], date_fmt)
                             else:
                                 write_center(sheet, row + current_row + i, 18, inv['balance_date'], row_fmt)
 
-                            if inv['is_overdue']:
+                            if inv['is_overdue'] and inv['payment_due'] != 'N/A':
                                 write_center(sheet, row + current_row + i, 19, inv['payment_due'], red_fmt)
                             else:
                                 write_center(sheet, row + current_row + i, 19, inv['payment_due'], row_fmt)
@@ -606,15 +613,16 @@ class EramSaleOrderReport(models.TransientModel):
                         safe_merge(sheet, row + current_row, 15, row + current_row + rows_for_this_invoice - 1, 15,
                                    inv['advance_amount'], order_currency_format)
                         safe_merge(sheet, row + current_row, 16, row + current_row + rows_for_this_invoice - 1, 16,
-                                   inv['advance_date'], date_fmt if isinstance(inv['advance_date'], date) or (
-                                    isinstance(inv['advance_date'], str) and inv['advance_date'] != 'N/A') else row_fmt)
+                                   inv['advance_date'],
+                                   date_fmt if inv['advance_date'] and inv['advance_date'] != 'N/A' else row_fmt)
                         safe_merge(sheet, row + current_row, 17, row + current_row + rows_for_this_invoice - 1, 17,
                                    inv['balance_payment'], order_currency_format)
                         safe_merge(sheet, row + current_row, 18, row + current_row + rows_for_this_invoice - 1, 18,
-                                   inv['balance_date'], date_fmt if isinstance(inv['balance_date'], date) or (
-                                    isinstance(inv['balance_date'], str) and inv['balance_date'] != 'N/A') else row_fmt)
+                                   inv['balance_date'],
+                                   date_fmt if inv['balance_date'] and inv['balance_date'] != 'N/A' else row_fmt)
                         safe_merge(sheet, row + current_row, 19, row + current_row + rows_for_this_invoice - 1, 19,
-                                   inv['payment_due'], red_fmt if inv['is_overdue'] else row_fmt)
+                                   inv['payment_due'],
+                                   red_fmt if inv['is_overdue'] and inv['payment_due'] != 'N/A' else row_fmt)
                         safe_merge(sheet, row + current_row, 20, row + current_row + rows_for_this_invoice - 1, 20,
                                    inv['payment_due_date'], date_fmt if inv['payment_due_date'] != 'N/A' else row_fmt)
 
