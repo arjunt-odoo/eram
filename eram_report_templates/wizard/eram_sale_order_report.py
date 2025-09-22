@@ -64,7 +64,7 @@ class EramSaleOrderReport(models.TransientModel):
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
         sheet = workbook.add_worksheet()
         light_green = '#daeef3'
-        purple = '#ccc0d9'
+        purple = '#daeef3'
         light_blue = '#D9E1F2'
         light_yellow = '#FFEB9C'
         red = '#FF0000'
@@ -188,7 +188,7 @@ class EramSaleOrderReport(models.TransientModel):
             'align': 'center',
             'valign': 'vcenter',
             'text_wrap': True,
-            # 'bg_color': light_blue,
+            'bg_color': light_blue,
             'border': 1
         })
         odd_row_format = workbook.add_format({
@@ -203,7 +203,7 @@ class EramSaleOrderReport(models.TransientModel):
             'align': 'center',
             'valign': 'vcenter',
             'text_wrap': True,
-            # 'bg_color': light_blue,
+            'bg_color': light_blue,
             'border': 1
         })
         odd_currency_format = workbook.add_format({
@@ -219,7 +219,7 @@ class EramSaleOrderReport(models.TransientModel):
             'align': 'center',
             'valign': 'vcenter',
             'text_wrap': True,
-            # 'bg_color': light_blue,
+            'bg_color': light_blue,
             'border': 1
         })
         odd_date_format = workbook.add_format({
@@ -235,7 +235,7 @@ class EramSaleOrderReport(models.TransientModel):
             'valign': 'vcenter',
             'text_wrap': True,
             'font_color': red,
-            # 'bg_color': light_blue,
+            'bg_color': light_blue,
             'border': 1
         })
         odd_red_format = workbook.add_format({
@@ -245,9 +245,6 @@ class EramSaleOrderReport(models.TransientModel):
             'font_color': red,
             'border': 1
         })
-
-        # Add empty first row
-        sheet.set_row(0, 8)  # Small empty row
 
         module_path = os.path.dirname(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -305,7 +302,7 @@ class EramSaleOrderReport(models.TransientModel):
         for col, header in enumerate(headers, 1):
             sheet.write(4, col, header, header_format)
 
-        row = 4  # Start from row 5 (accounting for empty row and header rows)
+        row = 5  # Start from row 5 (accounting for empty row and header rows)
         grand_total_qty = 0
         grand_total_value = 0
         grand_total_advance = 0
@@ -336,10 +333,10 @@ class EramSaleOrderReport(models.TransientModel):
             else:
                 num_format = f'"{symbol}" #,##0.00'
 
-            # if is_even:
-            #     bg_color = light_blue
-            # else:
-            #     bg_color = None
+            if is_even:
+                bg_color = light_blue
+            else:
+                bg_color = None
 
             format_props = {
                 'num_format': num_format,
@@ -349,8 +346,8 @@ class EramSaleOrderReport(models.TransientModel):
                 'border': 1
             }
 
-            # if bg_color:
-            #     format_props['bg_color'] = bg_color
+            if bg_color:
+                format_props['bg_color'] = bg_color
 
             if is_total:
                 format_props.update({
