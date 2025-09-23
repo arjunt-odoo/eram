@@ -21,10 +21,12 @@ class EramSaleOrderReport(models.TransientModel):
     to_date = fields.Date(string="To Date")
     type = fields.Selection([('xlsx', "XLSX")], string="Report Type",
                             default='xlsx', required=True)
+    state = fields.Selection(selection=[('sale', 'Sale Order'),
+                                        ('draft', 'Quotation')], required=True, default='sale')
 
     def action_print_report(self):
         if self.type == 'xlsx':
-            domain = [('state', '!=', 'cancel')]
+            domain = [('state', '=', self.state)]
             if self.from_date and self.to_date:
                 domain.append(('date_order', '>=', self.from_date))
                 domain.append(('date_order', '<=', self.to_date))
@@ -32,41 +34,32 @@ class EramSaleOrderReport(models.TransientModel):
                 domain.append(('date_order', '>=', self.from_date))
             elif not self.from_date and self.to_date:
                 domain.append(('date_order', '<=', self.to_date))
-            records = self.env['sale.order'].search_read(domain, ['id', 'state'])
+            records = self.env['sale.order'].search_read(domain, ['id'])
             record_ids = [item.get('id', False) for item in records if item]
-
-            sale_orders = []
-            other_orders = []
-            for item in records:
-                if item.get('state') == 'sale':
-                    sale_orders.append(item.get('id'))
-                else:
-                    other_orders.append(item.get('id'))
-
-            sorted_record_ids = sale_orders + other_orders
-
-            # Generate unique document number
             current_datetime = datetime.now()
             doc_no = f"DOC_SALE_REPORT_{current_datetime.strftime('%d_%m_%y_%H_%M')}"
             formatted_datetime = current_datetime.strftime('%d-%m-%Y %H:%M')
 
             data = {
-                'orders': sorted_record_ids,
+                'orders': record_ids,
                 'doc_no': doc_no,
-                'generated_datetime': formatted_datetime
+                'generated_datetime': formatted_datetime,
+                'state': self.state
             }
             return {
                 'type': 'ir.actions.report',
-                'data': {'model': 'eram.sale.order.report',
-                         'options': json.dumps(data, default=json_default),
-                         'output_format': 'xlsx',
-                         'report_name': 'Sales Excel Report',
-                         },
+                'data': {
+                    'model': 'eram.sale.order.report',
+                     'options': json.dumps(data, default=json_default),
+                     'output_format': 'xlsx',
+                     'report_name': 'Sales Excel Report',
+                     },
                 'report_type': 'xlsx',
             }
 
     def get_xlsx_report(self, data, response):
         order_id_list = data.get('orders', [])
+        state = data.get('state', '')
         doc_no = data.get('doc_no', '')
         generated_datetime = data.get('generated_datetime', '')
         order_ids = self.env['sale.order'].browse(order_id_list)
@@ -455,18 +448,18 @@ class EramSaleOrderReport(models.TransientModel):
             order_lines = order.order_line
 
             # Get purchase order details
-            purchase_order = order.e_purchase_order_id
+            purchase_order = order.e_customer_po_id
             po_name = purchase_order.name if purchase_order else 'N/A'
 
             # Format PO date properly
             po_date = 'N/A'
-            if purchase_order and purchase_order.e_ref_date:
-                if isinstance(purchase_order.e_ref_date, str):
-                    po_date = fields.Date.from_string(purchase_order.e_ref_date).strftime('%d-%m-%Y')
+            if purchase_order and purchase_order.date:
+                if isinstance(purchase_order.date, str):
+                    po_date = fields.Date.from_string(purchase_order.date).strftime('%d-%m-%Y')
                 else:
-                    po_date = purchase_order.e_ref_date.strftime('%d-%m-%Y')
+                    po_date = purchase_order.date.strftime('%d-%m-%Y')
 
-            po_value = purchase_order.amount_total if purchase_order else 0.0
+            po_value = purchase_order.amount if purchase_order else 0.0
             po_currency = purchase_order.currency_id if purchase_order else order.currency_id
 
             # Get delivery date from first delivery's scheduled_date
@@ -523,6 +516,9 @@ class EramSaleOrderReport(models.TransientModel):
             current_row = row
             product_row_index = 0
             invoice_row_index = 0
+
+            # Check if invoice columns should be merged (state != 'sale' or no invoices)
+            merge_invoice_columns = order.state != 'sale' or invoice_count == 0
 
             for i in range(max_rows_per_order):
                 # Write common fields (SI No, Customer, Account Name, Quote, PO, Shipment, Delivery, Remarks)
@@ -589,145 +585,163 @@ class EramSaleOrderReport(models.TransientModel):
                         write_center(sheet, current_row + i, 6, '', row_fmt)
                         write_center(sheet, current_row + i, 7, '', row_fmt)
 
-                # Write invoice information for this row or ensure empty cells have background color
-                if invoice_row_index < len(order_invoices):
-                    invoice = order_invoices[invoice_row_index]
-                    row_span = invoice_row_spans[invoice_row_index]
-                    if i < sum(invoice_row_spans[:invoice_row_index + 1]):
-                        invoice_amount = invoice.amount_total
-                        amount_residual = invoice.amount_residual
-                        matched_payments = invoice.matched_payment_ids.filtered(
-                            lambda p: p.state in ('in_process', 'paid')
-                        )
-                        advance_amount = sum(matched_payments.mapped('amount'))
-                        latest_payment_date = matched_payments.sorted(key=lambda p: p.date, reverse=True)[
-                            0].date if matched_payments else None
+                # Write invoice information or merge invoice columns
+                if merge_invoice_columns:
+                    # If state != 'sale' or no invoices, merge invoice columns for this row
+                    for col in range(13, 25):  # Columns M to X
+                        format_to_use = row_fmt
+                        if col in (14, 20, 22, 24):  # Date columns (Invoice Date, Advance Date, Balance Date, Due Date)
+                            format_to_use = date_fmt
+                        elif col in (15, 19, 21):  # Currency columns (Invoice Value, Advance Amount, Balance Payment)
+                            format_to_use = order_currency_format
+                        write_center(sheet, current_row + i, col, '', format_to_use)
+                else:
+                    # Write invoice information for this row
+                    if invoice_row_index < len(order_invoices):
+                        invoice = order_invoices[invoice_row_index]
+                        row_span = invoice_row_spans[invoice_row_index]
+                        if i < sum(invoice_row_spans[:invoice_row_index + 1]):
+                            invoice_amount = invoice.amount_total
+                            amount_residual = invoice.amount_residual
+                            matched_payments = invoice.matched_payment_ids.filtered(
+                                lambda p: p.state in ('in_process', 'paid')
+                            )
+                            advance_amount = sum(matched_payments.mapped('amount'))
+                            latest_payment_date = matched_payments.sorted(key=lambda p: p.date, reverse=True)[
+                                0].date if matched_payments else None
 
-                        days_overdue = 0
-                        payment_due_display = 'N/A'
-                        is_overdue = False
-                        if invoice.invoice_date_due:
-                            today = fields.Date.today()
-                            due_date = fields.Date.from_string(invoice.invoice_date_due)
-                            if today > due_date:
-                                days_overdue = (today - due_date).days
-                                payment_due_display = f"{days_overdue} days overdue"
-                                is_overdue = True
-
-                        if invoice.payment_state == 'paid':
-                            payment_status = 'RECEIVED'
-                            advance_payment = 'Received'
-                            advance_date = latest_payment_date or invoice.invoice_date
-                            balance_payment = 0.0
-                            balance_date = 'N/A'
+                            days_overdue = 0
                             payment_due_display = 'N/A'
-                        elif invoice.payment_state == 'partial':
-                            payment_status = 'PARTIALLY RECEIVED'
-                            advance_payment = 'Received'
-                            advance_date = latest_payment_date or 'N/A'
-                            balance_payment = amount_residual
-                            balance_date = invoice.invoice_date_due
+                            is_overdue = False
+                            if invoice.invoice_date_due:
+                                today = fields.Date.today()
+                                due_date = fields.Date.from_string(invoice.invoice_date_due)
+                                if today > due_date:
+                                    days_overdue = (today - due_date).days
+                                    payment_due_display = f"{days_overdue} days overdue"
+                                    is_overdue = True
+
+                            if invoice.payment_state == 'paid':
+                                payment_status = 'RECEIVED'
+                                advance_payment = 'Received'
+                                advance_date = latest_payment_date or invoice.invoice_date
+                                balance_payment = 0.0
+                                balance_date = 'N/A'
+                                payment_due_display = 'N/A'
+                            elif invoice.payment_state == 'partial':
+                                payment_status = 'PARTIALLY RECEIVED'
+                                advance_payment = 'Received'
+                                advance_date = latest_payment_date or 'N/A'
+                                balance_payment = amount_residual
+                                balance_date = invoice.invoice_date_due
+                            else:
+                                payment_status = 'NOT RECEIVED'
+                                advance_payment = 'Not Received'
+                                advance_date = 'N/A'
+                                balance_payment = amount_residual
+                                balance_date = invoice.invoice_date_due
+
+                            payment_terms = invoice.invoice_payment_term_id.name or 'N/A'
+
+                            # Format invoice dates properly
+                            invoice_date = 'N/A'
+                            if invoice.invoice_date:
+                                if isinstance(invoice.invoice_date, str):
+                                    invoice_date = fields.Date.from_string(invoice.invoice_date).strftime('%d-%m-%Y')
+                                else:
+                                    invoice_date = invoice.invoice_date.strftime('%d-%m-%Y')
+
+                            due_date = 'N/A'
+                            if invoice.invoice_date_due:
+                                if isinstance(invoice.invoice_date_due, str):
+                                    due_date = fields.Date.from_string(invoice.invoice_date_due).strftime('%d-%m-%Y')
+                                else:
+                                    due_date = invoice.invoice_date_due.strftime('%d-%m-%Y')
+
+                            advance_date_formatted = 'N/A'
+                            if advance_date and advance_date != 'N/A':
+                                if isinstance(advance_date, str):
+                                    advance_date_formatted = fields.Date.from_string(advance_date).strftime('%d-%m-%Y')
+                                else:
+                                    advance_date_formatted = advance_date.strftime('%d-%m-%Y')
+
+                            balance_date_formatted = 'N/A'
+                            if balance_date and balance_date != 'N/A':
+                                if isinstance(balance_date, str):
+                                    balance_date_formatted = fields.Date.from_string(balance_date).strftime('%d-%m-%Y')
+                                else:
+                                    balance_date_formatted = balance_date.strftime('%d-%m-%Y')
+
+                            if row_span > 1 and i == sum(invoice_row_spans[:invoice_row_index]):
+                                safe_merge(sheet, current_row + i, 13, current_row + i + row_span - 1, 13,
+                                           invoice.name or 'N/A', row_fmt)
+                                safe_merge(sheet, current_row + i, 14, current_row + i + row_span - 1, 14,
+                                           invoice_date, date_fmt if invoice_date != 'N/A' else row_fmt)
+                                safe_merge(sheet, current_row + i, 15, current_row + i + row_span - 1, 15,
+                                           invoice_amount, order_currency_format)
+                                safe_merge(sheet, current_row + i, 16, current_row + i + row_span - 1, 16,
+                                           payment_terms, row_fmt)
+                                safe_merge(sheet, current_row + i, 17, current_row + i + row_span - 1, 17,
+                                           payment_status, row_fmt)
+                                safe_merge(sheet, current_row + i, 18, current_row + i + row_span - 1, 18,
+                                           advance_payment, row_fmt)
+                                safe_merge(sheet, current_row + i, 19, current_row + i + row_span - 1, 19,
+                                           advance_amount, order_currency_format)
+                                safe_merge(sheet, current_row + i, 20, current_row + i + row_span - 1, 20,
+                                           advance_date_formatted,
+                                           date_fmt if advance_date_formatted != 'N/A' else row_fmt)
+                                safe_merge(sheet, current_row + i, 21, current_row + i + row_span - 1, 21,
+                                           balance_payment, order_currency_format)
+                                safe_merge(sheet, current_row + i, 22, current_row + i + row_span - 1, 22,
+                                           balance_date_formatted,
+                                           date_fmt if balance_date_formatted != 'N/A' else row_fmt)
+                                safe_merge(sheet, current_row + i, 23, current_row + i + row_span - 1, 23,
+                                           payment_due_display,
+                                           red_fmt if is_overdue and payment_due_display != 'N/A' else row_fmt)
+                                safe_merge(sheet, current_row + i, 24, current_row + i + row_span - 1, 24,
+                                           due_date, date_fmt if due_date != 'N/A' else row_fmt)
+                            elif row_span == 1:
+                                write_center(sheet, current_row + i, 13, invoice.name or 'N/A', row_fmt)
+                                write_center(sheet, current_row + i, 14, invoice_date,
+                                             date_fmt if invoice_date != 'N/A' else row_fmt)
+                                write_center(sheet, current_row + i, 15, invoice_amount, order_currency_format)
+                                write_center(sheet, current_row + i, 16, payment_terms, row_fmt)
+                                write_center(sheet, current_row + i, 17, payment_status, row_fmt)
+                                write_center(sheet, current_row + i, 18, advance_payment, row_fmt)
+                                write_center(sheet, current_row + i, 19, advance_amount, order_currency_format)
+                                write_center(sheet, current_row + i, 20, advance_date_formatted,
+                                             date_fmt if advance_date_formatted != 'N/A' else row_fmt)
+                                write_center(sheet, current_row + i, 21, balance_payment, order_currency_format)
+                                write_center(sheet, current_row + i, 22, balance_date_formatted,
+                                             date_fmt if balance_date_formatted != 'N/A' else row_fmt)
+                                write_center(sheet, current_row + i, 23, payment_due_display,
+                                             red_fmt if is_overdue and payment_due_display != 'N/A' else row_fmt)
+                                write_center(sheet, current_row + i, 24, due_date,
+                                             date_fmt if due_date != 'N/A' else row_fmt)
+                            grand_total_value += invoice_amount if i == sum(
+                                invoice_row_spans[:invoice_row_index]) else 0
+                            grand_total_advance += advance_amount if i == sum(
+                                invoice_row_spans[:invoice_row_index]) else 0
+                            grand_total_balance += balance_payment if i == sum(
+                                invoice_row_spans[:invoice_row_index]) else 0
+                            if i == sum(invoice_row_spans[:invoice_row_index + 1]) - 1:
+                                invoice_row_index += 1
                         else:
-                            payment_status = 'NOT RECEIVED'
-                            advance_payment = 'Not Received'
-                            advance_date = 'N/A'
-                            balance_payment = amount_residual
-                            balance_date = invoice.invoice_date_due
-
-                        payment_terms = invoice.invoice_payment_term_id.name or 'N/A'
-
-                        # Format invoice dates properly
-                        invoice_date = 'N/A'
-                        if invoice.invoice_date:
-                            if isinstance(invoice.invoice_date, str):
-                                invoice_date = fields.Date.from_string(invoice.invoice_date).strftime('%d-%m-%Y')
-                            else:
-                                invoice_date = invoice.invoice_date.strftime('%d-%m-%Y')
-
-                        due_date = 'N/A'
-                        if invoice.invoice_date_due:
-                            if isinstance(invoice.invoice_date_due, str):
-                                due_date = fields.Date.from_string(invoice.invoice_date_due).strftime('%d-%m-%Y')
-                            else:
-                                due_date = invoice.invoice_date_due.strftime('%d-%m-%Y')
-
-                        advance_date_formatted = 'N/A'
-                        if advance_date and advance_date != 'N/A':
-                            if isinstance(advance_date, str):
-                                advance_date_formatted = fields.Date.from_string(advance_date).strftime('%d-%m-%Y')
-                            else:
-                                advance_date_formatted = advance_date.strftime('%d-%m-%Y')
-
-                        balance_date_formatted = 'N/A'
-                        if balance_date and balance_date != 'N/A':
-                            if isinstance(balance_date, str):
-                                balance_date_formatted = fields.Date.from_string(balance_date).strftime('%d-%m-%Y')
-                            else:
-                                balance_date_formatted = balance_date.strftime('%d-%m-%Y')
-
-                        if row_span > 1 and i == sum(invoice_row_spans[:invoice_row_index]):
-                            safe_merge(sheet, current_row + i, 13, current_row + i + row_span - 1, 13,
-                                       invoice.name or 'N/A', row_fmt)
-                            safe_merge(sheet, current_row + i, 14, current_row + i + row_span - 1, 14,
-                                       invoice_date, date_fmt if invoice_date != 'N/A' else row_fmt)
-                            safe_merge(sheet, current_row + i, 15, current_row + i + row_span - 1, 15,
-                                       invoice_amount, order_currency_format)
-                            safe_merge(sheet, current_row + i, 16, current_row + i + row_span - 1, 16,
-                                       payment_terms, row_fmt)
-                            safe_merge(sheet, current_row + i, 17, current_row + i + row_span - 1, 17,
-                                       payment_status, row_fmt)
-                            safe_merge(sheet, current_row + i, 18, current_row + i + row_span - 1, 18,
-                                       advance_payment, row_fmt)
-                            safe_merge(sheet, current_row + i, 19, current_row + i + row_span - 1, 19,
-                                       advance_amount, order_currency_format)
-                            safe_merge(sheet, current_row + i, 20, current_row + i + row_span - 1, 20,
-                                       advance_date_formatted, date_fmt if advance_date_formatted != 'N/A' else row_fmt)
-                            safe_merge(sheet, current_row + i, 21, current_row + i + row_span - 1, 21,
-                                       balance_payment, order_currency_format)
-                            safe_merge(sheet, current_row + i, 22, current_row + i + row_span - 1, 22,
-                                       balance_date_formatted, date_fmt if balance_date_formatted != 'N/A' else row_fmt)
-                            safe_merge(sheet, current_row + i, 23, current_row + i + row_span - 1, 23,
-                                       payment_due_display,
-                                       red_fmt if is_overdue and payment_due_display != 'N/A' else row_fmt)
-                            safe_merge(sheet, current_row + i, 24, current_row + i + row_span - 1, 24,
-                                       due_date, date_fmt if due_date != 'N/A' else row_fmt)
-                        elif row_span == 1:
-                            write_center(sheet, current_row + i, 13, invoice.name or 'N/A', row_fmt)
-                            write_center(sheet, current_row + i, 14, invoice_date,
-                                         date_fmt if invoice_date != 'N/A' else row_fmt)
-                            write_center(sheet, current_row + i, 15, invoice_amount, order_currency_format)
-                            write_center(sheet, current_row + i, 16, payment_terms, row_fmt)
-                            write_center(sheet, current_row + i, 17, payment_status, row_fmt)
-                            write_center(sheet, current_row + i, 18, advance_payment, row_fmt)
-                            write_center(sheet, current_row + i, 19, advance_amount, order_currency_format)
-                            write_center(sheet, current_row + i, 20, advance_date_formatted,
-                                         date_fmt if advance_date_formatted != 'N/A' else row_fmt)
-                            write_center(sheet, current_row + i, 21, balance_payment, order_currency_format)
-                            write_center(sheet, current_row + i, 22, balance_date_formatted,
-                                         date_fmt if balance_date_formatted != 'N/A' else row_fmt)
-                            write_center(sheet, current_row + i, 23, payment_due_display,
-                                         red_fmt if is_overdue and payment_due_display != 'N/A' else row_fmt)
-                            write_center(sheet, current_row + i, 24, due_date,
-                                         date_fmt if due_date != 'N/A' else row_fmt)
-                        grand_total_value += invoice_amount if i == sum(invoice_row_spans[:invoice_row_index]) else 0
-                        grand_total_advance += advance_amount if i == sum(invoice_row_spans[:invoice_row_index]) else 0
-                        grand_total_balance += balance_payment if i == sum(invoice_row_spans[:invoice_row_index]) else 0
-                        if i == sum(invoice_row_spans[:invoice_row_index + 1]) - 1:
-                            invoice_row_index += 1
-                    else:
-                        # Write empty invoice columns with appropriate background color
-                        write_center(sheet, current_row + i, 13, '', row_fmt)  # Invoice No
-                        write_center(sheet, current_row + i, 14, '', row_fmt)  # Invoice Date
-                        write_center(sheet, current_row + i, 15, '', row_fmt)  # Invoice Value
-                        write_center(sheet, current_row + i, 16, '', row_fmt)  # Payment Terms
-                        write_center(sheet, current_row + i, 17, '', row_fmt)  # Payment Status
-                        write_center(sheet, current_row + i, 18, '', row_fmt)  # Advance Payment Received/Not Received
-                        write_center(sheet, current_row + i, 19, '', row_fmt)  # Advance Payment Amount
-                        write_center(sheet, current_row + i, 20, '', row_fmt)  # Advance Payment Received Date
-                        write_center(sheet, current_row + i, 21, '', row_fmt)  # Balance Payment
-                        write_center(sheet, current_row + i, 22, '', row_fmt)  # Balance Payment Received Date
-                        write_center(sheet, current_row + i, 23, '', row_fmt)  # Payment Due
-                        write_center(sheet, current_row + i, 24, '', row_fmt)  # Payment Due Date
+                            # Write empty invoice columns with appropriate background color
+                            write_center(sheet, current_row + i, 13, '', row_fmt)  # Invoice No
+                            write_center(sheet, current_row + i, 14, '', date_fmt)  # Invoice Date
+                            write_center(sheet, current_row + i, 15, '', order_currency_format)  # Invoice Value
+                            write_center(sheet, current_row + i, 16, '', row_fmt)  # Payment Terms
+                            write_center(sheet, current_row + i, 17, '', row_fmt)  # Payment Status
+                            write_center(sheet, current_row + i, 18, '',
+                                         row_fmt)  # Advance Payment Received/Not Received
+                            write_center(sheet, current_row + i, 19, '',
+                                         order_currency_format)  # Advance Payment Amount
+                            write_center(sheet, current_row + i, 20, '', date_fmt)  # Advance Payment Received Date
+                            write_center(sheet, current_row + i, 21, '', order_currency_format)  # Balance Payment
+                            write_center(sheet, current_row + i, 22, '', date_fmt)  # Balance Payment Received Date
+                            write_center(sheet, current_row + i, 23, '', row_fmt)  # Payment Due
+                            write_center(sheet, current_row + i, 24, '', date_fmt)  # Payment Due Date
 
             grand_total_po_value += po_value
 
@@ -755,14 +769,14 @@ class EramSaleOrderReport(models.TransientModel):
                 safe_merge(sheet, row, 26, row + max_rows_per_order - 1, 26, delivery_date, row_fmt)
                 safe_merge(sheet, row, 27, row + max_rows_per_order - 1, 27, 'N/A', row_fmt)
 
-                # Merge empty invoice columns if there are no invoices
-                if invoice_count == 0:
+                # Merge invoice columns if state != 'sale' or no invoices
+                if merge_invoice_columns:
                     for col in range(13, 25):  # Columns M to X
                         format_to_use = row_fmt
                         if col in (14, 20, 22, 24):  # Date columns
                             format_to_use = date_fmt
                         elif col in (15, 19, 21):  # Currency columns
-                            format_to_use = currency_fmt
+                            format_to_use = order_currency_format
                         safe_merge(sheet, row, col, row + max_rows_per_order - 1, col, '', format_to_use)
 
             row += max_rows_per_order

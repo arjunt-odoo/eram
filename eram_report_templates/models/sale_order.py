@@ -16,6 +16,7 @@ class SaleOrder(models.Model):
     e_packing_and_forwarding = fields.Char(string="PACKING & FORWARDING")
     e_purchase_order_id = fields.Many2one("purchase.order",
                                           string="Ref#")
+    e_customer_po_id = fields.Many2one("eram.customer.po", string="Ref#")
 
     def _prepare_invoice(self):
         values = super()._prepare_invoice()

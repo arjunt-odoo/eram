@@ -16,7 +16,7 @@
             </xpath>
             <xpath expr="//group[@name='order_details']" position="after">
                 <group>
-                    <field name="e_purchase_order_id" domain="[('state', '=', 'purchase')]"/>
+                    <field name="e_customer_po_id" domain="[('partner_id', '=', partner_id)]"/>
                 </group>
             </xpath>
             <field name="partner_id" position="after">

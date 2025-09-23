@@ -12,6 +12,9 @@
                             <field name="to_date"/>
                             <field name="type"/>
                         </group>
+                        <group>
+                            <field name="state"/>
+                        </group>
                     </group>
                     <footer>
                         <button name="action_print_report" string="Print"
