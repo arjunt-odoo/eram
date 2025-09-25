@@ -627,20 +627,20 @@ class EramSaleOrderReport(models.TransientModel):
                                     is_overdue = True
 
                             if invoice.payment_state == 'paid':
-                                payment_status = 'RECEIVED'
+                                payment_status = 'Received'
                                 advance_payment = 'Received'
                                 advance_date = latest_payment_date or invoice.invoice_date
                                 balance_payment = 0.0
                                 balance_date = 'N/A'
                                 payment_due_display = 'N/A'
                             elif invoice.payment_state == 'partial':
-                                payment_status = 'PARTIALLY RECEIVED'
+                                payment_status = 'Partially Received'
                                 advance_payment = 'Received'
                                 advance_date = latest_payment_date or 'N/A'
                                 balance_payment = amount_residual
                                 balance_date = invoice.invoice_date_due
                             else:
-                                payment_status = 'NOT RECEIVED'
+                                payment_status = 'Not Received'
                                 advance_payment = 'Not Received'
                                 advance_date = 'N/A'
                                 balance_payment = amount_residual
