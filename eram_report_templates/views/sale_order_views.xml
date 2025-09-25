@@ -16,16 +16,18 @@
             </xpath>
             <xpath expr="//group[@name='order_details']" position="after">
                 <group>
-                    <field name="e_customer_po_id" domain="[('partner_id', '=', partner_id)]"/>
+                    <field name="e_customer_po_id" readonly="state == 'sale'"
+                           domain="[('partner_id', '=', partner_id)]"/>
                 </group>
             </xpath>
             <field name="partner_id" position="after">
-                <field name="e_revision"/>
-                <field name="e_place"/>
-                <field name="date_order"/>
-                <field name="partner_id" string="Bill To"/>
-                <field name="e_subject"/>
-                <field name="e_attn"/>
+                <field name="e_revision" readonly="state == 'sale'"/>
+                <field name="e_place" readonly="state == 'sale'"/>
+                <field name="date_order" readonly="state == 'sale'"/>
+                <field name="partner_id" readonly="state == 'sale'"
+                       string="Bill To"/>
+                <field name="e_subject" readonly="state == 'sale'"/>
+                <field name="e_attn" readonly="state == 'sale'"/>
             </field>
             <xpath expr="//notebook//list//field[@name='sequence']" position="after">
                 <field name="e_line_index"/>
@@ -43,14 +45,14 @@
             <xpath expr="//field[@name='tax_totals']" position="after">
                 <div class="oe_inline">
                     <label for="amount_total_words">TOTAL QUOTE VALUE:</label>
-                    <field name="amount_total_words"/>
+                    <field name="amount_total_words" readonly="state == 'sale'"/>
                 </div>
             </xpath>
-            <field name="order_line" position="after">
+            <field name="order_line" readonly="state == 'sale'" position="after">
                 <group>
                     <group/>
                     <group>
-                        <field name="e_packing_and_forwarding"/>
+                        <field name="e_packing_and_forwarding" readonly="state == 'sale'"/>
                     </group>
                 </group>
             </field>

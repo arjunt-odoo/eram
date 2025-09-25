@@ -10,6 +10,7 @@
 
     'data': [
         'data/ir_cron_data.xml',
+        'data/ir_sequence.xml',
         'data/mail_template_data.xml',
         'security/ir.model.access.csv',
         'report/external_layout_templates.xml',

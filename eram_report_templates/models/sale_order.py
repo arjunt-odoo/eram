@@ -18,13 +18,23 @@ class SaleOrder(models.Model):
                                           string="Ref#")
     e_customer_po_id = fields.Many2one("eram.customer.po", string="Ref#")
 
+    @api.constrains('partner_id')
+    def _constrains_partner_id(self):
+        if self.partner_id and self.partner_id != self.e_customer_po_id.partner_id:
+            self.e_customer_po_id.write({
+                'partner_id': self.partner_id.id
+            })
+
     def _prepare_invoice(self):
         values = super()._prepare_invoice()
-        values["narration"] = """<span><u>Bank Details</u></span><br/>
-            <span>Bank Name: HDFC Bank Limited</span><br/>
-            <span>Bank A/C No: 50200064073923</span><br/>
-            <span>Bank IFSC: HDFC0000549</span><br/>
-            <span>Branch: Electronic City</span>"""
+        values.update({
+            "narration": """<span><u>Bank Details</u></span><br/>
+                            <span>Bank Name: HDFC Bank Limited</span><br/>
+                            <span>Bank A/C No: 50200064073923</span><br/>
+                            <span>Bank IFSC: HDFC0000549</span><br/>
+                            <span>Branch: Electronic City</span>""",
+            "e_buyer_order_no": self.e_customer_po_id.name
+        })
         return values
 
     def _compute_tax_totals(self):

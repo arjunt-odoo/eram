@@ -14,16 +14,26 @@
             <xpath expr="//notebook" position="before">
                 <group>
                     <group>
-                        <field name="invoice_date" string="Invoice Date" invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
-                        <field name="e_reverse_charge" invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
-                        <field name="l10n_in_state_id" string="State" invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
-                        <field name="currency_id" invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
+                        <field name="invoice_date" string="Invoice Date"
+                               readonly="state == 'posted'"
+                               invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
+                        <field name="e_reverse_charge" readonly="state == 'posted'"
+                               invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
+                        <field name="l10n_in_state_id" string="State"
+                               readonly="state == 'posted'"
+                               invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
+                        <field name="currency_id" readonly="state == 'posted'"
+                               invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
                     </group>
                     <group>
-                        <field name="e_transport_mode" invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
-                        <field name="invoice_payment_term_id" invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
-                        <field name="e_buyer_order_no" invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
-                        <field name="e_shipment_terms" invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
+                        <field name="e_transport_mode" readonly="state == 'posted'"
+                               invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
+                        <field name="invoice_payment_term_id" readonly="state == 'posted'"
+                               invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
+                        <field name="e_buyer_order_no" readonly="state == 'posted'"
+                               invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
+                        <field name="e_shipment_terms" readonly="state == 'posted'"
+                               invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
                     </group>
                 </group>
                 <div class="row mx-1" style="gap: 10px;">
