@@ -66,7 +66,7 @@ class EramSaleOrderReport(models.TransientModel):
         sheet = workbook.add_worksheet()
         light_green = '#daeef3'
         purple = '#daeef3'
-        light_blue = '#D9E1F2'
+        light_blue = '#f2f2f2'
         red = '#FF0000'
 
         # Set column widths based on the sample Excel - updated with new columns
@@ -464,7 +464,7 @@ class EramSaleOrderReport(models.TransientModel):
                 else:
                     po_date = purchase_order.date.strftime('%d-%m-%Y')
 
-            po_value = purchase_order.amount if purchase_order else 0.0
+            po_value = purchase_order.amount_total if purchase_order else 0.0
             po_currency = purchase_order.currency_id if purchase_order else order.currency_id
 
             # Get delivery date from first delivery's scheduled_date

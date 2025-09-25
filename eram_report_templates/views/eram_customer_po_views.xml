@@ -8,7 +8,7 @@
                 <field name="name"/>
                 <field name="partner_id"/>
                 <field name="date"/>
-                <field name="amount"/>
+                <field name="amount_total"/>
                 <field name="currency_id" column_invisible="1"/>
                 <field name="company_id" column_invisible="1"/>
             </list>
@@ -25,6 +25,8 @@
                         <field name="partner_id"/>
                         <field name="date"/>
                         <field name="amount"/>
+                        <field name="tax_ids" widget="many2many_tags"/>
+                        <field name="amount_total"/>
                         <field name="currency_id"/>
                         <field name="company_id"/>
                     </group>
