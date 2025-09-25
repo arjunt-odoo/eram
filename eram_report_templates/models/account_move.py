@@ -9,6 +9,8 @@ _logger = logging.getLogger(__name__)
 
 class AccountMove(models.Model):
     _inherit = 'account.move'
+    _sql_constraints = [('name_unique', 'unique(name)',
+                         "Invoice name should be unique!")]
 
     e_transport_mode = fields.Char(string="Transport Mode")
     e_reverse_charge = fields.Boolean(string="Reverse Charge")
@@ -97,6 +99,8 @@ class AccountMove(models.Model):
             except Exception as e:
                 _logger.error("Failed to send overdue notification for invoice %s: %s", invoice.name, str(e))
 
+    def _constrains_date_sequence(self):
+        pass
 
 class AccountMoveLine(models.Model):
     _inherit = 'account.move.line'
