@@ -16,14 +16,8 @@ class SaleOrder(models.Model):
     e_packing_and_forwarding = fields.Char(string="PACKING & FORWARDING")
     e_purchase_order_id = fields.Many2one("purchase.order",
                                           string="Ref#")
-    e_customer_po_id = fields.Many2one("eram.customer.po", string="Ref#")
-
-    @api.constrains('partner_id')
-    def _constrains_partner_id(self):
-        if self.partner_id and self.partner_id != self.e_customer_po_id.partner_id:
-            self.e_customer_po_id.write({
-                'partner_id': self.partner_id.id
-            })
+    e_customer_po_ids = fields.One2many("eram.customer.po", "sale_id")
+    e_ref = fields.Char(string="Ref#")
 
     def _prepare_invoice(self):
         values = super()._prepare_invoice()
@@ -33,7 +27,6 @@ class SaleOrder(models.Model):
                             <span>Bank A/C No: 50200064073923</span><br/>
                             <span>Bank IFSC: HDFC0000549</span><br/>
                             <span>Branch: Electronic City</span>""",
-            "e_buyer_order_no": self.e_customer_po_id.name
         })
         return values
 

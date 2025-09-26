@@ -21,15 +21,31 @@
             <form>
                 <sheet>
                     <group>
-                        <field name="name"/>
-                        <field name="partner_id"/>
-                        <field name="date"/>
-                        <field name="amount"/>
-                        <field name="tax_ids" widget="many2many_tags"/>
-                        <field name="amount_total"/>
-                        <field name="currency_id"/>
-                        <field name="company_id"/>
+                        <group>
+                            <field name="name"/>
+                            <field name="partner_id"/>
+                            <field name="date"/>
+                            <field name="amount"/>
+                            <field name="tax_ids" widget="many2many_tags"/>
+                            <field name="amount_total"/>
+                            <field name="currency_id"/>
+                            <field name="company_id"/>
+                        </group>
+                        <group>
+                            <field name="sale_id" string="Quote"/>
+                        </group>
+
                     </group>
+                    <notebook>
+                        <page string="Order Lines">
+                            <field name="line_ids">
+                                <list editable="bottom">
+                                    <field name="product_id"/>
+                                    <field name="quantity"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
                 </sheet>
             </form>
         </field>

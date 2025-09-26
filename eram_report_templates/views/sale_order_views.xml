@@ -16,8 +16,7 @@
             </xpath>
             <xpath expr="//group[@name='order_details']" position="after">
                 <group>
-                    <field name="e_customer_po_id" readonly="state == 'sale'"
-                           domain="[('partner_id', '=', partner_id)]"/>
+                    <field name="e_ref" readonly="state == 'sale'"/>
                 </group>
             </xpath>
             <field name="partner_id" position="after">
@@ -59,6 +58,20 @@
             <field name="name" position="attributes">
                 <attribute name="readonly">state == 'sale'</attribute>
             </field>
+            <xpath expr="//notebook//page[@name='order_lines']" position="after">
+                <page string="Customer PO">
+                    <field name="e_customer_po_ids">
+                        <list>
+                            <field name="name"/>
+                            <field name="partner_id"/>
+                            <field name="date"/>
+                            <field name="amount_total"/>
+                            <field name="currency_id" column_invisible="1"/>
+                            <field name="company_id" column_invisible="1"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
         </field>
     </record>
     <record id="view_order_quote_list_inherit_eram" model="ir.ui.view">

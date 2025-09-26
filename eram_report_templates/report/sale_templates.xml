@@ -86,7 +86,7 @@
                                     <tr>
                                         <td><strong>REF # </strong></td>
                                         <td>:</td>
-                                        <td><span t-field="doc.e_customer_po_id"/></td>
+                                        <td><span t-field="doc.e_ref"/></td>
                                     </tr>
                                 </table>
                             </div>
