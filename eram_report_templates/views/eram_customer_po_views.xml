@@ -33,6 +33,9 @@
                         </group>
                         <group>
                             <field name="sale_id" string="Quote"/>
+                            <field name="advance_amount"/>
+                            <field name="advance_date"/>
+                            <field name="delivery_date"/>
                         </group>
 
                     </group>

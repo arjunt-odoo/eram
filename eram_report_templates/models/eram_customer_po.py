@@ -18,6 +18,9 @@ class EramCustomerPo(models.Model):
                                    store=True)
     sale_id = fields.Many2one("sale.order")
     line_ids = fields.One2many("eram.customer.po.line", "customer_po_id")
+    advance_amount = fields.Monetary()
+    advance_date = fields.Date()
+    delivery_date = fields.Date()
 
     @api.depends('amount', 'currency_id', 'tax_ids')
     def _compute_amount_total(self):

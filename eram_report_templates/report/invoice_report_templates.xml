@@ -41,6 +41,7 @@
                             <span>CIN:U73100KA2021FTC155104 / GSTIN: 29AAGCE7876F1Z4</span><br/>
                             <span>Mob. No: +91 9886068175, Email: coe@eramelectronics.com, www.eramelectronics.com</span>
                         </div>
+                        <br/>
                         <div>
                             <table style="width:100%;" class="table table-bordered">
                                 <thead>
@@ -52,36 +53,36 @@
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td class="w-50">Invoice No: <span t-field="o.name"/> </td>
+                                        <td class="w-50" style="padding-left: 3px;">Invoice No: <span t-field="o.name"/> </td>
                                         <td class="w-50">Transport Mode: <span t-field="o.e_transport_mode"/> </td>
                                     </tr>
                                     <tr>
-                                        <td>Invoice Date: <span t-field="o.invoice_date"/> </td>
+                                        <td style="padding-left: 3px;">Invoice Date: <span t-field="o.invoice_date"/> </td>
                                         <td>Payment Terms: <span t-field="o.invoice_payment_term_id"/> </td>
                                     </tr>
                                     <tr>
-                                        <td class="text-start">Reverse Charge (Y/N):
+                                        <td class="text-start" style="padding-left: 3px;">Reverse Charge (Y/N):
                                             <t t-if="o.e_reverse_charge">
                                                 <span>Y</span>
                                             </t>
                                             <t t-else="">N</t>
                                         </td>
-                                        <td>Buyer's Order No: <span t-field="o.e_buyer_order_no"/></td>
+                                        <td style="padding-left: 3px;">Buyer's Order No: <span t-field="o.e_buyer_order_no"/></td>
                                     </tr>
                                     <tr>
-                                        <td class="text-start">State: <span t-field="o.partner_id.state_id"/></td>
+                                        <td class="text-start" style="padding-left: 3px;">State: <span t-field="o.partner_id.state_id"/></td>
                                         <td>Shipment Terms: <span t-field="o.e_shipment_terms"/> </td>
                                     </tr>
                                     <tr style="background-color:#99b9f7;">
-                                        <td>Bill to Party</td>
+                                        <td style="padding-left: 3px;">Bill to Party</td>
                                         <td>Ship to Party</td>
                                     </tr>
                                     <tr>
-                                        <td>Name: <span t-field="o.partner_id"/></td>
+                                        <td style="padding-left: 3px;">Name: <span t-field="o.partner_id"/></td>
                                         <td>Name: <span t-field="o.e_ship_to_party"/></td>
                                     </tr>
                                     <tr>
-                                        <td>
+                                        <td style="padding-left: 3px;">
                                             Address: <span t-field="o.partner_id.street"/>,
                                                     <span t-field="o.partner_id.city"/>,
                                                     <span t-field="o.partner_id.state_id"/><br/>
@@ -97,7 +98,7 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>GSTIN - <span t-field="o.e_bill_vat"/></td>
+                                        <td style="padding-left: 3px;">GSTIN - <span t-field="o.e_bill_vat"/></td>
                                         <td>GSTIN - <span t-field="o.e_ship_vat"/></td>
                                     </tr>
                                 </tbody>
@@ -109,9 +110,9 @@
                                 <table class="table table-bordered w-100">
                                     <thead>
                                         <tr>
-                                            <th class="text-center">SI. No.</th>
+                                            <th class="text-center" style="width: 8%">SI. No.</th>
                                             <th class="text-center">Product Name And Description</th>
-                                            <th class="text-center">SAC Code</th>
+                                            <th class="text-center">HSN/SAC Code</th>
                                             <th class="text-center">Qty</th>
                                             <th class="text-center">Unit Price (<span t-field="currency.name"/>)</th>
                                             <th class="text-center">Total Price (<span t-field="currency.name"/>)</th>
@@ -178,7 +179,7 @@
                                                         <t t-else="">-</t>
                                                     </td>
                                                 </t>
-                                                <td class="text-end"><span t-field="line.price_total"/></td>
+                                                <td class="text-end" style="padding-right: 3px;"><span t-field="line.price_total"/></td>
                                             </tr>
                                         </t>
                                         <!-- Total row -->
@@ -208,10 +209,10 @@
                                                     <t t-else="">-</t>
                                                 </td>
                                             </t>
-                                            <td><span t-field="o.amount_total"/></td>
+                                            <td><span t-field="o.amount_total" style="padding-right: 3px;"/></td>
                                         </tr>
                                         <tr class="text-start">
-                                            <td colspan="100%">
+                                            <td colspan="100%" style="padding-left: 5px;">
                                                 Total Invoice Amount In Words: <span t-field="o.e_amount_total_words"/>
                                             </td>
                                         </tr>

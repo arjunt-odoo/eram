@@ -6,6 +6,7 @@ import json
 import io
 import os
 from PIL import Image
+from collections import defaultdict
 
 try:
     from odoo.tools.misc import xlsxwriter
@@ -21,12 +22,11 @@ class EramSaleOrderReport(models.TransientModel):
     to_date = fields.Date(string="To Date")
     type = fields.Selection([('xlsx', "XLSX")], string="Report Type",
                             default='xlsx', required=True)
-    state = fields.Selection(selection=[('sale', 'Sale Order'),
-                                        ('draft', 'Quotation')], required=True, default='sale')
+
 
     def action_print_report(self):
         if self.type == 'xlsx':
-            domain = [('state', '=', self.state)]
+            domain = []
             if self.from_date and self.to_date:
                 domain.append(('date_order', '>=', self.from_date))
                 domain.append(('date_order', '<=', self.to_date))
@@ -41,7 +41,6 @@ class EramSaleOrderReport(models.TransientModel):
             data = {
                 'orders': record_ids,
                 'doc_no': doc_no,
-                'state': self.state
             }
             return {
                 'type': 'ir.actions.report',
@@ -56,20 +55,51 @@ class EramSaleOrderReport(models.TransientModel):
 
     def get_xlsx_report(self, data, response):
         order_id_list = data.get('orders', [])
-        state = data.get('state', '')
         doc_no = data.get('doc_no', '')
         current_datetime = fields.Datetime.context_timestamp(self, fields.Datetime.now())
         formatted_datetime = current_datetime.strftime('%d-%m-%Y %H:%M')
         order_ids = self.env['sale.order'].browse(order_id_list)
         output = io.BytesIO()
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
-        sheet = workbook.add_worksheet()
+
+        # Separate sales and quotations
+        sales = order_ids.filtered(lambda o: o.state == 'sale')
+        quotations = order_ids.filtered(lambda o: o.state in ('draft', 'sent'))
+
+        # Group sales by currency
+        sales_by_currency = defaultdict(list)
+        for o in sales:
+            sales_by_currency[o.currency_id].append(o)
+
+        # Group quotations by currency
+        quotations_by_currency = defaultdict(list)
+        for o in quotations:
+            quotations_by_currency[o.currency_id].append(o)
+
+        # First, create sheets for sales
+        for currency, orders in sales_by_currency.items():
+            sheet_name = f"Sale Order Report ({currency.name})"
+            sheet = workbook.add_worksheet(sheet_name)
+            self.write_sale_sheet(workbook, sheet, orders, doc_no, formatted_datetime, currency)
+
+        # Then, create sheets for quotations
+        for currency, orders in quotations_by_currency.items():
+            sheet_name = f"Quotation Report ({currency.name})"
+            sheet = workbook.add_worksheet(sheet_name)
+            self.write_quotation_sheet(workbook, sheet, orders, doc_no, formatted_datetime, currency)
+
+        workbook.close()
+        output.seek(0)
+        response.stream.write(output.read())
+        output.close()
+
+    def write_sale_sheet(self, workbook, sheet, order_ids, doc_no, formatted_datetime, currency):
         light_green = '#daeef3'
         purple = '#daeef3'
         light_blue = '#f2f2f2'
         red = '#FF0000'
 
-        # Column widths
+        # Adjusted Column widths (removed one column)
         col_widths = [
             8,   # A: SI No
             30,  # B: Customer
@@ -89,20 +119,19 @@ class EramSaleOrderReport(models.TransientModel):
             22,  # P: Invoice Value
             30,  # Q: Payment Terms
             25,  # R: Payment Status
-            22,  # S: Advance Payment Received/Not Received
-            25,  # T: Advance Payment Amount
-            22,  # U: Advance Payment Received Date
-            25,  # V: Balance Payment
-            22,  # W: Balance Payment Received Date
-            22,  # X: Payment Due
-            18,  # Y: Payment Due Date
-            25,  # Z: Shipment Status
-            18,  # AA: Delivery Date
-            25,  # AB: Remarks
+            25,  # S: Advance Payment Amount (was T)
+            22,  # T: Advance Payment Received Date (was U)
+            25,  # U: Balance Payment (was V)
+            22,  # V: Balance Payment Received Date (was W)
+            22,  # W: Payment Due (was X)
+            18,  # X: Payment Due Date (was Y)
+            25,  # Y: Shipment Status (was Z)
+            18,  # Z: Delivery Date (was AA)
+            25,  # AA: Remarks (was AB)
         ]
 
         # Set column widths (starting from column B since A is empty)
-        for col, width in enumerate(col_widths, 1):  # Start from column B (index 1)
+        for col, width in enumerate(col_widths, 1):
             sheet.set_column(col, col, width)
 
         # Set first column (A) as empty with small width
@@ -116,14 +145,6 @@ class EramSaleOrderReport(models.TransientModel):
             'bg_color': light_green,
             'text_wrap': True,
             'border': 1
-        })
-
-        info_format = workbook.add_format({
-            'bold': True,
-            'align': 'left',
-            'valign': 'vcenter',
-            'font_size': 10,
-            'text_wrap': True
         })
 
         header_format = workbook.add_format({
@@ -144,13 +165,6 @@ class EramSaleOrderReport(models.TransientModel):
         })
         date_format = workbook.add_format({
             'num_format': 'dd-mm-yyyy',
-            'align': 'center',
-            'valign': 'vcenter',
-            'text_wrap': True,
-            'border': 1
-        })
-        base_currency_format = workbook.add_format({
-            'num_format': '#,##0.00',
             'align': 'center',
             'valign': 'vcenter',
             'text_wrap': True,
@@ -188,23 +202,6 @@ class EramSaleOrderReport(models.TransientModel):
             'text_wrap': True,
             'border': 1
         })
-        base_total_format = workbook.add_format({
-            'bold': True,
-            'align': 'center',
-            'valign': 'vcenter',
-            'border': 1,
-            'bg_color': light_green,
-            'text_wrap': True,
-            'num_format': '#,##0.00'
-        })
-        total_qty_format = workbook.add_format({
-            'bold': True,
-            'align': 'center',
-            'valign': 'vcenter',
-            'border': 1,
-            'bg_color': light_green,
-            'text_wrap': True
-        })
 
         even_row_format = workbook.add_format({
             'align': 'center',
@@ -214,22 +211,6 @@ class EramSaleOrderReport(models.TransientModel):
             'border': 1
         })
         odd_row_format = workbook.add_format({
-            'align': 'center',
-            'valign': 'vcenter',
-            'text_wrap': True,
-            'border': 1
-        })
-
-        even_currency_format = workbook.add_format({
-            'num_format': '#,##0.00',
-            'align': 'center',
-            'valign': 'vcenter',
-            'text_wrap': True,
-            'bg_color': light_blue,
-            'border': 1
-        })
-        odd_currency_format = workbook.add_format({
-            'num_format': '#,##0.00',
             'align': 'center',
             'valign': 'vcenter',
             'text_wrap': True,
@@ -304,8 +285,8 @@ class EramSaleOrderReport(models.TransientModel):
         report_date = fields.Date.context_today(self)
         formatted_date = report_date.strftime('%d-%m-%Y') if report_date else ''
 
-        sheet.merge_range('B3:AA3', f'SALES ORDER REPORT-{formatted_date}', heading_format)
-        sheet.merge_range('AB3:AC3', f'Generated by Odoo    \nDate and Time: {formatted_datetime}    \nDoc No: {doc_no}',
+        sheet.merge_range('B3:Z3', f'SALES ORDER REPORT-{formatted_date}', heading_format)
+        sheet.merge_range('AA3:AB3', f'Generated by Odoo    \nDate and Time: {formatted_datetime}    \nDoc No: {doc_no}',
                           header_doc_format)
 
         sheet.set_row(2, 45)  # Heading row (row 3)
@@ -314,7 +295,7 @@ class EramSaleOrderReport(models.TransientModel):
             'SI No', 'Customer', 'Account Name', 'Product Details', 'Product Description',
             'Quantity', 'Unit Price', 'Quote No', 'Quote Date', 'Quote Value',
             'Purchase Order No', 'PO Date', 'PO Value', 'Invoice No', 'Invoice Date',
-            'Invoice Value', 'Payment Terms', 'Payment Status', 'Advance Payment Received/Not Received',
+            'Invoice Value', 'Payment Terms', 'Payment Status',
             'Advance Payment', 'Advance Payment Received Date', 'Balance Payment',
             'Balance Payment Received Date', 'Payment Due', 'Payment Due Date',
             'Shipment Status', 'Delivery Date', 'Remarks'
@@ -400,7 +381,7 @@ class EramSaleOrderReport(models.TransientModel):
                 remainder = max_count % product_count
                 product_row_spans = [base_span + 1 if i < remainder else base_span for i in range(product_count)]
             if po_count == 0:
-                po_row_spans = [max_count]  # Merge PO columns into a single row spanning all rows
+                po_row_spans = [max_count]
             else:
                 base_span = max_count // po_count
                 remainder = max_count % po_count
@@ -422,7 +403,8 @@ class EramSaleOrderReport(models.TransientModel):
             is_even_order = (order_idx % 2 == 0)
 
             if order.state == 'sale':
-                order_invoices = order.invoice_ids.filtered(lambda i: i.state == 'posted')
+                order_invoices = order.invoice_ids.filtered(
+                    lambda i: i.state == 'posted').sorted(key=lambda i: i.e_sequence)
             else:
                 order_invoices = self.env['account.move']
             order_lines = order.order_line
@@ -431,11 +413,11 @@ class EramSaleOrderReport(models.TransientModel):
             delivery_date = 'N/A'
             if order.picking_ids and order.state == 'sale':
                 first_picking = order.picking_ids[0]
-                if first_picking.scheduled_date:
-                    if isinstance(first_picking.scheduled_date, str):
-                        delivery_date = fields.Date.from_string(first_picking.scheduled_date).strftime('%d-%m-%Y')
+                if first_picking.date_done:
+                    if isinstance(first_picking.date_done, str):
+                        delivery_date = fields.Date.from_string(first_picking.date_done).strftime('%d-%m-%Y')
                     else:
-                        delivery_date = first_picking.scheduled_date.strftime('%d-%m-%Y')
+                        delivery_date = first_picking.date_done.strftime('%d-%m-%Y')
 
             picking_ids = order.picking_ids.filtered(lambda p: p.state != 'cancel')
             if order.state == 'draft':
@@ -462,16 +444,14 @@ class EramSaleOrderReport(models.TransientModel):
 
             if is_even_order:
                 row_fmt = even_row_format
-                currency_fmt = even_currency_format
                 date_fmt = even_date_format
                 red_fmt = even_red_format
             else:
                 row_fmt = odd_row_format
-                currency_fmt = odd_currency_format
                 date_fmt = odd_date_format
                 red_fmt = odd_red_format
 
-            order_currency = order.currency_id
+            order_currency = currency  # Since grouped by currency
             order_currency_format = get_currency_format(workbook, order_currency, is_even=is_even_order)
 
             current_row = row
@@ -506,7 +486,7 @@ class EramSaleOrderReport(models.TransientModel):
                     if po_row_index < len(purchase_orders):
                         po = purchase_orders[po_row_index]
                         row_span = po_row_spans[po_row_index]
-                        po_currency = po.currency_id or order.currency_id
+                        po_currency = po.currency_id or order_currency
                         po_currency_format = get_currency_format(workbook, po_currency, is_even=is_even_order)
                         if i < sum(po_row_spans[:po_row_index + 1]):
                             po_name = po.name or 'N/A'
@@ -568,13 +548,13 @@ class EramSaleOrderReport(models.TransientModel):
                         write_center(sheet, current_row + i, 7, '', row_fmt)
 
                 if merge_invoice_columns:
-                    for col in range(14, 26):
+                    for col in range(14, 25):  # Adjusted range
                         format_to_use = row_fmt
-                        if col in (15, 21, 23, 25):
+                        if col in (15, 20, 22, 24):  # Adjusted dates
                             format_to_use = date_fmt
-                        elif col in (16, 20, 22):
+                        elif col in (16, 19, 21):  # Adjusted currencies
                             format_to_use = order_currency_format
-                        write_center(sheet,current_row + i, col, '', format_to_use)
+                        write_center(sheet, current_row + i, col, '', format_to_use)
                 else:
                     if invoice_row_index < len(order_invoices):
                         invoice = order_invoices[invoice_row_index]
@@ -602,20 +582,17 @@ class EramSaleOrderReport(models.TransientModel):
 
                             if invoice.payment_state == 'paid':
                                 payment_status = 'Received'
-                                advance_payment = 'Received'
                                 advance_date = latest_payment_date or invoice.invoice_date
                                 balance_payment = 0.0
                                 balance_date = 'N/A'
                                 payment_due_display = 'N/A'
                             elif invoice.payment_state == 'partial':
                                 payment_status = 'Partially Received'
-                                advance_payment = 'Received'
                                 advance_date = latest_payment_date or 'N/A'
                                 balance_payment = amount_residual
                                 balance_date = invoice.invoice_date_due
                             else:
                                 payment_status = 'Not Received'
-                                advance_payment = 'Not Received'
                                 advance_date = 'N/A'
                                 balance_payment = amount_residual
                                 balance_date = invoice.invoice_date_due
@@ -662,21 +639,19 @@ class EramSaleOrderReport(models.TransientModel):
                                 safe_merge(sheet, current_row + i, 18, current_row + i + row_span - 1, 18,
                                            payment_status, row_fmt)
                                 safe_merge(sheet, current_row + i, 19, current_row + i + row_span - 1, 19,
-                                           advance_payment, row_fmt)
-                                safe_merge(sheet, current_row + i, 20, current_row + i + row_span - 1, 20,
                                            advance_amount, order_currency_format)
-                                safe_merge(sheet, current_row + i, 21, current_row + i + row_span - 1, 21,
+                                safe_merge(sheet, current_row + i, 20, current_row + i + row_span - 1, 20,
                                            advance_date_formatted,
                                            date_fmt if advance_date_formatted != 'N/A' else row_fmt)
-                                safe_merge(sheet, current_row + i, 22, current_row + i + row_span - 1, 22,
+                                safe_merge(sheet, current_row + i, 21, current_row + i + row_span - 1, 21,
                                            balance_payment, order_currency_format)
-                                safe_merge(sheet, current_row + i, 23, current_row + i + row_span - 1, 23,
+                                safe_merge(sheet, current_row + i, 22, current_row + i + row_span - 1, 22,
                                            balance_date_formatted,
                                            date_fmt if balance_date_formatted != 'N/A' else row_fmt)
-                                safe_merge(sheet, current_row + i, 24, current_row + i + row_span - 1, 24,
+                                safe_merge(sheet, current_row + i, 23, current_row + i + row_span - 1, 23,
                                            payment_due_display,
                                            red_fmt if is_overdue and payment_due_display != 'N/A' else row_fmt)
-                                safe_merge(sheet, current_row + i, 25, current_row + i + row_span - 1, 25,
+                                safe_merge(sheet, current_row + i, 24, current_row + i + row_span - 1, 24,
                                            due_date, date_fmt if due_date != 'N/A' else row_fmt)
                             elif row_span == 1:
                                 write_center(sheet, current_row + i, 14, invoice.name or 'N/A', row_fmt)
@@ -685,16 +660,15 @@ class EramSaleOrderReport(models.TransientModel):
                                 write_center(sheet, current_row + i, 16, invoice_amount, order_currency_format)
                                 write_center(sheet, current_row + i, 17, payment_terms, row_fmt)
                                 write_center(sheet, current_row + i, 18, payment_status, row_fmt)
-                                write_center(sheet, current_row + i, 19, advance_payment, row_fmt)
-                                write_center(sheet, current_row + i, 20, advance_amount, order_currency_format)
-                                write_center(sheet, current_row + i, 21, advance_date_formatted,
+                                write_center(sheet, current_row + i, 19, advance_amount, order_currency_format)
+                                write_center(sheet, current_row + i, 20, advance_date_formatted,
                                              date_fmt if advance_date_formatted != 'N/A' else row_fmt)
-                                write_center(sheet, current_row + i, 22, balance_payment, order_currency_format)
-                                write_center(sheet, current_row + i, 23, balance_date_formatted,
+                                write_center(sheet, current_row + i, 21, balance_payment, order_currency_format)
+                                write_center(sheet, current_row + i, 22, balance_date_formatted,
                                              date_fmt if balance_date_formatted != 'N/A' else row_fmt)
-                                write_center(sheet, current_row + i, 24, payment_due_display,
+                                write_center(sheet, current_row + i, 23, payment_due_display,
                                              red_fmt if is_overdue and payment_due_display != 'N/A' else row_fmt)
-                                write_center(sheet, current_row + i, 25, due_date,
+                                write_center(sheet, current_row + i, 24, due_date,
                                              date_fmt if due_date != 'N/A' else row_fmt)
                             grand_total_value += invoice_amount if i == sum(
                                 invoice_row_spans[:invoice_row_index]) else 0
@@ -716,11 +690,22 @@ class EramSaleOrderReport(models.TransientModel):
                             write_center(sheet, current_row + i, 22, '', date_fmt)
                             write_center(sheet, current_row + i, 23, '', row_fmt)
                             write_center(sheet, current_row + i, 24, '', date_fmt)
-                            write_center(sheet, current_row + i, 25, '', date_fmt)
+                    else:
+                        write_center(sheet, current_row + i, 14, '', row_fmt)
+                        write_center(sheet, current_row + i, 15, '', date_fmt)
+                        write_center(sheet, current_row + i, 16, '', order_currency_format)
+                        write_center(sheet, current_row + i, 17, '', row_fmt)
+                        write_center(sheet, current_row + i, 18, '', row_fmt)
+                        write_center(sheet, current_row + i, 19, '', order_currency_format)
+                        write_center(sheet, current_row + i, 20, '', date_fmt)
+                        write_center(sheet, current_row + i, 21, '', order_currency_format)
+                        write_center(sheet, current_row + i, 22, '', date_fmt)
+                        write_center(sheet, current_row + i, 23, '', row_fmt)
+                        write_center(sheet, current_row + i, 24, '', date_fmt)
 
-                write_center(sheet, current_row + i, 26, shipment_status if i == 0 else '', row_fmt)
-                write_center(sheet, current_row + i, 27, delivery_date if i == 0 else '', row_fmt)
-                write_center(sheet, current_row + i, 28, 'N/A' if i == 0 else '', row_fmt)
+                write_center(sheet, current_row + i, 25, shipment_status if i == 0 else '', row_fmt)
+                write_center(sheet, current_row + i, 26, delivery_date if i == 0 else '', row_fmt)
+                write_center(sheet, current_row + i, 27, 'N/A' if i == 0 else '', row_fmt)
 
             grand_total_quote_value += order.amount_total
 
@@ -738,20 +723,19 @@ class EramSaleOrderReport(models.TransientModel):
                 else:
                     safe_merge(sheet, row, 9, row + max_rows_per_order - 1, 9, '', row_fmt)
                 safe_merge(sheet, row, 10, row + max_rows_per_order - 1, 10, order.amount_total, order_currency_format)
-                safe_merge(sheet, row, 26, row + max_rows_per_order - 1, 26, shipment_status, row_fmt)
-                safe_merge(sheet, row, 27, row + max_rows_per_order - 1, 27, delivery_date, row_fmt)
-                safe_merge(sheet, row, 28, row + max_rows_per_order - 1, 28, 'N/A', row_fmt)
+                safe_merge(sheet, row, 25, row + max_rows_per_order - 1, 25, shipment_status, row_fmt)
+                safe_merge(sheet, row, 26, row + max_rows_per_order - 1, 26, delivery_date, row_fmt)
+                safe_merge(sheet, row, 27, row + max_rows_per_order - 1, 27, 'N/A', row_fmt)
 
                 if merge_invoice_columns:
-                    for col in range(14, 26):
+                    for col in range(14, 25):
                         format_to_use = row_fmt
-                        if col in (15, 21, 23, 25):
+                        if col in (15, 20, 22, 24):
                             format_to_use = date_fmt
-                        elif col in (16, 20, 22):
+                        elif col in (16, 19, 21):
                             format_to_use = order_currency_format
                         safe_merge(sheet, row, col, row + max_rows_per_order - 1, col, '', format_to_use)
 
-                # Merge PO columns if no POs
                 if po_count == 0:
                     safe_merge(sheet, row, 11, row + max_rows_per_order - 1, 11, 'N/A', row_fmt)
                     safe_merge(sheet, row, 12, row + max_rows_per_order - 1, 12, 'N/A', row_fmt)
@@ -760,9 +744,8 @@ class EramSaleOrderReport(models.TransientModel):
             row += max_rows_per_order
             si_no += 1
 
-        company_currency = self.env.company.currency_id
-        company_currency_format = get_currency_format(workbook, company_currency, is_total=True)
-        company_total_qty_format = workbook.add_format({
+        currency_format = get_currency_format(workbook, currency, is_total=True)
+        total_qty_format = workbook.add_format({
             'bold': True,
             'align': 'center',
             'valign': 'vcenter',
@@ -772,30 +755,29 @@ class EramSaleOrderReport(models.TransientModel):
             'font_size': 14
         })
 
-        sheet.merge_range(f'B{row + 1}:F{row + 1}', 'Grand Total:', company_total_qty_format)
-        write_center(sheet, row, 6, grand_total_qty, company_total_qty_format)
-        write_center(sheet, row, 7, '', company_currency_format)
-        write_center(sheet, row, 8, '', company_total_qty_format)
-        write_center(sheet, row, 9, '', company_total_qty_format)
-        write_center(sheet, row, 10, grand_total_quote_value, company_currency_format)
-        write_center(sheet, row, 11, '', company_total_qty_format)
-        write_center(sheet, row, 12, '', company_total_qty_format)
-        write_center(sheet, row, 13, grand_total_po_value, company_currency_format)
-        write_center(sheet, row, 14, '', company_total_qty_format)
-        write_center(sheet, row, 15, '', company_total_qty_format)
-        write_center(sheet, row, 16, grand_total_value, company_currency_format)
-        write_center(sheet, row, 17, '', company_total_qty_format)
-        write_center(sheet, row, 18, '', company_total_qty_format)
-        write_center(sheet, row, 19, '', company_total_qty_format)
-        write_center(sheet, row, 20, grand_total_advance, company_currency_format)
-        write_center(sheet, row, 21, '', company_total_qty_format)
-        write_center(sheet, row, 22, grand_total_balance, company_currency_format)
-        write_center(sheet, row, 23, '', company_total_qty_format)
-        write_center(sheet, row, 24, '', company_total_qty_format)
-        write_center(sheet, row, 25, '', company_total_qty_format)
-        write_center(sheet, row, 26, '', company_total_qty_format)
-        write_center(sheet, row, 27, '', company_total_qty_format)
-        write_center(sheet, row, 28, '', company_total_qty_format)
+        sheet.merge_range(f'B{row + 1}:F{row + 1}', 'Grand Total:', total_qty_format)
+        write_center(sheet, row, 6, grand_total_qty, total_qty_format)
+        write_center(sheet, row, 7, '', currency_format)
+        write_center(sheet, row, 8, '', total_qty_format)
+        write_center(sheet, row, 9, '', total_qty_format)
+        write_center(sheet, row, 10, grand_total_quote_value, currency_format)
+        write_center(sheet, row, 11, '', total_qty_format)
+        write_center(sheet, row, 12, '', total_qty_format)
+        write_center(sheet, row, 13, grand_total_po_value, currency_format)
+        write_center(sheet, row, 14, '', total_qty_format)
+        write_center(sheet, row, 15, '', total_qty_format)
+        write_center(sheet, row, 16, grand_total_value, currency_format)
+        write_center(sheet, row, 17, '', total_qty_format)
+        write_center(sheet, row, 18, '', total_qty_format)
+        write_center(sheet, row, 19, grand_total_advance, currency_format)
+        write_center(sheet, row, 20, '', total_qty_format)
+        write_center(sheet, row, 21, grand_total_balance, currency_format)
+        write_center(sheet, row, 22, '', total_qty_format)
+        write_center(sheet, row, 23, '', total_qty_format)
+        write_center(sheet, row, 24, '', total_qty_format)
+        write_center(sheet, row, 25, '', total_qty_format)
+        write_center(sheet, row, 26, '', total_qty_format)
+        write_center(sheet, row, 27, '', total_qty_format)
 
         row += 3
         note_format = workbook.add_format({
@@ -806,7 +788,7 @@ class EramSaleOrderReport(models.TransientModel):
             'font_size': 14,
             'font_color': red,
         })
-        sheet.merge_range(f'B{row}:AD{row}',
+        sheet.merge_range(f'B{row}:AB{row}',
                           'Note: This report has been generated using the Odoo tool by the Eram Power engineers with Python code. The report has been converted into Excel format.',
                           note_format)
 
@@ -817,28 +799,28 @@ class EramSaleOrderReport(models.TransientModel):
             'align': 'center',
             'font_size': 14,
         })
-        sheet.merge_range(f'B{row}:AD{row}', '', purple_format)
+        sheet.merge_range(f'B{row}:AB{row}', '', purple_format)
 
         row += 1
         sheet.merge_range(f'B{row}:I{row}', 'Prepared By', purple_format)
         sheet.merge_range(f'J{row}:Q{row}', 'Reviewed By', purple_format)
-        sheet.merge_range(f'R{row}:AD{row}', 'Approved By', purple_format)
+        sheet.merge_range(f'R{row}:AB{row}', 'Approved By', purple_format)
 
         row += 1
-        sheet.merge_range(f'B{row}:AD{row}', '', purple_format)
+        sheet.merge_range(f'B{row}:AB{row}', '', purple_format)
 
         row += 1
         sheet.merge_range(f'B{row}:I{row}', 'Priya Singh', purple_format)
         sheet.merge_range(f'J{row}:Q{row}', 'Sneha John', purple_format)
-        sheet.merge_range(f'R{row}:AD{row}', 'Basil Issac', purple_format)
+        sheet.merge_range(f'R{row}:AB{row}', 'Basil Issac', purple_format)
 
         row += 1
         sheet.merge_range(f'B{row}:I{row}', 'Data Analyst - Sourcing', purple_format)
         sheet.merge_range(f'J{row}:Q{row}', 'Project Manager', purple_format)
-        sheet.merge_range(f'R{row}:AD{row}', 'Vice President', purple_format)
+        sheet.merge_range(f'R{row}:AB{row}', 'Vice President', purple_format)
 
         row += 1
-        sheet.merge_range(f'B{row}:AD{row}', '', purple_format)
+        sheet.merge_range(f'B{row}:AB{row}', '', purple_format)
 
         row += 2
 
@@ -861,7 +843,606 @@ class EramSaleOrderReport(models.TransientModel):
             )
             sheet.set_row(footer_row - 1, footer_height * (scale_factor / 2) / 1.33)
 
+    def write_quotation_sheet(self, workbook, sheet, order_ids, doc_no,
+                              formatted_datetime, currency):
+        light_green = '#daeef3'
+        purple = '#daeef3'
+        light_blue = '#f2f2f2'
+        red = '#FF0000'
+
+        # Column widths for quotation
+        col_widths = [
+            8,  # Si No
+            30,  # Customer
+            30,  # Account Name
+            20,  # Product Details
+            40,  # Product Description
+            12,  # Quantity
+            15,  # Quote No
+            15,  # Quote Date
+            25,  # Po No
+            15,  # Po Date
+            15,  # Unit Price Per Product
+            20,  # Total Price Of The Product
+            20,  # Total Value With GST
+            20,  # Advance Payment Of The Product
+            18,  # Advance Payment Date
+            18,  # Delivery Date
+            25,  # Remarks
+            40,  # Remarks 1
+        ]
+
+        # Set column widths (starting from B)
+        for col, width in enumerate(col_widths, 1):
+            sheet.set_column(col, col, width)
+
+        sheet.set_column(0, 0, 2)
+
+        heading_format = workbook.add_format({
+            'bold': True,
+            'align': 'center',
+            'valign': 'vcenter',
+            'font_size': 28,
+            'bg_color': light_green,
+            'text_wrap': True,
+            'border': 1
+        })
+
+        header_format = workbook.add_format({
+            'bold': True,
+            'align': 'center',
+            'valign': 'vcenter',
+            'border': 1,
+            'bg_color': purple,
+            'text_wrap': True
+        })
+        header_doc_format = workbook.add_format({
+            'bold': True,
+            'align': 'left',
+            'valign': 'vcenter',
+            'border': 1,
+            'bg_color': purple,
+            'text_wrap': True
+        })
+        date_format = workbook.add_format({
+            'num_format': 'dd-mm-yyyy',
+            'align': 'center',
+            'valign': 'vcenter',
+            'text_wrap': True,
+            'border': 1
+        })
+        row_format = workbook.add_format({
+            'align': 'center',
+            'valign': 'vcenter',
+            'text_wrap': True,
+            'border': 1
+        })
+
+        even_row_format = workbook.add_format({
+            'align': 'center',
+            'valign': 'vcenter',
+            'text_wrap': True,
+            'bg_color': light_blue,
+            'border': 1
+        })
+        odd_row_format = workbook.add_format({
+            'align': 'center',
+            'valign': 'vcenter',
+            'text_wrap': True,
+            'border': 1
+        })
+
+        even_date_format = workbook.add_format({
+            'num_format': 'dd-mm-yyyy',
+            'align': 'center',
+            'valign': 'vcenter',
+            'text_wrap': True,
+            'bg_color': light_blue,
+            'border': 1
+        })
+        odd_date_format = workbook.add_format({
+            'num_format': 'dd-mm-yyyy',
+            'align': 'center',
+            'valign': 'vcenter',
+            'text_wrap': True,
+            'border': 1
+        })
+
+        module_path = os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        logo_path = os.path.join(
+            module_path,
+            'eram_report_templates',
+            'static',
+            'src',
+            'img',
+            'logo.png'
+        )
+
+        footer_path = os.path.join(
+            module_path,
+            'eram_report_templates',
+            'static',
+            'src',
+            'img',
+            'footer.png'
+        )
+
+        if os.path.exists(logo_path):
+            with Image.open(logo_path) as img:
+                logo_width, logo_height = img.size
+
+            scale_factor = 0.4
+            sheet.insert_image('B2', logo_path, {
+                'x_offset': 15,
+                'y_offset': 35,
+                'x_scale': scale_factor,
+                'y_scale': scale_factor,
+                'object_position': 3
+            })
+
+        report_date = fields.Date.context_today(self)
+        formatted_date = report_date.strftime('%d-%m-%Y') if report_date else ''
+
+        sheet.merge_range('B3:Q3', f'QUOTATION REPORT-{formatted_date}',
+                          heading_format)
+        sheet.merge_range('R3:S3',
+                          f'Generated by Odoo    \nDate and Time: {formatted_datetime}    \nDoc No: {doc_no}',
+                          header_doc_format)
+
+        sheet.set_row(2, 45)
+
+        headers = [
+            'Si No', 'Customer', 'Account Name', 'Product Details',
+            'Product Description', 'Quantity',
+            'Quote No', 'Quote Date', 'Po No', 'Po Date',
+            'Unit Price Per Product', 'Total Price Of The Product',
+            'Total Value With GST', 'Advance Payment Of The Product',
+            'Advance Payment Date',
+            'Delivery Date', 'Remarks', 'Remarks 1'
+        ]
+
+        for col, header in enumerate(headers, 1):
+            sheet.write(4, col, header, header_format)
+
+        row = 5
+        grand_total_price = 0
+        grand_total_gst = 0
+        grand_total_advance = 0  # Track total advance payment
+        si_no = 1
+
+        def write_center(sheet, row, col, value, format=None):
+            is_even_order = ((row - 5) // max_rows_per_order) % 2 == 0
+            if format is None:
+                if is_even_order:
+                    format = even_row_format
+                else:
+                    format = odd_row_format
+            sheet.write(row, col, value, format)
+
+        def get_currency_format(workbook, currency, is_total=False,
+                                is_even=False):
+            symbol = currency.symbol
+            position = currency.position
+            if position == 'after':
+                num_format = f'#,##0.00 "{symbol}"'
+            else:
+                num_format = f'"{symbol}" #,##0.00'
+            format_props = {
+                'num_format': num_format,
+                'align': 'center',
+                'valign': 'vcenter',
+                'text_wrap': True,
+                'border': 1
+            }
+            if is_even:
+                format_props['bg_color'] = light_blue
+            if is_total:
+                format_props.update({
+                    'bold': True,
+                    'border': 1,
+                    'bg_color': light_green,
+                    'font_size': 14
+                })
+            return workbook.add_format(format_props)
+
+        merged_ranges = set()
+
+        def safe_merge(sheet, first_row, first_col, last_row, last_col, data,
+                       cell_format=None):
+            merge_key = f"{first_row}:{first_col}:{last_row}:{last_col}"
+            if merge_key in merged_ranges:
+                return
+            is_even_order = ((first_row - 5) // max_rows_per_order) % 2 == 0
+            if cell_format is None:
+                if is_even_order:
+                    cell_format = even_row_format
+                else:
+                    cell_format = odd_row_format
+            if first_row == last_row and first_col == last_col:
+                sheet.write(first_row, first_col, data, cell_format)
+            else:
+                sheet.merge_range(first_row, first_col, last_row, last_col,
+                                  data, cell_format)
+            merged_ranges.add(merge_key)
+
+        def calculate_row_distribution(product_count, po_count):
+            max_count = max(product_count, po_count or 1)
+            if product_count == 0:
+                product_row_spans = []
+            else:
+                base_span = max_count // product_count
+                remainder = max_count % product_count
+                product_row_spans = [
+                    base_span + 1 if i < remainder else base_span for i in
+                    range(product_count)]
+            if po_count == 0:
+                po_row_spans = [max_count]
+            else:
+                base_span = max_count // po_count
+                remainder = max_count % po_count
+                po_row_spans = [base_span + 1 if i < remainder else base_span
+                                for i in range(po_count)]
+            return product_row_spans, po_row_spans, max_count
+
+        for order_idx, order in enumerate(order_ids):
+            order_start_row = row
+            partner = order.partner_id
+            full_name = partner.name
+            account_name = order.partner_id.name
+            current_si_no = si_no
+            is_even_order = (order_idx % 2 == 0)
+
+            order_lines = order.order_line
+            purchase_orders = order.e_customer_po_ids  # Use e_customer_po_ids for quotations
+
+            product_count = len(order_lines)
+            po_count = len(purchase_orders)
+
+            product_row_spans, po_row_spans, max_rows_per_order = calculate_row_distribution(
+                product_count, po_count
+            )
+
+            merged_ranges = set()
+
+            if is_even_order:
+                row_fmt = even_row_format
+                date_fmt = even_date_format
+            else:
+                row_fmt = odd_row_format
+                date_fmt = odd_date_format
+
+            order_currency = currency
+            order_currency_format = get_currency_format(workbook,
+                                                        order_currency,
+                                                        is_even=is_even_order)
+
+            current_row = row
+            product_row_index = 0
+            po_row_index = 0
+
+            for i in range(max_rows_per_order):
+                write_center(sheet, current_row + i, 1,
+                             current_si_no if i == 0 else '', row_fmt)
+                write_center(sheet, current_row + i, 2,
+                             full_name if i == 0 else '', row_fmt)
+                write_center(sheet, current_row + i, 3,
+                             account_name if i == 0 else '', row_fmt)
+
+                # Product info
+                if product_row_index < len(order_lines):
+                    line = order_lines[product_row_index]
+                    row_span = product_row_spans[product_row_index]
+                    if i < sum(product_row_spans[:product_row_index + 1]):
+                        product_name = line.product_id.name
+                        description = line.e_description or 'N/A'
+                        quantity = line.product_uom_qty
+                        unit_price = line.price_unit
+                        total_price = quantity * unit_price
+                        total_gst = total_price * 1.18
+                        if row_span > 1 and i == sum(
+                                product_row_spans[:product_row_index]):
+                            safe_merge(sheet, current_row + i, 4,
+                                       current_row + i + row_span - 1, 4,
+                                       product_name, row_fmt)
+                            safe_merge(sheet, current_row + i, 5,
+                                       current_row + i + row_span - 1, 5,
+                                       description, row_fmt)
+                            safe_merge(sheet, current_row + i, 6,
+                                       current_row + i + row_span - 1, 6,
+                                       quantity, row_fmt)
+                            safe_merge(sheet, current_row + i, 11,
+                                       current_row + i + row_span - 1, 11,
+                                       unit_price, order_currency_format)
+                            safe_merge(sheet, current_row + i, 12,
+                                       current_row + i + row_span - 1, 12,
+                                       total_price, order_currency_format)
+                            safe_merge(sheet, current_row + i, 13,
+                                       current_row + i + row_span - 1, 13,
+                                       total_gst, order_currency_format)
+                        elif row_span == 1:
+                            write_center(sheet, current_row + i, 4,
+                                         product_name, row_fmt)
+                            write_center(sheet, current_row + i, 5, description,
+                                         row_fmt)
+                            write_center(sheet, current_row + i, 6, quantity,
+                                         row_fmt)
+                            write_center(sheet, current_row + i, 11, unit_price,
+                                         order_currency_format)
+                            write_center(sheet, current_row + i, 12,
+                                         total_price, order_currency_format)
+                            write_center(sheet, current_row + i, 13, total_gst,
+                                         order_currency_format)
+                        if i == sum(product_row_spans[:product_row_index]):
+                            grand_total_price += total_price
+                            grand_total_gst += total_gst
+                        if i == sum(
+                                product_row_spans[:product_row_index + 1]) - 1:
+                            product_row_index += 1
+                    else:
+                        write_center(sheet, current_row + i, 4, '', row_fmt)
+                        write_center(sheet, current_row + i, 5, '', row_fmt)
+                        write_center(sheet, current_row + i, 6, '', row_fmt)
+                        write_center(sheet, current_row + i, 11, '',
+                                     order_currency_format)
+                        write_center(sheet, current_row + i, 12, '',
+                                     order_currency_format)
+                        write_center(sheet, current_row + i, 13, '',
+                                     order_currency_format)
+
+                # Quote info
+                write_center(sheet, current_row + i, 7,
+                             order.name if i == 0 else '', row_fmt)
+                if i == 0 and order.date_order:
+                    if isinstance(order.date_order, str):
+                        quote_date = fields.Date.from_string(
+                            order.date_order).strftime('%d-%m-%Y')
+                    else:
+                        quote_date = order.date_order.strftime('%d-%m-%Y')
+                    write_center(sheet, current_row + i, 8, quote_date,
+                                 date_fmt)
+                else:
+                    write_center(sheet, current_row + i, 8, '', row_fmt)
+
+                # PO info, including Delivery Date
+                if po_count == 0:
+                    if i == 0:
+                        safe_merge(sheet, current_row, 9,
+                                   current_row + max_rows_per_order - 1, 9,
+                                   'N/A', row_fmt)
+                        safe_merge(sheet, current_row, 10,
+                                   current_row + max_rows_per_order - 1, 10,
+                                   'N/A', row_fmt)
+                        safe_merge(sheet, current_row, 14,
+                                   current_row + max_rows_per_order - 1, 14,
+                                   0.0, order_currency_format)
+                        safe_merge(sheet, current_row, 15,
+                                   current_row + max_rows_per_order - 1, 15,
+                                   'N/A', date_fmt)
+                        safe_merge(sheet, current_row, 16,
+                                   current_row + max_rows_per_order - 1, 16,
+                                   'N/A', date_fmt)
+                else:
+                    if po_row_index < len(purchase_orders):
+                        po = purchase_orders[po_row_index]
+                        row_span = po_row_spans[po_row_index]
+                        if i < sum(po_row_spans[:po_row_index + 1]):
+                            po_name = po.name or 'N/A'
+                            po_date = 'N/A'
+                            if po.date:
+                                if isinstance(po.date, str):
+                                    po_date = fields.Date.from_string(
+                                        po.date).strftime('%d-%m-%Y')
+                                else:
+                                    po_date = po.date.strftime('%d-%m-%Y')
+                            advance_amount = po.advance_amount or 0.0
+                            advance_date = po.advance_date
+                            delivery_date = po.delivery_date  # Fetch delivery_date from po
+                            advance_date_formatted = 'N/A'
+                            if advance_date:
+                                if isinstance(advance_date, str):
+                                    advance_date_formatted = fields.Date.from_string(
+                                        advance_date).strftime('%d-%m-%Y')
+                                else:
+                                    advance_date_formatted = advance_date.strftime(
+                                        '%d-%m-%Y')
+                            delivery_date_formatted = 'N/A'
+                            if delivery_date:
+                                if isinstance(delivery_date, str):
+                                    delivery_date_formatted = fields.Date.from_string(
+                                        delivery_date).strftime('%d-%m-%Y')
+                                else:
+                                    delivery_date_formatted = delivery_date.strftime(
+                                        '%d-%m-%Y')
+                            if row_span > 1 and i == sum(
+                                    po_row_spans[:po_row_index]):
+                                safe_merge(sheet, current_row + i, 9,
+                                           current_row + i + row_span - 1, 9,
+                                           po_name, row_fmt)
+                                safe_merge(sheet, current_row + i, 10,
+                                           current_row + i + row_span - 1, 10,
+                                           po_date,
+                                           date_fmt if po_date != 'N/A' else row_fmt)
+                                safe_merge(sheet, current_row + i, 14,
+                                           current_row + i + row_span - 1, 14,
+                                           advance_amount,
+                                           order_currency_format)
+                                safe_merge(sheet, current_row + i, 15,
+                                           current_row + i + row_span - 1, 15,
+                                           advance_date_formatted,
+                                           date_fmt if advance_date_formatted != 'N/A' else row_fmt)
+                                safe_merge(sheet, current_row + i, 16,
+                                           current_row + i + row_span - 1, 16,
+                                           delivery_date_formatted,
+                                           date_fmt if delivery_date_formatted != 'N/A' else row_fmt)
+                            elif row_span == 1:
+                                write_center(sheet, current_row + i, 9, po_name,
+                                             row_fmt)
+                                write_center(sheet, current_row + i, 10,
+                                             po_date,
+                                             date_fmt if po_date != 'N/A' else row_fmt)
+                                write_center(sheet, current_row + i, 14,
+                                             advance_amount,
+                                             order_currency_format)
+                                write_center(sheet, current_row + i, 15,
+                                             advance_date_formatted,
+                                             date_fmt if advance_date_formatted != 'N/A' else row_fmt)
+                                write_center(sheet, current_row + i, 16,
+                                             delivery_date_formatted,
+                                             date_fmt if delivery_date_formatted != 'N/A' else row_fmt)
+                            if i == sum(po_row_spans[:po_row_index]):
+                                grand_total_advance += advance_amount
+                            if i == sum(po_row_spans[:po_row_index + 1]) - 1:
+                                po_row_index += 1
+                        else:
+                            write_center(sheet, current_row + i, 9, '', row_fmt)
+                            write_center(sheet, current_row + i, 10, '',
+                                         date_fmt)
+                            write_center(sheet, current_row + i, 14, '',
+                                         order_currency_format)
+                            write_center(sheet, current_row + i, 15, '',
+                                         date_fmt)
+                            write_center(sheet, current_row + i, 16, '',
+                                         date_fmt)
+                    else:
+                        write_center(sheet, current_row + i, 9, '', row_fmt)
+                        write_center(sheet, current_row + i, 10, '', date_fmt)
+                        write_center(sheet, current_row + i, 14, '',
+                                     order_currency_format)
+                        write_center(sheet, current_row + i, 15, '', date_fmt)
+                        write_center(sheet, current_row + i, 16, '', date_fmt)
+
+                # Remarks
+                write_center(sheet, current_row + i, 17,
+                             'Under Production', row_fmt)
+
+                # Remarks 1 (from note)
+                write_center(sheet, current_row + i, 18,
+                             '', row_fmt)
+
+            if max_rows_per_order > 1:
+                safe_merge(sheet, row, 1, row + max_rows_per_order - 1, 1,
+                           current_si_no, row_fmt)
+                safe_merge(sheet, row, 2, row + max_rows_per_order - 1, 2,
+                           full_name, row_fmt)
+                safe_merge(sheet, row, 3, row + max_rows_per_order - 1, 3,
+                           account_name, row_fmt)
+                safe_merge(sheet, row, 7, row + max_rows_per_order - 1, 7,
+                           order.name, row_fmt)
+                if order.date_order:
+                    quote_date = fields.Date.from_string(
+                        order.date_order) if isinstance(order.date_order,
+                                                        str) else order.date_order
+                    quote_date = quote_date.strftime('%d-%m-%Y')
+                    safe_merge(sheet, row, 8, row + max_rows_per_order - 1, 8,
+                               quote_date, date_fmt)
+                else:
+                    safe_merge(sheet, row, 8, row + max_rows_per_order - 1, 8,
+                               '', row_fmt)
+                if po_count == 0:
+                    safe_merge(sheet, row, 9, row + max_rows_per_order - 1, 9,
+                               'N/A', row_fmt)
+                    safe_merge(sheet, row, 10, row + max_rows_per_order - 1, 10,
+                               'N/A', row_fmt)
+                    safe_merge(sheet, row, 14, row + max_rows_per_order - 1, 14,
+                               0.0, order_currency_format)
+                    safe_merge(sheet, row, 15, row + max_rows_per_order - 1, 15,
+                               'N/A', date_fmt)
+                    safe_merge(sheet, row, 16, row + max_rows_per_order - 1, 16,
+                               'N/A', date_fmt)
+                safe_merge(sheet, row, 17, row + max_rows_per_order - 1, 17,
+                           'Under Production', row_fmt)
+                safe_merge(sheet, row, 18, row + max_rows_per_order - 1, 18,
+                           '', row_fmt)
+
+            row += max_rows_per_order
+            si_no += 1
+
+        currency_format = get_currency_format(workbook, currency, is_total=True)
+        total_qty_format = workbook.add_format({
+            'bold': True,
+            'align': 'center',
+            'valign': 'vcenter',
+            'border': 1,
+            'bg_color': light_green,
+            'text_wrap': True,
+            'font_size': 14
+        })
+
+        sheet.merge_range(f'B{row + 1}:L{row + 1}', 'TOTAL VALUE:',
+                          total_qty_format)
+        write_center(sheet, row, 12, grand_total_price, currency_format)
+        write_center(sheet, row, 13, grand_total_gst, currency_format)
+        write_center(sheet, row, 14, grand_total_advance, currency_format)
+        write_center(sheet, row, 15, '', total_qty_format)
+        write_center(sheet, row, 16, '', total_qty_format)
+        for col in range(17, 19):
+            write_center(sheet, row, col, '', total_qty_format)
+
+        row += 3
+        note_format = workbook.add_format({
+            'bold': True,
+            'text_wrap': True,
+            'align': 'left',
+            'valign': 'top',
+            'font_size': 14,
+            'font_color': red,
+        })
+        sheet.merge_range(f'B{row}:T{row}',
+                          'Note: This report has been generated using the Odoo tool by the Eram Power engineers with Python code. The report has been converted into Excel format.',
+                          note_format)
+
+        row += 1
+        purple_format = workbook.add_format({
+            'bold': True,
+            'text_wrap': True,
+            'align': 'center',
+            'font_size': 14,
+        })
+        sheet.merge_range(f'B{row}:T{row}', '', purple_format)
+
+        row += 1
+        sheet.merge_range(f'B{row}:F{row}', 'Prepared By', purple_format)
+        sheet.merge_range(f'G{row}:L{row}', 'Reviewed By', purple_format)
+        sheet.merge_range(f'M{row}:T{row}', 'Approved By', purple_format)
+
+        row += 1
+        sheet.merge_range(f'B{row}:T{row}', '', purple_format)
+
+        row += 1
+        sheet.merge_range(f'B{row}:F{row}', 'Priya Singh', purple_format)
+        sheet.merge_range(f'G{row}:L{row}', 'Sneha John', purple_format)
+        sheet.merge_range(f'M{row}:T{row}', 'Basil Issac', purple_format)
+
+        row += 1
+        sheet.merge_range(f'B{row}:F{row}', 'Data Analyst - Sourcing',
+                          purple_format)
+        sheet.merge_range(f'G{row}:L{row}', 'Project Manager', purple_format)
+        sheet.merge_range(f'M{row}:T{row}', 'Vice President', purple_format)
+
+        row += 1
+        sheet.merge_range(f'B{row}:T{row}', '', purple_format)
+
+        row += 2
+
+        if os.path.exists(footer_path):
+            total_width_pixels = sum([w * 8.1 for w in col_widths])
+            with Image.open(footer_path) as img:
+                footer_width, footer_height = img.size
+            scale_factor = total_width_pixels / 1000
+            footer_row = row + 1
+            sheet.insert_image(
+                f'B{footer_row}',
+                footer_path,
+                {
+                    'x_offset': 0,
+                    'y_offset': 0,
+                    'x_scale': scale_factor / 4,
+                    'y_scale': scale_factor / 4,
+                    'object_position': 3
+                }
+            )
+            sheet.set_row(footer_row - 1,
+                          footer_height * (scale_factor / 2) / 1.33)
+
         workbook.close()
-        output.seek(0)
-        response.stream.write(output.read())
-        output.close()

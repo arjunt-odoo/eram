@@ -83,6 +83,9 @@
             <xpath expr="//notebook//field[@name='invoice_line_ids']/list/field[@name='price_unit']" position="after">
                 <field name="price_subtotal" string="Total Price"/>
             </xpath>
+            <xpath expr="//notebook//page[@id='other_tab']//field[@name='delivery_date']" position="after">
+                <field name="e_sequence"/>
+            </xpath>
             <xpath expr="//group[hasclass('oe_invoice_lines_tab')]" position="before">
                 <group>
                     <field name="e_amount_total_words"/>

@@ -32,6 +32,8 @@ class AccountMove(models.Model):
     e_amount_total_words = fields.Char(
         string="Total amount in words",
     )
+    e_sequence = fields.Integer("Sequence", defualt=1,
+                                help="The order in which the invoices are taken in sale order report")
 
     def _compute_tax_totals(self):
         """Override to sort tax groups alphabetically by group_name"""

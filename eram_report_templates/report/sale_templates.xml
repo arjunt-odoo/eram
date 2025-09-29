@@ -148,19 +148,19 @@
                             <table class="table table-bordered">
                                 <thead>
                                     <tr>
-                                        <th>S.I.NO</th>
-                                        <th>ITEM</th>
-                                        <th>PRODUCT DESCRIPTION</th>
-                                        <th>UOM</th>
-                                        <th>QTY</th>
-                                        <th>UNIT PRICE (<span t-field="currency.name"/>)</th>
-                                        <th>TOTAL (<span t-field="currency.name"/>)</th>
+                                        <th class="text-center" style="padding-left:2px;">S.I.NO</th>
+                                        <th class="text-center">ITEM</th>
+                                        <th class="text-center">PRODUCT DESCRIPTION</th>
+                                        <th class="text-center">UOM</th>
+                                        <th class="text-center">QTY</th>
+                                        <th class="text-center" style="width:12%;">UNIT PRICE (<span t-field="currency.name"/>)</th>
+                                        <th class="text-center">TOTAL (<span t-field="currency.name"/>)</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <t t-foreach="doc.order_line" t-as="line">
                                         <tr t-if="not line.display_type">
-                                            <td><span t-esc="line_index + 1"/></td>
+                                            <td class="text-center"><span t-esc="line_index + 1"/></td>
                                             <td><span t-field="line.product_id"/></td>
                                             <td><span t-field="line.e_description"/></td>
                                             <td><span t-field="line.product_uom.name"/></td>
