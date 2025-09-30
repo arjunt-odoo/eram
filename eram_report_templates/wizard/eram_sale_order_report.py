@@ -87,7 +87,7 @@ class EramSaleOrderReport(models.TransientModel):
 
         # Then, create sheets for quotations
         for currency, orders in quotations_by_currency.items():
-            sheet_name = f"Quotation Report ({currency.name})"
+            sheet_name = f"Existing PO Report ({currency.name})"
             sheet = workbook.add_worksheet(sheet_name)
             self.write_quotation_sheet(workbook, sheet, orders, quote_doc_no, formatted_datetime, currency)
 
@@ -887,6 +887,32 @@ class EramSaleOrderReport(models.TransientModel):
             si_no += 1
 
         currency_format = get_currency_format(workbook, currency, is_total=True)
+        symbol = currency.symbol
+        position = currency.position
+        if position == 'after':
+            num_format = f'#,##0.00 "{symbol}"'
+        else:
+            num_format = f'"{symbol}" #,##0.00'
+        advance_currency_format = workbook.add_format({
+            'num_format': num_format,
+            'align': 'center',
+            'valign': 'vcenter',
+            'text_wrap': True,
+            'border': 1,
+            'bold': True,
+            'bg_color': "#92d050",
+            'font_size': 14
+        })
+        balance_currency_format = workbook.add_format({
+            'num_format': num_format,
+            'align': 'center',
+            'valign': 'vcenter',
+            'text_wrap': True,
+            'border': 1,
+            'bold': True,
+            'bg_color': "#ff5353",
+            'font_size': 14
+        })
         total_qty_format = workbook.add_format({
             'bold': True,
             'align': 'center',
@@ -912,9 +938,9 @@ class EramSaleOrderReport(models.TransientModel):
         write_center(sheet, row, 16, grand_total_value, currency_format)
         write_center(sheet, row, 17, '', total_qty_format)
         write_center(sheet, row, 18, '', total_qty_format)
-        write_center(sheet, row, 19, grand_total_advance, currency_format)
+        write_center(sheet, row, 19, grand_total_advance, advance_currency_format)
         write_center(sheet, row, 20, '', total_qty_format)
-        write_center(sheet, row, 21, grand_total_balance, currency_format)
+        write_center(sheet, row, 21, grand_total_balance, balance_currency_format)
         write_center(sheet, row, 22, '', total_qty_format)
         write_center(sheet, row, 23, '', total_qty_format)
         write_center(sheet, row, 24, '', total_qty_format)
@@ -928,10 +954,10 @@ class EramSaleOrderReport(models.TransientModel):
             'align': 'left',
             'valign': 'top',
             'font_size': 14,
-            'font_color': red,
+            'font_color': "#92d050",
         })
         sheet.merge_range(f'B{row}:AA{row}',
-                          'Note: This report has been developed using the Odoo tool by the Eram Power Electronics, R&D with Python code. The output has been converted into Excel format.',
+                          'Note: This report has been developed using the Odoo software tool by the Eram Power Electronics, R&D with Python code. The output has been converted into an Excel format.',
                           note_format)
 
         row += 1
@@ -1230,8 +1256,7 @@ class EramSaleOrderReport(models.TransientModel):
 
         for order_idx, order in enumerate(order_ids):
             order_start_row = row
-            partner = order.partner_id
-            full_name = partner.name
+            full_name = order.e_attn
             account_name = order.partner_id.name
             current_si_no = si_no
             is_even_order = (order_idx % 2 == 0)
@@ -1522,11 +1547,28 @@ class EramSaleOrderReport(models.TransientModel):
             'font_size': 14
         })
 
+        symbol = currency.symbol
+        position = currency.position
+        if position == 'after':
+            num_format = f'#,##0.00 "{symbol}"'
+        else:
+            num_format = f'"{symbol}" #,##0.00'
+        advance_currency_format = workbook.add_format({
+            'num_format': num_format,
+            'align': 'center',
+            'valign': 'vcenter',
+            'text_wrap': True,
+            'border': 1,
+            'bold': True,
+            'bg_color': "#92d050",
+            'font_size': 14
+        })
+
         sheet.merge_range(f'B{row + 1}:L{row + 1}', 'TOTAL VALUE:',
                           total_qty_format)
         write_center(sheet, row, 12, grand_total_price, currency_format)
         write_center(sheet, row, 13, grand_total_gst, currency_format)
-        write_center(sheet, row, 14, grand_total_advance, currency_format)
+        write_center(sheet, row, 14, grand_total_advance, advance_currency_format)
         write_center(sheet, row, 15, '', total_qty_format)
         write_center(sheet, row, 16, '', total_qty_format)
         for col in range(17, 19):
@@ -1539,10 +1581,10 @@ class EramSaleOrderReport(models.TransientModel):
             'align': 'left',
             'valign': 'top',
             'font_size': 14,
-            'font_color': red,
+            'font_color': "#92d050",
         })
         sheet.merge_range(f'B{row}:T{row}',
-                          'Note: This report has been developed using the Odoo tool by the Eram Power Electronics, R&D with Python code. The output has been converted into Excel format.',
+                          'Note: This report has been developed using the Odoo software tool by the Eram Power Electronics, R&D with Python code. The output has been converted into an Excel format.',
                           note_format)
 
         row += 1
