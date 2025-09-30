@@ -23,6 +23,7 @@
         'views/purchase_order_views.xml',
         'views/res_config_settings_views.xml',
         'views/sale_order_views.xml',
+        'views/stock_picking_views.xml',
         'wizard/eram_sale_order_report_views.xml'
     ],
     'assets': {
