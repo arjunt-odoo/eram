@@ -43,6 +43,12 @@ class SaleOrder(models.Model):
                         )
         return res
 
+    def _prepare_confirmation_values(self):
+        vals = super()._prepare_confirmation_values()
+        vals.update({
+            'date_order': self.date_order
+        })
+        return vals
 
 class SaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
