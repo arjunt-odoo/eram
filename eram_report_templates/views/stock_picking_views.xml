@@ -12,6 +12,10 @@
             <field name="date_done" position="attributes">
                 <attribute name="readonly">0</attribute>
             </field>
+            <xpath expr="//button[@name='action_cancel']" position="after">
+                <button name="action_reset_to_draft" type="object"
+                        string="Reset to Draft" invisible="state != 'done'"/>
+            </xpath>
         </field>
     </record>
 </odoo>

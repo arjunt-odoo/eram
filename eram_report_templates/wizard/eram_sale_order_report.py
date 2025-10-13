@@ -970,24 +970,29 @@ class EramSaleOrderReport(models.TransientModel):
         sheet.merge_range(f'B{row}:AA{row}', '', purple_format)
 
         row += 1
-        sheet.merge_range(f'B{row}:I{row}', 'Prepared By', purple_format)
-        sheet.merge_range(f'J{row}:Q{row}', 'Reviewed By', purple_format)
-        sheet.merge_range(f'R{row}:AA{row}', 'Approved By', purple_format)
+        sheet.merge_range(f'B{row}:G{row}', 'Prepared By', purple_format)
+        sheet.merge_range(f'H{row}:N{row}', 'Reviewed By', purple_format)
+        sheet.merge_range(f'O{row}:U{row}', 'Verified By', purple_format)
+        sheet.merge_range(f'V{row}:AA{row}', 'Approved By', purple_format)
 
         row += 1
-        sheet.merge_range(f'B{row}:AA{row}', '', purple_format)
+        sheet.merge_range(f'B{row}:G{row}', '', purple_format)
+        sheet.merge_range(f'H{row}:N{row}', '', purple_format)
+        sheet.merge_range(f'O{row}:U{row}', '', purple_format)
+        sheet.merge_range(f'V{row}:AA{row}', '', purple_format)
 
         row += 1
-        sheet.merge_range(f'B{row}:I{row}', 'Priya Singh', purple_format)
-        sheet.merge_range(f'J{row}:Q{row}', 'Mark Dass', purple_format)
-        sheet.merge_range(f'R{row}:AA{row}', 'Sneha John', purple_format)
+        sheet.merge_range(f'B{row}:G{row}', 'Priya Singh', purple_format)
+        sheet.merge_range(f'H{row}:N{row}', 'Mark Dass', purple_format)
+        sheet.merge_range(f'O{row}:U{row}', 'Sneha John', purple_format)
+        sheet.merge_range(f'V{row}:AA{row}', 'Basil Issac', purple_format)
 
         row += 1
-        sheet.merge_range(f'B{row}:I{row}', 'Data Analyst - Sourcing',
+        sheet.merge_range(f'B{row}:G{row}', 'Data Analyst - Sourcing',
                           purple_format)
-        sheet.merge_range(f'J{row}:Q{row}', 'Office Assistant', purple_format)
-        sheet.merge_range(f'R{row}:AA{row}', 'Project Manager', purple_format)
-
+        sheet.merge_range(f'H{row}:N{row}', 'Office Assistant', purple_format)
+        sheet.merge_range(f'O{row}:U{row}', 'Project Manager', purple_format)
+        sheet.merge_range(f'V{row}:AA{row}', 'Vice President', purple_format)
         row += 1
         sheet.merge_range(f'B{row}:AA{row}', '', purple_format)
 
@@ -1598,22 +1603,28 @@ class EramSaleOrderReport(models.TransientModel):
 
         row += 1
         sheet.merge_range(f'B{row}:F{row}', 'Prepared By', purple_format)
-        sheet.merge_range(f'G{row}:L{row}', 'Reviewed By', purple_format)
-        sheet.merge_range(f'M{row}:T{row}', 'Approved By', purple_format)
+        sheet.merge_range(f'G{row}:J{row}', 'Reviewed By', purple_format)
+        sheet.merge_range(f'K{row}:N{row}', 'Verified By', purple_format)
+        sheet.merge_range(f'O{row}:S{row}', 'Approved By', purple_format)
 
         row += 1
-        sheet.merge_range(f'B{row}:T{row}', '', purple_format)
+        sheet.merge_range(f'B{row}:F{row}', '', purple_format)
+        sheet.merge_range(f'G{row}:J{row}', '', purple_format)
+        sheet.merge_range(f'K{row}:N{row}', '', purple_format)
+        sheet.merge_range(f'O{row}:S{row}', '', purple_format)
 
         row += 1
         sheet.merge_range(f'B{row}:F{row}', 'Priya Singh', purple_format)
-        sheet.merge_range(f'G{row}:L{row}', 'Mark Dass', purple_format)
-        sheet.merge_range(f'M{row}:T{row}', 'Sneha John', purple_format)
+        sheet.merge_range(f'G{row}:J{row}', 'Mark Dass', purple_format)
+        sheet.merge_range(f'K{row}:N{row}', 'Sneha John', purple_format)
+        sheet.merge_range(f'O{row}:S{row}', 'Basil Issac', purple_format)
 
         row += 1
         sheet.merge_range(f'B{row}:F{row}', 'Data Analyst - Sourcing',
                           purple_format)
-        sheet.merge_range(f'G{row}:L{row}', 'Office Assistant', purple_format)
-        sheet.merge_range(f'M{row}:T{row}', 'Project Manager', purple_format)
+        sheet.merge_range(f'G{row}:J{row}', 'Office Assistant', purple_format)
+        sheet.merge_range(f'K{row}:N{row}', 'Project Manager', purple_format)
+        sheet.merge_range(f'O{row}:S{row}', 'Vice President', purple_format)
 
         row += 1
         sheet.merge_range(f'B{row}:T{row}', '', purple_format)
