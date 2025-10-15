@@ -382,7 +382,10 @@
                                     <span>1)</span>
                                 </div>
                                 <div class="col-11">
-                                    <p>Above item (s) should be supplied as per the quotation and all the related clarifications.</p>
+                                    <span>1.1 Design and development control.</span><br/>
+                                    <span>1.2 Special requirements, critical items, or key characteristics.</span><br/>
+                                    <span>1.3 Test, inspection, and verification (including production process verification).</span><br/>
+                                    <span>1.4 The use of statistical techniques for product acceptance and related instructions for acceptance by the organization.</span><br/>
                                 </div>
                             </div>
                             <div class="row" style="page-break-inside: avoid;">
@@ -390,9 +393,14 @@
                                     <span>2)</span>
                                 </div>
                                 <div class="col-11">
-                                    <p>This Purchase Order is issued against your offer / quotation mentioned above. Unless otherwise
-                                        specified, all applicable terms and conditions thereof and those cited here below shall apply to
-                                        this order.  Any exception should be kept informed while acknowledging the order.</p>
+                                    <span>2.1 Implement a quality management system.</span><br/>
+                                    <span>2.2 Use customer-designated or approved external providers, including process sources.</span><br/>
+                                    <span>2.3 Notify the organization of nonconforming processes, products, or services and obtain approval for their disposition.</span>
+                                    <span>2.4 Prevent the use of counterfeit parts.</span><br/>
+                                    <span>2.5 Notify the organization of changes to processes, products, or services, including changes of their external providers or location of manufacture, and obtain the organization’s approval.</span><br/>
+                                    <span>2.6 Flow down to external providers applicable requirements including customer requirements.</span><br/>
+                                    <span>2.7 Provide test specimens for design approval, inspection/verification, investigation, or auditing.</span><br/>
+                                    <span>2.8 Retain documented information, including retention periods and disposition requirements.</span><br/>
                                 </div>
                             </div>
                             <div class="row" style="page-break-inside: avoid;">
@@ -400,14 +408,47 @@
                                     <span>3)</span>
                                 </div>
                                 <div class="col-11">
-                                    <p>Order confirmation: Within 2 days upon receipt of this order (by fax or e-mail), supplier shall
-                                        acknowledge to the buyer, acceptance of this order.  Failure to confirm or acknowledge this order and
-                                         its terms and conditions, will be presumed as acceptance within the prescribed period.</p>
+                                    <span>The right of access by the organization, their customer, and regulatory authorities to the applicable areas of facilities and to applicable documented information, at any level of the supply chain.</span>
                                 </div>
                             </div>
                             <div class="row" style="page-break-inside: avoid;">
                                 <div class="col-1">
                                     <span>4)</span>
+                                </div>
+                                <div class="col-11">
+                                    <span>Ensuring that persons are aware of:</span><br/>
+                                    <span>4.1 Their contribution to product or service conformity.</span><br/>
+                                    <span>4.2 Their contribution to product safety.</span><br/>
+                                    <span>4.3 The importance of ethical behaviour.</span>
+                                </div>
+                            </div>
+                            <div class="row" style="page-break-inside: avoid;">
+                                <div class="col-1">
+                                    <span>5)</span>
+                                </div>
+                                <div class="col-11">
+                                    <span>Above item (s) should be supplied as per the quotation and all the related clarifications.</span>
+                                </div>
+                            </div>
+                            <div class="row" style="page-break-inside: avoid;">
+                                <div class="col-1">
+                                    <span>6)</span>
+                                </div>
+                                <div class="col-11">
+                                    <span>This Purchase Order is issued against your offer / quotation mentioned above. Unless otherwise specified, all applicable terms and conditions thereof and those cited here below shall apply to this order.  Any exception should be kept informed while acknowledging the order.</span>
+                                </div>
+                            </div>
+                            <div class="row" style="page-break-inside: avoid;">
+                                <div class="col-1">
+                                    <span>7)</span>
+                                </div>
+                                <div class="col-11">
+                                    <span>Order confirmation: Within 2 days upon receipt of this order (by fax or e-mail), supplier shall acknowledge to the buyer, acceptance of this order.  Failure to confirm or acknowledge this order and its terms and conditions, will be presumed as acceptance within the prescribed period.</span>
+                                </div>
+                            </div>
+                            <div class="row" style="page-break-inside: avoid;">
+                                <div class="col-1">
+                                    <span>8)</span>
                                 </div>
                                 <div class="col-11">
                                     <span>For payments, kindly contact our Senior Accountant Mr. Mohammed Sirajudheen K.</span><br/>
@@ -421,7 +462,7 @@
                                 <br/>
                                 <br/>
                                 <p><strong>Mark Dass</strong></p>
-                                <p><strong>Procurement Specialist</strong></p>
+                                <p><strong>Office Assistant</strong></p>
                             </div>
                             <div class="col-3 text-center">
                                 <p><strong>Reviewed by:</strong></p>
