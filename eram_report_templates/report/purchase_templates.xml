@@ -2,7 +2,6 @@
 <odoo>
     <template id="eram_report_purchaseorder_document"
               name="Eram Purchase Order Template">
-<!--        <xpath expr="//t[@t-call='web.external_layout']" position="replace">-->
          <t t-call="web.html_container">
              <t t-foreach="docs" t-as="o">
                 <t t-call="web.external_layout">
@@ -152,7 +151,7 @@
                                             <td class="border-right width-60">
                                                 <table class="inner-table">
                                                     <tr>
-                                                        <td class="width-35 text-left-padded">P.O. Box(Address)</td>
+                                                        <td class="width-35 text-left-padded" style="vertical-align: middle;">P.O. Box(Address)</td>
                                                         <td>: <span t-field="o.partner_id.name" class="pl-1"/>,<br/>
                                                             <span t-field="o.partner_id.street"/>,
                                                             <span t-field="o.partner_id.city"/>,
@@ -161,10 +160,10 @@
                                                     </tr>
                                                 </table>
                                             </td>
-                                            <td class="width-40">
+                                            <td class="width-40" style="vertical-align: middle;">
                                                 <table class="inner-table">
                                                     <tr>
-                                                        <td class="width-45 text-left-padded">REF Date</td>
+                                                        <td class="width-45 text-left-padded" style="vertical-align: middle;">REF Date</td>
                                                         <td>: <span t-field="o.e_ref_date"/></td>
                                                     </tr>
                                                 </table>
@@ -377,7 +376,7 @@
                             <p>1) Late delivery penalty:  A late delivery penalty shall be imposed from at the rate of 1% per week
                                 subject  to a maximum of 10% of the total Purchase Order value.</p>
                             <h5><u> Terms &amp; Conditions</u></h5>
-                            <div class="row" style="page-break-inside: avoid;">
+                            <div class="row align-items-center" style="page-break-inside: avoid;">
                                 <div class="col-1">
                                     <span>1)</span>
                                 </div>
@@ -388,7 +387,8 @@
                                     <span>1.4 The use of statistical techniques for product acceptance and related instructions for acceptance by the organization.</span><br/>
                                 </div>
                             </div>
-                            <div class="row" style="page-break-inside: avoid;">
+                            <br/>
+                            <div class="row align-items-center" style="page-break-inside: avoid;">
                                 <div class="col-1">
                                     <span>2)</span>
                                 </div>
@@ -403,7 +403,8 @@
                                     <span>2.8 Retain documented information, including retention periods and disposition requirements.</span><br/>
                                 </div>
                             </div>
-                            <div class="row" style="page-break-inside: avoid;">
+                            <br/>
+                            <div class="row align-items-center" style="page-break-inside: avoid;">
                                 <div class="col-1">
                                     <span>3)</span>
                                 </div>
@@ -411,7 +412,8 @@
                                     <span>The right of access by the organization, their customer, and regulatory authorities to the applicable areas of facilities and to applicable documented information, at any level of the supply chain.</span>
                                 </div>
                             </div>
-                            <div class="row" style="page-break-inside: avoid;">
+                            <br/>
+                            <div class="row align-items-center" style="page-break-inside: avoid;">
                                 <div class="col-1">
                                     <span>4)</span>
                                 </div>
@@ -422,7 +424,8 @@
                                     <span>4.3 The importance of ethical behaviour.</span>
                                 </div>
                             </div>
-                            <div class="row" style="page-break-inside: avoid;">
+                            <br/>
+                            <div class="row align-items-center" style="page-break-inside: avoid;">
                                 <div class="col-1">
                                     <span>5)</span>
                                 </div>
@@ -430,7 +433,8 @@
                                     <span>Above item (s) should be supplied as per the quotation and all the related clarifications.</span>
                                 </div>
                             </div>
-                            <div class="row" style="page-break-inside: avoid;">
+                            <br/>
+                            <div class="row align-items-center" style="page-break-inside: avoid;">
                                 <div class="col-1">
                                     <span>6)</span>
                                 </div>
@@ -438,7 +442,8 @@
                                     <span>This Purchase Order is issued against your offer / quotation mentioned above. Unless otherwise specified, all applicable terms and conditions thereof and those cited here below shall apply to this order.  Any exception should be kept informed while acknowledging the order.</span>
                                 </div>
                             </div>
-                            <div class="row" style="page-break-inside: avoid;">
+                            <br/>
+                            <div class="row align-items-center" style="page-break-inside: avoid;">
                                 <div class="col-1">
                                     <span>7)</span>
                                 </div>
@@ -446,7 +451,8 @@
                                     <span>Order confirmation: Within 2 days upon receipt of this order (by fax or e-mail), supplier shall acknowledge to the buyer, acceptance of this order.  Failure to confirm or acknowledge this order and its terms and conditions, will be presumed as acceptance within the prescribed period.</span>
                                 </div>
                             </div>
-                            <div class="row" style="page-break-inside: avoid;">
+                            <br/>
+                            <div class="row align-items-center" style="page-break-inside: avoid;">
                                 <div class="col-1">
                                     <span>8)</span>
                                 </div>
@@ -490,6 +496,5 @@
                 </t>
              </t>
          </t>
-<!--        </xpath>-->
     </template>
 </odoo>
