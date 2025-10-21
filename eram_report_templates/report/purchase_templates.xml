@@ -8,11 +8,46 @@
                     <t t-set="o" t-value="o.with_context(lang=o.partner_id.lang)"/>
                     <style>
                         .page {
+                            font-family: 'Calibri', sans-serif;
                             font-size: 0.7em;
+                        }
+                        h3 {
+                            font-size: 16pt !important;
+                            font-weight: bold !important;
+                            text-align: center;
+                            text-decoration: underline;
+                        }
+                        .body-text {
+                            font-size: 11pt;
                             font-weight: bold;
                         }
-                        .page * {
-                            font-weight: bold !important;
+                        .body-text * {
+                            font-size: 11pt;
+                            font-weight: bold;
+                        }
+                        .terms {
+                            font-size: 11pt;
+                            font-weight: bold;
+                        }
+                        .terms * {
+                            font-size: 11pt;
+                            font-weight: bold;
+                        }
+                        .signatures {
+                            font-size: 11pt;
+                            font-weight: bold;
+                        }
+                        .signatures * {
+                            font-size: 11pt;
+                            font-weight: bold;
+                        }
+                        .table-bordered th {
+                            font-size: 9pt;
+                            font-weight: bold;
+                        }
+                        .table-bordered td {
+                            font-size: 9pt;
+                            font-weight: normal;
                         }
                         table {
                             page-break-inside: auto;
@@ -40,13 +75,14 @@
                         .po-table {
                             width: 100%;
                             border-collapse: collapse;
+                            font-size: 11pt;
+                            font-weight: bold;
                         }
                         .po-table td {
                             padding-left: 5px;
                             border: 1px solid black;
-                        }
-                        .po-table .border-none {
-                            border: none !important;
+                            font-size: 11pt;
+                            font-weight: bold;
                         }
                         .po-table .text-center {
                             text-align: center;
@@ -111,29 +147,44 @@
                         .po-table .inner-table td {
                             border: none;
                             padding-left: 0;
+                            font-size: 11pt;
+                            font-weight: bold;
                         }
                         .po-table .inner-table .text-left-padded {
                             padding-left: 5px !important;
                         }
+                        .header-table {
+                            width: 40%;
+                            margin-left: auto;
+                            border-collapse: collapse;
+                            font-size: 11pt;
+                            font-weight: bold;
+                        }
+                        .header-table td {
+                            border: 1px solid black;
+                            padding: 5px;
+                            text-align: center;
+                            font-size: 11pt;
+                            font-weight: bold;
+                        }
                     </style>
                     <div class="page">
                         <div class="text-center">
-                            <h3><u>PURCHASE ORDER</u></h3>
+                            <h3>PURCHASE ORDER</h3>
                         </div>
+                        <table class="header-table">
+                            <tr>
+                                <td><strong>PO #</strong></td>
+                                <td><strong>DATE</strong></td>
+                                <td><strong>REV.NO.</strong></td>
+                            </tr>
+                            <tr>
+                                <td><span t-field="o.name"/></td>
+                                <td><span t-field="o.e_ref_date"/></td>
+                                <td><span t-field="o.e_rev_no"/></td>
+                            </tr>
+                        </table>
                         <table class="po-table">
-                            <tr>
-                                <td class="border-none" style="width:546px"/>
-                                <td class="text-center"><strong>PO #</strong></td>
-                                <td class="text-center"><strong>DATE</strong></td>
-                                <td class="text-center"><strong>REV.NO.</strong></td>
-                            </tr>
-                            <tr>
-                                <td class="border-none" style="width:546px"/>
-                                <td class="text-center"><span t-field="o.name"/></td>
-                                <td class="text-center"><span t-field="o.e_ref_date"/></td>
-                                <td class="text-center"><span t-field="o.e_rev_no"/></td>
-                            </tr>
-
                             <!-- Second Row -->
                             <tr>
                                 <td colspan="4">
@@ -157,7 +208,7 @@
                                                 <table class="inner-table">
                                                     <tr>
                                                         <td class="width-34 text-left-padded">Supplier</td>
-                                                        <td class="width-1 border-none">:</td>
+                                                        <td class="width-1" style="border: none;">:</td>
                                                         <td class="width-65" style="vertical-align: middle;"><span t-field="o.partner_id.name"/></td>
                                                     </tr>
                                                 </table>
@@ -166,7 +217,7 @@
                                                 <table class="inner-table">
                                                     <tr>
                                                         <td class="width-44 text-left-padded">SUP. REF</td>
-                                                        <td class="width-1 border-none">:</td>
+                                                        <td class="width-1" style="border: none;">:</td>
                                                         <td class="width-55" style="vertical-align: middle;"><span t-field="o.e_supplier_ref"/></td>
                                                     </tr>
                                                 </table>
@@ -177,7 +228,7 @@
                                                 <table class="inner-table">
                                                     <tr>
                                                         <td class="width-34 text-left-padded" style="vertical-align: middle;">P.O. Box(Address)</td>
-                                                        <td class="width-1 border-none" style="vertical-align: middle;">:</td>
+                                                        <td class="width-1" style="border: none; vertical-align: middle;">:</td>
                                                         <td class="width-65" style="vertical-align: middle;"><span t-field="o.partner_id.name"/>,<br/>
                                                             <span t-field="o.partner_id.street"/>,
                                                             <span t-field="o.partner_id.city"/>,
@@ -190,7 +241,7 @@
                                                 <table class="inner-table">
                                                     <tr>
                                                         <td class="width-44 text-left-padded" style="vertical-align: middle;">REF Date</td>
-                                                        <td class="width-1 border-none" style="vertical-align: middle;">:</td>
+                                                        <td class="width-1" style="border: none; vertical-align: middle;">:</td>
                                                         <td class="width-55" style="vertical-align: middle;"><span t-field="o.e_ref_date"/></td>
                                                     </tr>
                                                 </table>
@@ -201,7 +252,7 @@
                                                 <table class="inner-table">
                                                     <tr>
                                                         <td class="width-34 text-left-padded">City</td>
-                                                        <td class="width-1 border-none">:</td>
+                                                        <td class="width-1" style="border: none;">:</td>
                                                         <td class="width-65" style="vertical-align: middle;"><span t-field="o.partner_id.city"/></td>
                                                     </tr>
                                                 </table>
@@ -210,7 +261,7 @@
                                                 <table class="inner-table">
                                                     <tr>
                                                         <td class="width-44 text-left-padded">No. of Line Items</td>
-                                                        <td class="width-1 border-none">:</td>
+                                                        <td class="width-1" style="border: none;">:</td>
                                                         <td class="width-55" style="vertical-align: middle;"><span t-esc="len(o.order_line)"/></td>
                                                     </tr>
                                                 </table>
@@ -221,7 +272,7 @@
                                                 <table class="inner-table">
                                                     <tr>
                                                         <td class="width-34 text-left-padded">Postal Code</td>
-                                                        <td class="width-1 border-none">:</td>
+                                                        <td class="width-1" style="border: none;">:</td>
                                                         <td class="width-65" style="vertical-align: middle;"><span t-field="o.partner_id.zip"/></td>
                                                     </tr>
                                                 </table>
@@ -230,7 +281,7 @@
                                                 <table class="inner-table">
                                                     <tr>
                                                         <td class="width-44 text-left-padded">Payment Terms</td>
-                                                        <td class="width-1 border-none">:</td>
+                                                        <td class="width-1" style="border: none;">:</td>
                                                         <td class="width-55" style="vertical-align: middle;"><span t-field="o.payment_term_id"/></td>
                                                     </tr>
                                                 </table>
@@ -241,7 +292,7 @@
                                                 <table class="inner-table">
                                                     <tr>
                                                         <td class="width-34 text-left-padded">Country</td>
-                                                        <td class="width-1 border-none">:</td>
+                                                        <td class="width-1" style="border: none;">:</td>
                                                         <td class="width-65" style="vertical-align: middle;"><span t-field="o.partner_id.country_id"/></td>
                                                     </tr>
                                                 </table>
@@ -250,7 +301,7 @@
                                                 <table class="inner-table">
                                                     <tr>
                                                         <td class="width-44 text-left-padded">Mode of Shipment</td>
-                                                        <td class="width-1 border-none">:</td>
+                                                        <td class="width-1" style="border: none;">:</td>
                                                         <td class="width-55" style="vertical-align: middle;"><span t-field="o.e_mode_of_shipment"/></td>
                                                     </tr>
                                                 </table>
@@ -261,7 +312,7 @@
                                                 <table class="inner-table">
                                                     <tr>
                                                         <td class="width-34 text-left-padded">Telephone</td>
-                                                        <td class="width-1 border-none">:</td>
+                                                        <td class="width-1" style="border: none;">:</td>
                                                         <td class="width-65" style="vertical-align: middle;"><span t-field="o.partner_id.phone"/></td>
                                                     </tr>
                                                 </table>
@@ -270,7 +321,7 @@
                                                 <table class="inner-table">
                                                     <tr>
                                                         <td class="width-44 text-left-padded">Delivery Terms</td>
-                                                        <td class="width-1 border-none">:</td>
+                                                        <td class="width-1" style="border: none;">:</td>
                                                         <td class="width-55" style="vertical-align: middle;"><span t-field="o.e_delivery_terms"/></td>
                                                     </tr>
                                                 </table>
@@ -281,7 +332,7 @@
                                                 <table class="inner-table">
                                                     <tr>
                                                         <td class="width-34 text-left-padded">GST#</td>
-                                                        <td class="width-1 border-none">:</td>
+                                                        <td class="width-1" style="border: none;">:</td>
                                                         <td class="width-65" style="vertical-align: middle;"><span t-field="o.partner_id.vat"/></td>
                                                     </tr>
                                                 </table>
@@ -290,7 +341,7 @@
                                                 <table class="inner-table">
                                                     <tr>
                                                         <td class="width-44 text-left-padded">Ship to</td>
-                                                        <td class="width-1 border-none">:</td>
+                                                        <td class="width-1" style="border: none;">:</td>
                                                         <td class="width-55"><span t-field="o.e_ship_to"/></td>
                                                     </tr>
                                                 </table>
@@ -301,7 +352,7 @@
                                                 <table class="inner-table">
                                                     <tr>
                                                         <td class="width-34 text-left-padded">E-mail</td>
-                                                        <td class="width-1 border-none">:</td>
+                                                        <td class="width-1" style="border: none;">:</td>
                                                         <td class="width-65" style="vertical-align: middle;"><span t-field="o.partner_id.email"/></td>
                                                     </tr>
                                                 </table>
@@ -310,7 +361,7 @@
                                                 <table class="inner-table">
                                                     <tr>
                                                         <td class="width-44 text-left-padded">Delivery Period</td>
-                                                        <td class="width-1 border-none">:</td>
+                                                        <td class="width-1" style="border: none;">:</td>
                                                         <td class="width-55" style="vertical-align: middle;"><span t-field="o.e_delivery_period"/></td>
                                                     </tr>
                                                 </table>
@@ -321,7 +372,7 @@
                                                 <table class="inner-table">
                                                     <tr>
                                                         <td class="width-34 text-left-padded">Attn</td>
-                                                        <td class="width-1 border-none">:</td>
+                                                        <td class="width-1" style="border: none;">:</td>
                                                         <td class="width-65" style="vertical-align: middle;"><span t-field="o.e_attn"/></td>
                                                     </tr>
                                                 </table>
@@ -330,7 +381,7 @@
                                                 <table class="inner-table">
                                                     <tr>
                                                         <td class="width-44 text-left-padded">Charge Code</td>
-                                                        <td class="width-1 border-none">:</td>
+                                                        <td class="width-1" style="border: none;">:</td>
                                                         <td class="width-55" style="vertical-align: middle;"><span t-field="o.e_charge_code"/></td>
                                                     </tr>
                                                 </table>
@@ -364,12 +415,12 @@
                                     <t t-foreach="o.order_line" t-as="line">
                                         <tr t-if="not line.display_type">
                                             <td class="text-center"><span t-esc="line_index + 1"/></td>
-                                            <td><span t-field="line.e_charge_code"/></td>
-                                            <td><span t-field="line.e_description"/></td>
-                                            <td><span t-field="line.product_uom.name"/></td>
-                                            <td class="text-end"><span t-field="line.product_qty"/></td>
-                                            <td class="text-end"><span t-field="line.price_unit"/></td>
-                                            <td class="text-end p-1"><span t-field="line.price_subtotal"/></td>
+                                            <td class="text-center"><span t-field="line.e_charge_code"/></td>
+                                            <td class="text-center"><span t-field="line.e_description"/></td>
+                                            <td class="text-center"><span t-field="line.product_uom.name"/></td>
+                                            <td class="text-center"><span t-field="line.product_qty"/></td>
+                                            <td class="text-center"><span t-field="line.price_unit"/></td>
+                                            <td class="text-center p-1"><span t-field="line.price_subtotal"/></td>
                                         </tr>
                                     </t>
                                 </tbody>
@@ -413,7 +464,7 @@
                                     <td class="text-end p-1"><span t-field="o.amount_total"/></td>
                                 </tr>
                             </table>
-                        <div>
+                        <div class="terms">
                             <p>1) Late delivery penalty:  A late delivery penalty shall be imposed from at the rate of 1% per week
                                 subject  to a maximum of 10% of the total Purchase Order value.</p>
                             <h5><u> Terms &amp; Conditions</u></h5>
@@ -503,7 +554,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="row mt-4" style="page-break-inside: avoid;">
+                        <div class="row signatures mt-4" style="page-break-inside: avoid;">
                             <div class="col-3 text-center">
                                 <p><strong>Prepared by:</strong></p>
                                 <br/>
