@@ -584,6 +584,15 @@
                                 <p><strong>Vice President R&amp;D</strong></p>
                             </div>
                         </div>
+                        <br/>
+                        <br/>
+                        <br/>
+                        <div class="row" style="font-size: 9pt; font-weight: bold;">
+                            <div class="col-1"/>
+                            <div class="col-11">
+                                <span><b>Note: This PO is generated using Odoo software tool by Eram Power Electronics, R&amp;D with Python code</b></span>
+                            </div>
+                        </div>
                     </div>
                 </t>
              </t>
