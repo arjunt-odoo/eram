@@ -180,9 +180,9 @@
                                 <td><strong>REV.NO.</strong></td>
                             </tr>
                             <tr>
-                                <td><span t-field="o.name"/></td>
-                                <td><span t-field="o.e_ref_date"/></td>
-                                <td><span t-field="o.e_rev_no"/></td>
+                                <td style="border-bottom: none;"><span t-field="o.name"/></td>
+                                <td style="border-bottom: none;"><span t-field="o.e_ref_date"/></td>
+                                <td style="border-bottom: none;"><span t-field="o.e_rev_no"/></td>
                             </tr>
                         </table>
                         <table class="po-table">
@@ -398,7 +398,7 @@
                             <t t-set="currency" t-value="o.currency_id"/>
                             <!-- Total Purchase Order Value Row -->
                             <tr>
-                                <td colspan="4" class="text-left-padded">
+                                <td colspan="4" class="text-left-padded" style="border-bottom: none;">
                                     <div style="padding-top:4px; padding-bottom:4px;">
                                         <strong>TOTAL PURCHASE ORDER VALUE: <span t-field="currency.full_name"/> : </strong>
                                         <span t-field="o.amount_total_words"/>
