@@ -191,9 +191,9 @@
                                     <table class="inner-table">
                                         <tr>
                                             <td style="vertical-align: middle;" class="border-right width-21 text-left-padded"><strong>Supplier #</strong></td>
-                                            <td style="vertical-align: middle;" class="border-right width-39"><span t-field="o.e_supplier_code"/> </td>
+                                            <td style="vertical-align: middle;" class="border-right width-39"> <span style="padding-left: 2px" t-field="o.e_supplier_code"/> </td>
                                             <td style="vertical-align: middle;" class="border-right width-18 text-left-padded"><strong>REQ. NO</strong></td>
-                                            <td style="vertical-align: middle;" class="width-22">: <span t-field="o.e_req_no"/> </td>
+                                            <td style="vertical-align: middle;" class="width-22"> <span style="padding-left: 2px" t-field="o.e_req_no"/> </td>
                                         </tr>
                                     </table>
                                 </td>
@@ -590,7 +590,13 @@
                         <br/>
                         <br/>
                         <br/>
-                        <div class="row" style="font-size: 7pt; font-weight: bold; font-color: red;">
+                        <br/>
+                        <br/>
+                        <br/>
+                        <br/>
+                        <br/>
+                        <br/>
+                        <div class="row" style="font-size: 7pt; font-weight: bold; color: red;">
                             <div class="col-1"/>
                             <div class="col-11">
                                 <span><b>Note: This PO is generated using Odoo software tool by Eram Power Electronics, R&amp;D with Python code</b></span>
