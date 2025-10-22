@@ -18,35 +18,35 @@
                             text-decoration: underline;
                         }
                         .body-text {
-                            font-size: 11pt;
+                            font-size: 10pt;
                             font-weight: bold;
                         }
                         .body-text * {
-                            font-size: 11pt;
+                            font-size: 10pt;
                             font-weight: bold;
                         }
                         .terms {
-                            font-size: 11pt;
+                            font-size: 10pt;
                             font-weight: bold;
                         }
                         .terms * {
-                            font-size: 11pt;
+                            font-size: 10pt;
                             font-weight: bold;
                         }
                         .signatures {
-                            font-size: 11pt;
+                            font-size: 10pt;
                             font-weight: bold;
                         }
                         .signatures * {
-                            font-size: 11pt;
+                            font-size: 10pt;
                             font-weight: bold;
                         }
                         .table-bordered th {
-                            font-size: 9pt;
+                            font-size: 8pt;
                             font-weight: bold;
                         }
                         .table-bordered td {
-                            font-size: 9pt;
+                            font-size: 8pt;
                             font-weight: normal;
                         }
                         table {
@@ -75,13 +75,13 @@
                         .po-table {
                             width: 100%;
                             border-collapse: collapse;
-                            font-size: 11pt;
+                            font-size: 10pt;
                             font-weight: bold;
                         }
                         .po-table td {
                             padding-left: 5px;
                             border: 1px solid black;
-                            font-size: 11pt;
+                            font-size: 10pt;
                             font-weight: bold;
                         }
                         .po-table .text-center {
@@ -147,7 +147,7 @@
                         .po-table .inner-table td {
                             border: none;
                             padding-left: 0;
-                            font-size: 11pt;
+                            font-size: 10pt;
                             font-weight: bold;
                         }
                         .po-table .inner-table .text-left-padded {
@@ -157,14 +157,14 @@
                             width: 40%;
                             margin-left: auto;
                             border-collapse: collapse;
-                            font-size: 11pt;
+                            font-size: 10pt;
                             font-weight: bold;
                         }
                         .header-table td {
                             border: 1px solid black;
                             padding: 5px;
                             text-align: center;
-                            font-size: 11pt;
+                            font-size: 10pt;
                             font-weight: bold;
                         }
                     </style>
@@ -587,7 +587,7 @@
                         <br/>
                         <br/>
                         <br/>
-                        <div class="row" style="font-size: 9pt; font-weight: bold;">
+                        <div class="row" style="font-size: 8pt; font-weight: bold;">
                             <div class="col-1"/>
                             <div class="col-11">
                                 <span><b>Note: This PO is generated using Odoo software tool by Eram Power Electronics, R&amp;D with Python code</b></span>
