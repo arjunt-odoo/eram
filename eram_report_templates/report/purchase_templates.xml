@@ -12,41 +12,41 @@
                             font-size: 0.7em;
                         }
                         h3 {
-                            font-size: 16pt !important;
+                            font-size: 14pt !important;
                             font-weight: bold !important;
                             text-align: center;
                             text-decoration: underline;
                         }
                         .body-text {
-                            font-size: 10pt;
+                            font-size: 9pt;
                             font-weight: bold;
                         }
                         .body-text * {
-                            font-size: 10pt;
+                            font-size: 9pt;
                             font-weight: bold;
                         }
                         .terms {
-                            font-size: 10pt;
+                            font-size: 9pt;
                             font-weight: bold;
                         }
                         .terms * {
-                            font-size: 10pt;
+                            font-size: 9pt;
                             font-weight: bold;
                         }
                         .signatures {
-                            font-size: 10pt;
+                            font-size: 9pt;
                             font-weight: bold;
                         }
                         .signatures * {
-                            font-size: 10pt;
+                            font-size: 9pt;
                             font-weight: bold;
                         }
                         .table-bordered th {
-                            font-size: 8pt;
+                            font-size: 7pt;
                             font-weight: bold;
                         }
                         .table-bordered td {
-                            font-size: 8pt;
+                            font-size: 7pt;
                             font-weight: normal;
                         }
                         table {
@@ -75,13 +75,13 @@
                         .po-table {
                             width: 100%;
                             border-collapse: collapse;
-                            font-size: 10pt;
+                            font-size: 9pt;
                             font-weight: bold;
                         }
                         .po-table td {
                             padding-left: 5px;
                             border: 1px solid black;
-                            font-size: 10pt;
+                            font-size: 9pt;
                             font-weight: bold;
                         }
                         .po-table .text-center {
@@ -147,7 +147,7 @@
                         .po-table .inner-table td {
                             border: none;
                             padding-left: 0;
-                            font-size: 10pt;
+                            font-size: 9pt;
                             font-weight: bold;
                         }
                         .po-table .inner-table .text-left-padded {
@@ -157,14 +157,14 @@
                             width: 40%;
                             margin-left: auto;
                             border-collapse: collapse;
-                            font-size: 10pt;
+                            font-size: 9pt;
                             font-weight: bold;
                         }
                         .header-table td {
                             border: 1px solid black;
                             padding: 5px;
                             text-align: center;
-                            font-size: 10pt;
+                            font-size: 9pt;
                             font-weight: bold;
                         }
                     </style>
@@ -190,10 +190,10 @@
                                 <td colspan="4">
                                     <table class="inner-table">
                                         <tr>
-                                            <td class="border-right width-21 text-left-padded"><strong>Supplier #</strong></td>
-                                            <td class="border-right width-39">: <span t-field="o.e_supplier_code"/> </td>
-                                            <td class="border-right width-18 text-left-padded"><strong>REQ. NO</strong></td>
-                                            <td class="width-22">: <span t-field="o.e_req_no"/> </td>
+                                            <td style="vertical-align: middle;" class="border-right width-21 text-left-padded"><strong>Supplier #</strong></td>
+                                            <td style="vertical-align: middle;" class="border-right width-39"><span t-field="o.e_supplier_code"/> </td>
+                                            <td style="vertical-align: middle;" class="border-right width-18 text-left-padded"><strong>REQ. NO</strong></td>
+                                            <td style="vertical-align: middle;" class="width-22">: <span t-field="o.e_req_no"/> </td>
                                         </tr>
                                     </table>
                                 </td>
@@ -403,8 +403,8 @@
                                 <thead>
                                     <tr>
                                         <th class="text-center">S.NO</th>
-                                        <th>ITEM#/ CHARGE CODE</th>
-                                        <th>DESCRIPTION</th>
+                                        <th class="text-center">ITEM#/ CHARGE CODE</th>
+                                        <th class="text-center">DESCRIPTION</th>
                                         <th class="text-center">UOM</th>
                                         <th class="text-center">QTY</th>
                                         <th class="text-center">UNIT PRICE (<span t-field="currency.name"/>)</th>
@@ -587,7 +587,10 @@
                         <br/>
                         <br/>
                         <br/>
-                        <div class="row" style="font-size: 8pt; font-weight: bold;">
+                        <br/>
+                        <br/>
+                        <br/>
+                        <div class="row" style="font-size: 7pt; font-weight: bold; font-color: red;">
                             <div class="col-1"/>
                             <div class="col-11">
                                 <span><b>Note: This PO is generated using Odoo software tool by Eram Power Electronics, R&amp;D with Python code</b></span>
