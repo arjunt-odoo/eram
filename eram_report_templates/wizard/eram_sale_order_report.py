@@ -268,7 +268,7 @@ class EramSaleOrderReport(models.TransientModel):
             'static',
             'src',
             'img',
-            'footer.png'
+            'report_footer.png'
         )
 
         if os.path.exists(logo_path):
@@ -1140,7 +1140,7 @@ class EramSaleOrderReport(models.TransientModel):
             'static',
             'src',
             'img',
-            'footer.png'
+            'report_footer.png'
         )
 
         if os.path.exists(logo_path):

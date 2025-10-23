@@ -10,7 +10,7 @@
         </xpath>
         <xpath expr="//div[contains(@class, 'footer')]" position="replace">
             <div class="mb-1">
-                <img src="/eram_report_templates/static/src/img/footer.png" style="width: 100%;"/>
+                <img src="/eram_report_templates/static/src/img/report_footer.png" style="width: 100%;"/>
             </div>
         </xpath>
     </template>
