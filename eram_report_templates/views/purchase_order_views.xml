@@ -46,6 +46,7 @@
                 <attribute name="invisible">1</attribute>
             </xpath>
             <field name="date_order" position="after">
+                <field name="e_rev_no" readonly="state == 'purchase'"/>
                 <field name="e_req_no" readonly="state == 'purchase'"/>
                 <field name="e_supplier_ref" readonly="state == 'purchase'"/>
                 <field name="e_ref_date" readonly="state == 'purchase'"/>
