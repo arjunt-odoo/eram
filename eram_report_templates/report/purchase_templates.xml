@@ -181,7 +181,7 @@
                             </tr>
                             <tr>
                                 <td style="border-bottom: none;"><span t-field="o.name"/></td>
-                                <td style="border-bottom: none;"><span t-field="o.date_order"/></td>
+                                <td style="border-bottom: none;"><span t-field="o.e_date"/></td>
                                 <td style="border-bottom: none;"><span t-field="o.e_rev_no"/></td>
                             </tr>
                         </table>

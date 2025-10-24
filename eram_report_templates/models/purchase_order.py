@@ -30,6 +30,7 @@ class PurchaseOrder(models.Model):
         string="TOTAL PURCHASE ORDER VALUE:",
     )
     purchase_cash_rounding_id = fields.Many2one("account.cash.rounding")
+    e_date = fields.Date("Date")
 
     @api.depends('order_line')
     def _compute_e_order_line_count(self):
@@ -48,6 +49,11 @@ class PurchaseOrder(models.Model):
                             key=lambda x: x.get('group_name', '').lower()
                         )
         return res
+
+    @api.onchange('e_date')
+    def _onchange_e_date(self):
+        if self.e_date:
+            self.date_order = self.e_date
 
     def _amount_all(self):
         AccountTax = self.env['account.tax']
