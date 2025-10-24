@@ -181,7 +181,7 @@
                             </tr>
                             <tr>
                                 <td style="border-bottom: none;"><span t-field="o.name"/></td>
-                                <td style="border-bottom: none;"><span t-field="o.e_ref_date"/></td>
+                                <td style="border-bottom: none;"><span t-field="o.date_order"/></td>
                                 <td style="border-bottom: none;"><span t-field="o.e_rev_no"/></td>
                             </tr>
                         </table>
@@ -192,7 +192,7 @@
                                     <table class="inner-table">
                                         <tr>
                                             <td style="vertical-align: middle;" class="border-right width-21 text-left-padded"><strong>Supplier #</strong></td>
-                                            <td style="vertical-align: middle;" class="border-right width-39"> <span style="padding-left: 2px" t-field="o.e_supplier_code"/> </td>
+                                            <td style="vertical-align: middle;" class="border-right width-39"> <span style="padding-left: 2px; color: #b00000;" t-field="o.e_supplier_code"/> </td>
                                             <td style="vertical-align: middle;" class="border-right width-18 text-left-padded"><strong>REQ. NO</strong></td>
                                             <td style="vertical-align: middle;" class="width-22"> <span style="padding-left: 2px" t-field="o.e_req_no"/> </td>
                                         </tr>
@@ -415,7 +415,7 @@
                                         <th class="text-center">UOM</th>
                                         <th class="text-center">QTY</th>
                                         <th class="text-center">UNIT PRICE (<span t-field="currency.name"/>)</th>
-                                        <th class="text-center">TOTAL PRICE(<span t-field="currency.name"/>)</th>
+                                        <th class="text-center">TOTAL PRICE</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -432,8 +432,8 @@
                                     </t>
                                 </tbody>
                                 <tr style="page-break-inside: avoid;">
-                                    <td colspan="6" class="text-end"><strong>TOTAL VALUE : (<span t-field="currency.name"/>)</strong></td>
-                                    <td class="text-end p-1"><span t-field="o.amount_untaxed"/></td>
+                                    <td colspan="6" class="text-end"><strong>TOTAL VALUE : </strong></td>
+                                    <td class="text-center p-1"><span t-field="o.amount_untaxed"/></td>
                                 </tr>
                                 <tr style="page-break-inside: avoid;">
                                     <t t-set="same_tax_base" t-value="o.tax_totals['same_tax_base']"/>
@@ -444,7 +444,7 @@
                                                     <td colspan="6" class="text-end fw-bold">
                                                         <span class="text-nowrap" t-out="tax_group['group_name']">Tax 15%</span>
                                                     </td>
-                                                    <td class="text-end o_price_total">
+                                                    <td class="text-center o_price_total">
                                                         <span class="text-nowrap p-1"
                                                               t-out="tax_group['tax_amount_currency']"
                                                               t-options='{"widget": "monetary", "display_currency": currency}'
@@ -467,8 +467,8 @@
                                     </t>
                                 </tr>
                                 <tr style="page-break-inside: avoid;">
-                                    <td colspan="6" class="text-end"><strong>TOTAL PURCHASE ORDER VALUE : (<span t-field="currency.name"/>)</strong></td>
-                                    <td class="text-end p-1"><span t-field="o.amount_total"/></td>
+                                    <td colspan="6" class="text-end"><strong>TOTAL PURCHASE ORDER VALUE : </strong></td>
+                                    <td class="text-center p-1"><span t-field="o.amount_total"/></td>
                                 </tr>
                             </table>
                         <div class="terms">
