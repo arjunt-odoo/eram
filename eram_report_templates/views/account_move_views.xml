@@ -17,6 +17,18 @@
                         <field name="invoice_date" string="Invoice Date"
                                readonly="state == 'posted'"
                                invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
+                        <field name="invoice_date" string="Bill Date"
+                               readonly="state == 'posted'"
+                               invisible="move_type in ('out_invoice', 'out_refund', 'out_receipt')"/>
+                        <label for="partner_id" string="Supplier Details"/>
+                        <field name="partner_id" widget="res_partner_many2one" nolabel="1"
+                               context="{'res_partner_search_mode': (context.get('default_move_type', 'entry') in ('out_invoice', 'out_refund', 'out_receipt') and 'customer') or (context.get('default_move_type', 'entry') in ('in_invoice', 'in_refund', 'in_receipt') and 'supplier') or False, 'show_address': 1, 'default_is_company': True, 'show_vat': True}"
+                               domain="[('company_id', 'in', (False, company_id))]"
+                               options="{&quot;no_quick_create&quot;: True}"
+                               invisible="move_type in ('out_invoice', 'out_refund', 'out_receipt')"
+                               placeholder="Search a name or Tax ID..." readonly="state != 'draft'"/>
+                        <field name="invoice_payment_term_id" readonly="state == 'posted'"
+                              invisible="move_type in ('out_invoice', 'out_refund', 'out_receipt')"/>
                         <field name="e_reverse_charge" readonly="state == 'posted'"
                                invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
                         <field name="l10n_in_state_id" string="State"
@@ -36,7 +48,7 @@
                                invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
                     </group>
                 </group>
-                <div class="row mx-1" style="gap: 10px;">
+                <div class="row mx-1" style="gap: 10px;" invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')">
                     <div class="col" style="background-color:#74a2f7">
                         <h5><strong>Bill To Party</strong></h5>
                     </div>
@@ -44,7 +56,7 @@
                         <h5><strong>Ship To Party</strong></h5>
                     </div>
                 </div>
-                <group>
+                <group invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')">
                     <group>
                         <label for="partner_id" string="Name"/>
                         <field name="partner_id" widget="res_partner_many2one" nolabel="1"

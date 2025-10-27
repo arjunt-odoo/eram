@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="eram_purchase_req_view_form" model="ir.ui.view">
+        <field name="name">eram.purchase.req.view.form</field>
+        <field name="model">eram.purchase.req</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_create_rfq" string="Create RFQ" invisible="purchase_id"
+                            class="btn btn-primary" type="object"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" name="action_view_rfq" type="object" icon="fa-file-text-o" invisible="not purchase_id">
+                            <div class="o_field_statinfo">
+                                <span class="o_stat_text">RFQ</span>
+                            </div>
+                        </button>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="pr_number"/>
+                            <field name="pr_date"/>
+                            <field name="closing_date"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page name="Order Lines">
+                            <field name="line_ids">
+                                <list editable="bottom">
+                                    <field name="sl_number"/>
+                                    <field name="product_id"/>
+                                    <field name="description"/>
+                                    <field name="qty"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="eram_purchase_req_view_list" model="ir.ui.view">
+        <field name="name">eram.purchase.req.view.list</field>
+        <field name="model">eram.purchase.req</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="pr_number"/>
+                <field name="pr_date"/>
+                <field name="closing_date"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_eram_purchase_req" model="ir.actions.act_window">
+        <field name="name">Purchase Request</field>
+        <field name="res_model">eram.purchase.req</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <menuitem id="menu_eram_purchase_req"
+              action="action_eram_purchase_req"
+              sequence="40"/>
+</odoo>

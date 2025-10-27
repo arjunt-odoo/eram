@@ -947,7 +947,54 @@ class EramSaleOrderReport(models.TransientModel):
         write_center(sheet, row, 25, '', total_qty_format)
         write_center(sheet, row, 26, '', total_qty_format)
 
+        row += 4
+        total_invoice_value_format = workbook.add_format({
+            'num_format': num_format,
+            'bold': True,
+            'border': 1,
+            'valign': 'vcenter',
+            'text_wrap': True,
+            'align': 'center',
+            'font_size': 14,
+            'bg_color': "#93e3ff",
+        })
+        sheet.merge_range(f'C{row}:D{row + 1}', 'Total Invoice Value', total_invoice_value_format)
+        sheet.merge_range(f'E{row}:F{row + 1}', grand_total_value, total_invoice_value_format)
+
+        row += 2
+
+        total_advance_payment_format = workbook.add_format({
+            'num_format': num_format,
+            'bold': True,
+            'border': 1,
+            'valign': 'vcenter',
+            'text_wrap': True,
+            'align': 'center',
+            'font_size': 14,
+            'bg_color': "#92d050",
+        })
+
+        sheet.merge_range(f'C{row}:D{row + 1}', 'Total Advance Payment Received', total_advance_payment_format)
+        sheet.merge_range(f'E{row}:F{row + 1}', grand_total_advance, total_advance_payment_format)
+
+        row += 2
+
+        total_balance_payment_format = workbook.add_format({
+            'num_format': num_format,
+            'bold': True,
+            'border': 1,
+            'valign': 'vcenter',
+            'text_wrap': True,
+            'align': 'center',
+            'font_size': 14,
+            'bg_color': "#ff6d6d",
+        })
+
+        sheet.merge_range(f'C{row}:D{row + 1}', 'Total Balance Payment Pending', total_balance_payment_format)
+        sheet.merge_range(f'E{row}:F{row + 1}', grand_total_balance, total_balance_payment_format)
+
         row += 3
+
         note_format = workbook.add_format({
             'bold': True,
             'text_wrap': True,
@@ -1580,6 +1627,38 @@ class EramSaleOrderReport(models.TransientModel):
             write_center(sheet, row, col, '', total_qty_format)
 
         row += 3
+
+        total_po_value_format = workbook.add_format({
+            'num_format': num_format,
+            'bold': True,
+            'border': 1,
+            'valign': 'vcenter',
+            'text_wrap': True,
+            'align': 'center',
+            'font_size': 12,
+            'bg_color': "#93e3ff",
+        })
+        sheet.merge_range(f'C{row}:C{row + 1}', 'Total PO Value', total_po_value_format)
+        sheet.merge_range(f'D{row}:D{row + 1}', grand_total_gst, total_po_value_format)
+
+        row += 2
+
+        total_advance_payment_format = workbook.add_format({
+            'num_format': num_format,
+            'bold': True,
+            'border': 1,
+            'valign': 'vcenter',
+            'text_wrap': True,
+            'align': 'center',
+            'font_size': 12,
+            'bg_color': "#92d050",
+        })
+        sheet.merge_range(f'C{row}:C{row + 1}', 'Total Advance Payment Received', total_advance_payment_format)
+        sheet.merge_range(f'D{row}:D{row + 1}', grand_total_advance, total_advance_payment_format)
+
+        row += 3
+
+
         note_format = workbook.add_format({
             'bold': True,
             'text_wrap': True,

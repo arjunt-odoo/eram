@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_eram_purchase_req_user,access.eram.purchase.req.user,model_eram_purchase_req,base.group_user,1,1,1,1
+access_eram_purchase_req_line_user,access.eram.purchase.req.line.user,model_eram_purchase_req_line,base.group_user,1,1,1,1
+access_eram_supplier_quote_user,access.eram.supplier.quote.user,model_eram_supplier_quote,base.group_user,1,1,1,1
+access_eram_supplier_quote_line_user,access.eram.supplier.quote.line.user,model_eram_supplier_quote_line,base.group_user,1,1,1,1
