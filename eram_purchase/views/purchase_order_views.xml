@@ -23,7 +23,6 @@
                 <field name="e_date" invisible="state == 'purchase'"/>
                 <field name="e_our_bid_closing_date" invisible="state == 'purchase'"/>
                 <field name="e_send_offer_by" invisible="state == 'purchase'"/>
-                <field name="e_send_offer_by" invisible="state == 'purchase'"/>
                 <field name="e_order_line_count" invisible="state == 'purchase'"/>
             </field>
             <field name="l10n_in_gst_treatment" position="attributes">

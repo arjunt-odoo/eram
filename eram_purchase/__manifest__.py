@@ -3,7 +3,7 @@
     'name': 'Eram Purchase',
     'version': '18.0.1.0.0',
     'category': 'purchase',
-    'summary': 'Eram Reports',
+    'summary': 'Eram Purchase',
     'license': 'LGPL-3',
 
     'depends': ['eram_report_templates'],
@@ -13,6 +13,8 @@
         'views/eram_purchase_req_views.xml',
         'views/eram_supplier_quote_views.xml',
         'views/purchase_order_views.xml',
+        'report/eram_rfq_templates.xml',
+        'report/purchase_reports.xml'
     ],
     'installable': True,
     'auto_install': False,

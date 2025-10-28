@@ -8,7 +8,7 @@ class PurchaseOrder(models.Model):
     eram_pr_id = fields.Many2one("eram.purchase.req")
     e_our_ref = fields.Char("Our REF")
     e_our_bid_closing_date = fields.Date("Our Bid Closing Date")
-    e_send_offer_by = fields.Date("Send your Offer by")
+    e_send_offer_by = fields.Char("Send your Offer by")
     e_quote_ids = fields.One2many("eram.supplier.quote", "purchase_id")
 
 
@@ -26,5 +26,9 @@ class PurchaseOrder(models.Model):
         self.write({
             'state': 'sent'
         })
+
+    def print_quotation(self):
+        self.write({'state': "sent"})
+        return self.env.ref('eram_purchase.eram_rfq').report_action(self)
 
 

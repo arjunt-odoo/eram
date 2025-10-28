@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="eram_report_rfq">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <style>
+                        .page {
+                            font-family: 'Calibri', sans-serif;
+                            font-size: 12pt;
+                        }
+
+                        /* Default padding for ALL bordered tables */
+                        .table-bordered th,
+                        .table-bordered td {
+                            border: 1px solid black !important;
+                            padding: 6px 10px !important;
+                            vertical-align: middle;
+                        }
+
+                        /* Tighter padding ONLY for the product items table */
+                        #product-items-table th,
+                        #product-items-table td {
+                            padding: 4px 6px !important;
+                            font-size: 11pt;
+                        }
+
+                        /* Explicit padding for REF block (small table) */
+                        .ref-block td {
+                            padding: 4px 8px !important;
+                            font-size: 11pt;
+                        }
+
+                        /* BID INFO table – good readable padding */
+                        #bid-info-table td {
+                            padding: 6px 12px !important;
+                        }
+
+                        /* Right-aligned reference block */
+                        .ref-block {
+                            max-width: 35%;
+                            float: right;
+                            margin-bottom: 1rem;
+                        }
+                        .ref-block table {
+                            width: 100%;
+                        }
+
+                        /* Optional: Zebra striping for product table */
+                        #product-items-table tbody tr:nth-child(even) {
+                            background-color: #f9f9f9;
+                        }
+                    </style>
+
+                    <div class="page">
+
+                        <!-- ==================== TITLE ==================== -->
+                        <div class="row mb-3">
+                            <div class="text-center">
+                                <h6 class="m-0 fw-bold"><u>REQUEST FOR QUOTATION (RFQ)</u></h6>
+                            </div>
+                        </div>
+
+                        <!-- ==================== OUR REF & DATE (right side) ==================== -->
+                        <div class="ref-block">
+                            <table class="table table-sm table-bordered">
+                                <tr>
+                                    <td><strong>OUR REF</strong></td>
+                                    <td><span t-esc="o.name"/></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>DATE</strong></td>
+                                    <td><span t-esc="o.date_order" t-options="{'widget': 'date'}"/></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="clearfix"></div> <!-- Clear float -->
+
+                        <!-- ==================== INTRO TEXT ==================== -->
+                        <p class="mb-3">
+                            Please submit your most competitive price and the best delivery time for the item(s) as per the attached list of items,
+                            all in accordance with the specification, terms and conditions of this RFQ. In case you are unable to submit a bid,
+                            please inform us in the form of a regret letter prior to the bid closing date.
+                        </p>
+
+                        <!-- ==================== BID INFO ==================== -->
+                        <table id="bid-info-table" class="table table-sm table-bordered mb-4">
+                            <tbody>
+                                <tr>
+                                    <td width="30%"><strong>OUR BID CLOSING DATE</strong></td>
+                                    <td><span t-esc="o.e_our_bid_closing_date"/></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>SEND YOUR OFFER BY</strong></td>
+                                    <td><span t-esc="o.e_send_offer_by"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- ==================== GENERAL TERMS ==================== -->
+                        <h5 class="mb-2 fw-bold"><u>GENERAL TERMS &amp; CONDITIONS TO BIDDERS.</u></h5>
+
+                        <ol class="pl-3 mb-4" style="line-height:1.6;">
+                            <li>Total number of item(s) <strong t-esc="len(o.order_line)"/></li>
+                            <li>Please find enclosed Nil page catalogues / drawings / samples for your reference.</li>
+                            <li>Our serial number of item(s) should be maintained / mentioned in your offer.</li>
+                            <li>Any deviation from the stipulated delivery date in the Purchase Order would attract penalty strictly
+                                at the rate of 1% (percent) per week subject to maximum of 4% (percent) for the order value.</li>
+                            <li>Validity of your offer should be minimum 30 days from the due date.</li>
+                            <li>Payment by cheque on 30 days credit basis after receipt of original invoice.</li>
+                            <li>If you are quoting same item(s) as mentioned in our RFQ, please reproduce complete.</li>
+                            <li>In case of alternative offer, please certify “The product offered is exact replacement / identical to your required specifications”</li>
+                            <li>EPEC reserve the right to purchase full or only part of item(s) offered herein.</li>
+                            <li>Your offer should include delivery of material to our office at
+                                <br/>Plot No 110-L/1, Survey No 68, Electronic City Phase-1, Bengaluru-560100.</li>
+                            <li>Suppliers should deliver the items only during Monday to Friday from 08.00 am to 04.00 pm.</li>
+                        </ol>
+
+                        <!-- ==================== SIGNATURE ==================== -->
+                        <div class="row mt-5">
+                            <div class="col-6">
+                                <p class="mb-0">_________________________</p>
+                                <p class="mb-0"><strong>Mark Dass</strong></p>
+                                <p class="mb-0">Office Assistant</p>
+                                <p class="mb-0">Plot No 110-L/1, Survey No 68,</p>
+                                <p class="mb-0">Electronic City Phase-1,</p>
+                                <p class="mb-0">Bengaluru-560100.</p>
+                                <p class="mb-0">Mobile: +91 80954 28115</p>
+                                <p class="mb-0">mark.dass@eramelectronics.com</p>
+                            </div>
+                            <div class="col-6 text-end">
+                                <p class="mb-0"><strong>FM-PU-01</strong></p>
+                            </div>
+                        </div>
+
+                        <div class="page-break"/>
+
+                        <h5 class="mb-3"><u>LIST OF ITEMS</u></h5>
+
+                        <!-- ==================== LINE ITEMS TABLE (COMPACT) ==================== -->
+                        <table id="product-items-table" class="table table-bordered">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th class="text-center">S.NO.</th>
+                                    <th class="text-center">ITEM NO.</th>
+                                    <th class="text-center">DESCRIPTION</th>
+                                    <th class="text-center">PART NO.</th>
+                                    <th class="text-center">UOM</th>
+                                    <th class="text-center">QTY</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="o.order_line" t-as="line">
+                                    <tr>
+                                        <td class="text-center"><span t-esc="line_index + 1"/></td>
+                                        <td class="text-center"><span t-esc="line.e_charge_code"/></td>
+                                        <td><span t-esc="line.e_description"/></td>
+                                        <td class="text-center"></td>
+                                        <td class="text-center"><span t-esc="line.product_uom.name"/></td>
+                                        <td class="text-center"><span t-esc="line.product_qty" t-options="{'widget':'integer'}"/></td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>
