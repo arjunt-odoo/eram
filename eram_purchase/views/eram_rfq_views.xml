@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="eram_rfq_view_form" model="ir.ui.view">
+        <field name="name">eram.rfq.view.form</field>
+        <field name="model">eram.rfq</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="print_rfq" string="Print RFQ"
+                            class="btn btn-primary" type="object"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" name="action_view_pr" type="object" icon="fa-file-text-o" invisible="not eram_pr_id">
+                            <div class="o_field_statinfo">
+                                <span class="o_stat_text">Purchase Request</span>
+                            </div>
+                        </button>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="our_ref"/>
+                            <field name="date"/>
+                            <field name="our_bid_closing_date"/>
+                            <field name="send_offer_by"/>
+                            <field name="no_of_items"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page name="Order Lines">
+                            <field name="line_ids">
+                                <list editable="bottom">
+                                    <field name="sl_no"/>
+                                    <field name="product_id"/>
+                                    <field name="item_no"/>
+                                    <field name="description"/>
+                                    <field name="part_no"/>
+                                    <field name="uom"/>
+                                    <field name="qty"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page name="Quotes">
+                            <field name="quote_ids">
+                                <list>
+                                    <field name="quote_no"/>
+                                    <field name="quote_date"/>
+                                    <field name="partner_id"/>
+                                    <button name="open_record" type="object" string="View"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="eram_rfq_view_list" model="ir.ui.view">
+        <field name="name">eram.rfq.view.list</field>
+        <field name="model">eram.rfq</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="our_ref"/>
+                <field name="date"/>
+                <field name="our_bid_closing_date"/>
+                <field name="send_offer_by"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_eram_rfq" model="ir.actions.act_window">
+        <field name="name">Request for Quote</field>
+        <field name="res_model">eram.rfq</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <menuitem id="menu_eram_rfq"
+              action="action_eram_rfq"
+              sequence="40"/>
+</odoo>

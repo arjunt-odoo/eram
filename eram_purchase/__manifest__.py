@@ -11,6 +11,7 @@
     'data': [
         'security/ir.model.access.csv',
         'views/eram_purchase_req_views.xml',
+        'views/eram_rfq_views.xml',
         'views/eram_supplier_quote_views.xml',
         'views/purchase_order_views.xml',
         'report/eram_rfq_templates.xml',

@@ -12,7 +12,8 @@ class EramPurchaseReq(models.Model):
     pr_date = fields.Date("PR Date")
     closing_date = fields.Date()
     line_ids = fields.One2many("eram.purchase.req.line", "request_id")
-    purchase_id = fields.Many2one("purchase.order")
+    rfq_id = fields.Many2one("eram.rfq")
+
 
     def action_create_rfq(self):
         if not self.line_ids:
@@ -21,12 +22,16 @@ class EramPurchaseReq(models.Model):
         for line in self.line_ids:
             order_lines.append(fields.Command.create({
                 'product_id': line.product_id.id,
-                'e_description': line.description,
-                'product_qty': line.qty
+                'description': line.description,
+                'qty': line.qty,
+                'part_no': line.part_no,
+                'item_no': line.item_no
+
             }))
-        self.purchase_id =  self.purchase_id.create({
+        self.rfq_id =  self.rfq_id.create({
             'eram_pr_id': self.id,
-            'order_line': order_lines
+            'our_bid_closing_date': self.closing_date,
+            'line_ids': order_lines
         })
 
     def action_view_rfq(self):
@@ -34,8 +39,8 @@ class EramPurchaseReq(models.Model):
         return {
             'type': 'ir.actions.act_window',
             'name': _("Request For Quotation"),
-            'res_model': 'purchase.order',
-            'res_id': self.purchase_id.id,
+            'res_model': 'eram.rfq',
+            'res_id': self.rfq_id.id,
             'view_mode': 'form'
         }
 
@@ -48,6 +53,8 @@ class EramPurchaseReqLine(models.Model):
     sl_number = fields.Integer("Sl No", compute="_compute_sl_number", store=True)
     product_id = fields.Many2one("product.product", string="Item")
     description = fields.Char()
+    part_no = fields.Char()
+    item_no = fields.Char()
     qty = fields.Float("Quantity")
 
     @api.depends('request_id', 'request_id.line_ids')

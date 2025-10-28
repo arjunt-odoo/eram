@@ -2,13 +2,13 @@
 <odoo>
     <data>
         <record id="eram_rfq" model="ir.actions.report">
-            <field name="name">Request for Quotation</field>
-            <field name="model">purchase.order</field>
+            <field name="name">RFQ</field>
+            <field name="model">eram.rfq</field>
             <field name="report_type">qweb-pdf</field>
             <field name="report_name">eram_purchase.eram_report_rfq</field>
             <field name="report_file">eram_purchase.eram_report_rfq</field>
-            <field name="print_report_name">'Request for Quotation - %s' % (object.name)</field>
-            <field name="binding_model_id" ref="model_purchase_order"/>
+            <field name="print_report_name">'Request for Quotation - %s' % (object.our_ref)</field>
+            <field name="binding_model_id" ref="model_eram_rfq"/>
             <field name="binding_type">report</field>
         </record>
     </data>

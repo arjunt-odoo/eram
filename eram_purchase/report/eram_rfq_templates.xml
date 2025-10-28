@@ -53,24 +53,21 @@
                     </style>
 
                     <div class="page">
-
-                        <!-- ==================== TITLE ==================== -->
                         <div class="row mb-3">
                             <div class="text-center">
                                 <h6 class="m-0 fw-bold"><u>REQUEST FOR QUOTATION (RFQ)</u></h6>
                             </div>
                         </div>
 
-                        <!-- ==================== OUR REF & DATE (right side) ==================== -->
                         <div class="ref-block">
                             <table class="table table-sm table-bordered">
                                 <tr>
                                     <td><strong>OUR REF</strong></td>
-                                    <td><span t-esc="o.name"/></td>
+                                    <td><span t-esc="o.our_ref"/></td>
                                 </tr>
                                 <tr>
                                     <td><strong>DATE</strong></td>
-                                    <td><span t-esc="o.date_order" t-options="{'widget': 'date'}"/></td>
+                                    <td><span t-esc="o.date" t-options="{'widget': 'date'}"/></td>
                                 </tr>
                             </table>
                         </div>
@@ -82,26 +79,26 @@
                             all in accordance with the specification, terms and conditions of this RFQ. In case you are unable to submit a bid,
                             please inform us in the form of a regret letter prior to the bid closing date.
                         </p>
-
-                        <!-- ==================== BID INFO ==================== -->
-                        <table id="bid-info-table" class="table table-sm table-bordered mb-4">
-                            <tbody>
-                                <tr>
-                                    <td width="30%"><strong>OUR BID CLOSING DATE</strong></td>
-                                    <td><span t-esc="o.e_our_bid_closing_date"/></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>SEND YOUR OFFER BY</strong></td>
-                                    <td><span t-esc="o.e_send_offer_by"/></td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <div style="max-width: 60%;">
+                            <table id="bid-info-table" class="table table-sm table-bordered mb-4">
+                                <tbody>
+                                    <tr>
+                                        <td><strong>OUR BID CLOSING DATE</strong></td>
+                                        <td><span t-esc="o.our_bid_closing_date" t-options="{'widget': 'date'}"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>SEND YOUR OFFER BY</strong></td>
+                                        <td><span t-esc="o.send_offer_by"/></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
 
                         <!-- ==================== GENERAL TERMS ==================== -->
                         <h5 class="mb-2 fw-bold"><u>GENERAL TERMS &amp; CONDITIONS TO BIDDERS.</u></h5>
 
                         <ol class="pl-3 mb-4" style="line-height:1.6;">
-                            <li>Total number of item(s) <strong t-esc="len(o.order_line)"/></li>
+                            <li>Total number of item(s) <strong t-esc="len(o.line_ids)"/></li>
                             <li>Please find enclosed Nil page catalogues / drawings / samples for your reference.</li>
                             <li>Our serial number of item(s) should be maintained / mentioned in your offer.</li>
                             <li>Any deviation from the stipulated delivery date in the Purchase Order would attract penalty strictly
@@ -115,8 +112,6 @@
                                 <br/>Plot No 110-L/1, Survey No 68, Electronic City Phase-1, Bengaluru-560100.</li>
                             <li>Suppliers should deliver the items only during Monday to Friday from 08.00 am to 04.00 pm.</li>
                         </ol>
-
-                        <!-- ==================== SIGNATURE ==================== -->
                         <div class="row mt-5">
                             <div class="col-6">
                                 <p class="mb-0">_________________________</p>
@@ -137,7 +132,6 @@
 
                         <h5 class="mb-3"><u>LIST OF ITEMS</u></h5>
 
-                        <!-- ==================== LINE ITEMS TABLE (COMPACT) ==================== -->
                         <table id="product-items-table" class="table table-bordered">
                             <thead class="thead-light">
                                 <tr>
@@ -150,14 +144,14 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <t t-foreach="o.order_line" t-as="line">
+                                <t t-foreach="o.line_ids" t-as="line">
                                     <tr>
                                         <td class="text-center"><span t-esc="line_index + 1"/></td>
-                                        <td class="text-center"><span t-esc="line.e_charge_code"/></td>
-                                        <td><span t-esc="line.e_description"/></td>
-                                        <td class="text-center"></td>
-                                        <td class="text-center"><span t-esc="line.product_uom.name"/></td>
-                                        <td class="text-center"><span t-esc="line.product_qty" t-options="{'widget':'integer'}"/></td>
+                                        <td class="text-center"><span t-esc="line.item_no"/></td>
+                                        <td class="text-center"><span t-esc="line.description"/></td>
+                                        <td class="text-center"><span t-esc="line.part_no"/></td>
+                                        <td class="text-center"><span t-esc="line.uom.name or ''"/></td>
+                                        <td class="text-center"><span t-esc="line.qty"/></td>
                                     </tr>
                                 </t>
                             </tbody>

@@ -3,3 +3,5 @@ access_eram_purchase_req_user,access.eram.purchase.req.user,model_eram_purchase_
 access_eram_purchase_req_line_user,access.eram.purchase.req.line.user,model_eram_purchase_req_line,base.group_user,1,1,1,1
 access_eram_supplier_quote_user,access.eram.supplier.quote.user,model_eram_supplier_quote,base.group_user,1,1,1,1
 access_eram_supplier_quote_line_user,access.eram.supplier.quote.line.user,model_eram_supplier_quote_line,base.group_user,1,1,1,1
+access_eram_rfq_user,access.eram.rfq.user,model_eram_rfq,base.group_user,1,1,1,1
+access_eram_rfq_line_user,access.eram.rfq.line.user,model_eram_rfq_line,base.group_user,1,1,1,1

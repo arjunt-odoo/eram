@@ -12,6 +12,7 @@ class EramSupplierQuote(models.Model):
     partner_id = fields.Many2one("res.partner", string="Supplier Details")
     line_ids = fields.One2many("eram.supplier.quote.line", "quote_id")
     company_id = fields.Many2one("res.company", default=lambda self: self.env.company)
+    rfq_id = fields.Many2one("eram.rfq")
     purchase_id = fields.Many2one("purchase.order")
 
     def action_view_rfq(self):
@@ -19,10 +20,44 @@ class EramSupplierQuote(models.Model):
         return {
             'type': 'ir.actions.act_window',
             'name': _("Request For Quotation"),
+            'res_model': 'eram.rfq',
+            'res_id': self.rfq_id.id,
+            'view_mode': 'form'
+        }
+
+    def action_view_po(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _("Purchase Order"),
             'res_model': 'purchase.order',
             'res_id': self.purchase_id.id,
             'view_mode': 'form'
         }
+
+    def open_record(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _("Supplier Quote"),
+            'res_model': 'eram.supplier.quote',
+            'res_id': self.id,
+            'view_mode': 'form'
+        }
+
+    def action_create_po(self):
+        order_lines = []
+        for line in self.line_ids:
+            order_lines.append(fields.Command.create({
+                'product_id': line.product_id.id,
+                'e_description': line.description,
+                'product_qty': line.qty,
+                'price_unit': line.price_unit,
+            }))
+        self.purchase_id = self.purchase_id.create({
+            'partner_id': self.partner_id.id,
+            'order_line': order_lines
+        })
 
 
 class EramSupplierQuoteLine(models.Model):

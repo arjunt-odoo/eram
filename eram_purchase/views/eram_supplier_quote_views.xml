@@ -5,11 +5,20 @@
         <field name="model">eram.supplier.quote</field>
         <field name="arch" type="xml">
             <form>
+                <header>
+                    <button name="action_create_po" string="Create PO" invisible="purchase_id"
+                            class="btn btn-primary" type="object"/>
+                </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
-                        <button class="oe_stat_button" name="action_view_rfq" type="object" icon="fa-file-text-o" invisible="not purchase_id">
+                        <button class="oe_stat_button" name="action_view_rfq" type="object" icon="fa-file-text-o" invisible="not rfq_id">
                             <div class="o_field_statinfo">
                                 <span class="o_stat_text">RFQ</span>
+                            </div>
+                        </button>
+                        <button class="oe_stat_button" name="action_view_po" type="object" icon="fa-file" invisible="not purchase_id">
+                            <div class="o_field_statinfo">
+                                <span class="o_stat_text">Purchase Order</span>
                             </div>
                         </button>
                     </div>
