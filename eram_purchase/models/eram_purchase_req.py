@@ -11,6 +11,7 @@ class EramPurchaseReq(models.Model):
     pr_number = fields.Char("PR No")
     pr_date = fields.Date("PR Date")
     closing_date = fields.Date()
+    project_code = fields.Char()
     line_ids = fields.One2many("eram.purchase.req.line", "request_id")
     rfq_id = fields.Many2one("eram.rfq")
 
@@ -52,9 +53,10 @@ class EramPurchaseReqLine(models.Model):
     request_id = fields.Many2one("eram.purchase.req")
     sl_number = fields.Integer("Sl No", compute="_compute_sl_number", store=True)
     product_id = fields.Many2one("product.product", string="Item")
-    description = fields.Char()
-    part_no = fields.Char()
-    item_no = fields.Char()
+    description = fields.Html()
+    make = fields.Html()
+    part_no = fields.Html()
+    item_no = fields.Html()
     qty = fields.Float("Quantity")
 
     @api.depends('request_id', 'request_id.line_ids')

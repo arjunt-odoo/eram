@@ -41,9 +41,9 @@ class EramRfqLine(models.Model):
 
     sl_no = fields.Integer("S.NO", compute="_compute_sl_no")
     product_id = fields.Many2one("product.product", required=True)
-    item_no = fields.Char(required=True)
-    description = fields.Char(required=True)
-    part_no = fields.Char(required=True)
+    item_no = fields.Html(required=True)
+    description = fields.Html(required=True)
+    part_no = fields.Html(required=True)
     uom = fields.Many2one("uom.uom")
     qty = fields.Float("Quantity")
     rfq_id = fields.Many2one("eram.rfq")

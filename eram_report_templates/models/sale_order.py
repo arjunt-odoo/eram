@@ -60,7 +60,7 @@ class SaleOrderLine(models.Model):
         help="The sequential number of this line in the purchase order"
     )
 
-    e_description = fields.Char(string="Product Description")
+    e_description = fields.Html(string="Product Description")
 
     @api.depends('order_id', 'order_id.order_line')
     def _compute_line_index(self):

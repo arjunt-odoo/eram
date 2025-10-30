@@ -67,7 +67,7 @@ class EramSupplierQuoteLine(models.Model):
     quote_id = fields.Many2one("eram.supplier.quote")
     sl_no = fields.Integer("Sl No", compute="_compute_sl_no")
     product_id = fields.Many2one("product.product", "Item")
-    description = fields.Char()
+    description = fields.Html()
     qty = fields.Float()
     company_id = fields.Many2one("res.company", related="quote_id.company_id")
     currency_id = fields.Many2one("res.currency",  default=lambda self: self.env.company.currency_id)

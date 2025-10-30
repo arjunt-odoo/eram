@@ -114,7 +114,7 @@ class AccountMoveLine(models.Model):
         help="The sequential number of this line in the purchase order"
     )
 
-    e_description = fields.Char(string="Description")
+    e_description = fields.Html(string="Description")
 
     @api.depends('move_id', 'move_id.invoice_line_ids')
     def _compute_line_index(self):

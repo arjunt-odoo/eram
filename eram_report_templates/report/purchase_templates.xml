@@ -421,13 +421,13 @@
                                 <tbody>
                                     <t t-foreach="o.order_line" t-as="line">
                                         <tr t-if="not line.display_type">
-                                            <td class="text-center"><span t-esc="line_index + 1"/></td>
-                                            <td class="text-center"><span t-field="line.e_charge_code"/></td>
-                                            <td class="text-center"><span t-field="line.e_description"/></td>
-                                            <td class="text-center"><span t-field="line.product_uom.name"/></td>
-                                            <td class="text-center"><span t-field="line.product_qty"/></td>
-                                            <td class="text-center"><span t-field="line.price_unit"/></td>
-                                            <td class="text-center p-1"><span t-field="line.price_subtotal"/></td>
+                                            <td style="vertical-align: middle;" class="text-center"><span t-esc="line_index + 1"/></td>
+                                            <td style="vertical-align: middle;" class="text-center"><span t-field="line.e_charge_code"/></td>
+                                            <td style="vertical-align: middle;" class="text-center"><span t-field="line.e_description"/></td>
+                                            <td style="vertical-align: middle;" class="text-center"><span t-field="line.product_uom.name"/></td>
+                                            <td style="vertical-align: middle;" class="text-center"><span t-field="line.product_qty"/></td>
+                                            <td style="vertical-align: middle;" class="text-center"><span t-field="line.price_unit"/></td>
+                                            <td style="vertical-align: middle;" class="text-center p-1"><span t-field="line.price_subtotal"/></td>
                                         </tr>
                                     </t>
                                 </tbody>
@@ -494,7 +494,7 @@
                                 <div class="col-11">
                                     <span>2.1 Implement a quality management system.</span><br/>
                                     <span>2.2 Use customer-designated or approved external providers, including process sources.</span><br/>
-                                    <span>2.3 Notify the organization of nonconforming processes, products, or services and obtain approval for their disposition.</span>
+                                    <span>2.3 Notify the organization of nonconforming processes, products, or services and obtain approval for their disposition.</span><br/>
                                     <span>2.4 Prevent the use of counterfeit parts.</span><br/>
                                     <span>2.5 Notify the organization of changes to processes, products, or services, including changes of their external providers or location of manufacture, and obtain the organization’s approval.</span><br/>
                                     <span>2.6 Flow down to external providers applicable requirements including customer requirements.</span><br/>

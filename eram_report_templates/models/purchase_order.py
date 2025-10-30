@@ -102,8 +102,8 @@ class PurchaseOrderLine(models.Model):
         help="The sequential number of this line in the purchase order"
     )
 
-    e_description = fields.Char(string="Description")
-    e_charge_code = fields.Char(string="ITEM # / CHARGE CODE")
+    e_description = fields.Html(string="Description")
+    e_charge_code = fields.Html(string="ITEM # / CHARGE CODE")
 
     @api.depends('order_id', 'order_id.order_line')
     def _compute_line_index(self):

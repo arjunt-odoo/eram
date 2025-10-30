@@ -66,8 +66,8 @@ class EramSaleOrderReport(models.TransientModel):
         workbook = xlsxwriter.Workbook(output, {'in_memory': True})
 
         # Separate sales and quotations
-        sales = order_ids.filtered(lambda o: o.state == 'sale')
-        quotations = order_ids.filtered(lambda o: o.state in ('draft', 'sent'))
+        sales = order_ids.filtered(lambda o: o.state == 'sale').sorted(lambda s: s.date_order)
+        quotations = order_ids.filtered(lambda o: o.state in ('draft', 'sent')).sorted(lambda s: s.date_order)
 
         # Group sales by currency
         sales_by_currency = defaultdict(list)
