@@ -13,27 +13,19 @@ class EramPurchaseReq(models.Model):
     closing_date = fields.Date()
     project_code = fields.Char()
     line_ids = fields.One2many("eram.purchase.req.line", "request_id")
-    rfq_id = fields.Many2one("eram.rfq")
+    rfq_ids = fields.One2many("eram.rfq", "eram_pr_id")
 
 
     def action_create_rfq(self):
-        if not self.line_ids:
-            raise ValidationError("Please add at least one product in PR!")
-        order_lines = []
-        for line in self.line_ids:
-            order_lines.append(fields.Command.create({
-                'product_id': line.product_id.id,
-                'description': line.description,
-                'qty': line.qty,
-                'part_no': line.part_no,
-                'item_no': line.item_no
-
-            }))
-        self.rfq_id =  self.rfq_id.create({
-            'eram_pr_id': self.id,
-            'our_bid_closing_date': self.closing_date,
-            'line_ids': order_lines
-        })
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _("Order Lines"),
+            'res_model': 'eram.purchase.req.line',
+            'view_mode': 'list',
+            'domain': [('id', '=', self.id)],
+            'target': 'new'
+        }
 
     def action_view_rfq(self):
         self.ensure_one()
@@ -41,8 +33,8 @@ class EramPurchaseReq(models.Model):
             'type': 'ir.actions.act_window',
             'name': _("Request For Quotation"),
             'res_model': 'eram.rfq',
-            'res_id': self.rfq_id.id,
-            'view_mode': 'form'
+            'view_mode': 'list,form',
+            'domain': [('eram_pr_id', '=', self.id)]
         }
 
 
@@ -64,3 +56,24 @@ class EramPurchaseReqLine(models.Model):
         for req in self.mapped('request_id'):
             for index, line in enumerate(req.line_ids, start=1):
                 line.sl_number = index
+
+    def create_rfq(self):
+        if not self:
+            raise ValidationError("Please select at least one line for RFQ!")
+        order_lines = []
+        for line in self:
+            order_lines.append(fields.Command.create({
+                'product_id': line.product_id.id,
+                'description': line.description,
+                'qty': line.qty,
+                'part_no': line.part_no,
+                'item_no': line.item_no
+
+            }))
+        self.request_id.write({
+            'rfq_ids': [fields.Command.create({
+                'eram_pr_id': self.request_id.id,
+                'our_bid_closing_date': self.request_id.closing_date,
+                'line_ids': order_lines
+            })]
+        })

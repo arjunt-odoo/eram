@@ -6,12 +6,12 @@
         <field name="arch" type="xml">
             <form>
                 <header>
-                    <button name="action_create_rfq" string="Create RFQ" invisible="rfq_id"
+                    <button name="action_create_rfq" string="Create RFQ"
                             class="btn btn-primary" type="object"/>
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
-                        <button class="oe_stat_button" name="action_view_rfq" type="object" icon="fa-file-text-o" invisible="not rfq_id">
+                        <button class="oe_stat_button" name="action_view_rfq" type="object" icon="fa-file-text-o" invisible="not rfq_ids">
                             <div class="o_field_statinfo">
                                 <span class="o_stat_text">RFQ</span>
                             </div>
@@ -64,4 +64,23 @@
     <menuitem id="menu_eram_purchase_req"
               action="action_eram_purchase_req"
               sequence="40"/>
+
+    <record id="eram_purchase_req_line_view_list" model="ir.ui.view">
+        <field name="name">eram.purchase.req.line.view.list</field>
+        <field name="model">eram.purchase.req.line</field>
+        <field name="arch" type="xml">
+            <list>
+                <header>
+                    <button name="create_rfq" string="Create RFQ" type="object" class="btn btn-primary"/>
+                </header>
+                <field name="sl_number"/>
+                <field name="product_id"/>
+                <field name="description"/>
+                <field name="make"/>
+                <field name="part_no"/>
+                <field name="item_no"/>
+                <field name="qty"/>
+            </list>
+        </field>
+    </record>
 </odoo>
