@@ -23,7 +23,7 @@ class EramPurchaseReq(models.Model):
             'name': _("Order Lines"),
             'res_model': 'eram.purchase.req.line',
             'view_mode': 'list',
-            'domain': [('id', '=', self.id)],
+            'domain': [('request_id', '=', self.id)],
             'target': 'new'
         }
 

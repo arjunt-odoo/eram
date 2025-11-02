@@ -3,8 +3,26 @@
     <template id="external_layout_inherit_custom" inherit_id="web.external_layout_standard">
         <xpath expr="//div[@t-attf-class='header o_company_#{company.id}_layout']" position="replace">
             <div t-attf-class="header o_company_#{company.id}_layout">
-                <div class="d-flex justify-content-end">
-                    <img t-if="company.logo" class="o_company_logo_small" t-att-src="image_data_uri(company.logo)" alt="Logo"/>
+                <div class="text-end">
+                    <div class="d-flex justify-content-end mb-2">
+                        <img t-if="company.logo" class="o_company_logo_small" t-att-src="image_data_uri(company.logo)" alt="Logo"/>
+                    </div>
+                    <t t-if="e_our_ref and e_date">
+                        <div class="ref-block">
+                            <table class="table table-sm text-center" style="width: 30%; display: inline-table; border-collapse: collapse;">
+                                <tbody>
+                                    <tr>
+                                        <td style="border: 1px solid black; padding: 4px;"><strong>OUR REF</strong></td>
+                                        <td style="border: 1px solid black; padding: 4px;"><span t-esc="e_our_ref"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="border: 1px solid black; padding: 4px;"><strong>DATE</strong></td>
+                                        <td style="border: 1px solid black; padding: 4px;"><span t-esc="e_date" t-options="{'widget': 'date'}"/></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </t>
                 </div>
             </div>
         </xpath>

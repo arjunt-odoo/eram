@@ -3,6 +3,8 @@
     <template id="eram_report_rfq">
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="o">
+                <t t-set="e_our_ref" t-value="o.our_ref"/>
+                <t t-set="e_date" t-value="o.date"/>
                 <t t-call="web.external_layout">
                     <style>
                         .page {
@@ -50,6 +52,11 @@
                         #product-items-table tbody tr:nth-child(even) {
                             background-color: #f9f9f9;
                         }
+
+                        /* Force new page for the items section */
+                        #items-section {
+                            page-break-before: always;
+                        }
                     </style>
 
                     <div class="page">
@@ -57,19 +64,6 @@
                             <div class="text-center">
                                 <h6 class="m-0 fw-bold"><u>REQUEST FOR QUOTATION (RFQ)</u></h6>
                             </div>
-                        </div>
-
-                        <div class="ref-block">
-                            <table class="table table-sm table-bordered">
-                                <tr>
-                                    <td><strong>OUR REF</strong></td>
-                                    <td><span t-esc="o.our_ref"/></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>DATE</strong></td>
-                                    <td><span t-esc="o.date" t-options="{'widget': 'date'}"/></td>
-                                </tr>
-                            </table>
                         </div>
                         <div class="clearfix"></div> <!-- Clear float -->
 
@@ -113,7 +107,7 @@
                             <li>Suppliers should deliver the items only during Monday to Friday from 08.00 am to 04.00 pm.</li>
                         </ol>
                         <div class="row mt-5">
-                            <div class="col-6">
+                            <div class="col">
                                 <p class="mb-0">_________________________</p>
                                 <p class="mb-0"><strong>Mark Dass</strong></p>
                                 <p class="mb-0">Office Assistant</p>
@@ -123,40 +117,43 @@
                                 <p class="mb-0">Mobile: +91 80954 28115</p>
                                 <p class="mb-0">mark.dass@eramelectronics.com</p>
                             </div>
-                            <div class="col-6 text-end">
+
+                        </div>
+                        <div>
+                            <div class="col text-end">
                                 <p class="mb-0"><strong>FM-PU-01</strong></p>
                             </div>
                         </div>
 
-                        <div class="page-break"/>
+                        <!-- Items section starts on a new page -->
+                        <div id="items-section">
+                            <h5 class="mb-3"><u>LIST OF ITEMS</u></h5>
 
-                        <h5 class="mb-3"><u>LIST OF ITEMS</u></h5>
-
-                        <table id="product-items-table" class="table table-bordered">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th class="text-center">S.NO.</th>
-                                    <th class="text-center">ITEM NO.</th>
-                                    <th class="text-center">DESCRIPTION</th>
-                                    <th class="text-center">PART NO.</th>
-                                    <th class="text-center">UOM</th>
-                                    <th class="text-center">QTY</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <t t-foreach="o.line_ids" t-as="line">
+                            <table id="product-items-table" class="table table-bordered">
+                                <thead class="thead-light">
                                     <tr>
-                                        <td class="text-center"><span t-esc="line_index + 1"/></td>
-                                        <td class="text-center"><span t-esc="line.item_no"/></td>
-                                        <td class="text-center"><span t-esc="line.description"/></td>
-                                        <td class="text-center"><span t-esc="line.part_no"/></td>
-                                        <td class="text-center"><span t-esc="line.uom.name or ''"/></td>
-                                        <td class="text-center"><span t-esc="line.qty"/></td>
+                                        <th class="text-center">S.NO.</th>
+                                        <th class="text-center">ITEM NO.</th>
+                                        <th class="text-center">DESCRIPTION</th>
+                                        <th class="text-center">PART NO.</th>
+                                        <th class="text-center">UOM</th>
+                                        <th class="text-center">QTY</th>
                                     </tr>
-                                </t>
-                            </tbody>
-                        </table>
-
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="o.line_ids" t-as="line">
+                                        <tr>
+                                            <td class="text-center"><span t-esc="line_index + 1"/></td>
+                                            <td class="text-center"><span t-esc="line.item_no"/></td>
+                                            <td class="text-center"><span t-esc="line.description"/></td>
+                                            <td class="text-center"><span t-esc="line.part_no"/></td>
+                                            <td class="text-center"><span t-esc="line.uom.name or ''"/></td>
+                                            <td class="text-center"><span t-esc="line.qty"/></td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </t>
             </t>
