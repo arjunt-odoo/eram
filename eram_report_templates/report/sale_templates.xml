@@ -2,13 +2,58 @@
 <odoo>
     <template id="eram_report_saleorder_document"
               name="Eram Sale Order Template">
-<!--        <xpath expr="//t[@t-call='web.external_layout']" position="replace">-->
          <t t-call="web.html_container">
              <t t-foreach="docs" t-as="doc">
                 <t t-call="web.external_layout">
                     <t t-call="web.internal_layout">
                         <t t-set="doc" t-value="doc.with_context(lang=doc.partner_id.lang)"/>
                         <style>
+                            .page {
+                                font-family: 'Calibri', sans-serif;
+                                font-size: 0.7em;
+                            }
+                            h1 {
+                                font-size: 14pt !important;
+                                font-weight: bold !important;
+                                text-align: center;
+                                text-decoration: underline;
+                            }
+                            h5 {
+                                font-size: 9pt !important;
+                                font-weight: bold !important;
+                            }
+                            .body-text {
+                                font-size: 9pt;
+                                font-weight: bold;
+                            }
+                            .body-text * {
+                                font-size: 9pt;
+                                font-weight: bold;
+                            }
+                            .terms {
+                                font-size: 9pt;
+                                font-weight: bold;
+                            }
+                            .terms * {
+                                font-size: 9pt;
+                                font-weight: bold;
+                            }
+                            .signatures {
+                                font-size: 9pt;
+                                font-weight: bold;
+                            }
+                            .signatures * {
+                                font-size: 9pt;
+                                font-weight: bold;
+                            }
+                            .table-bordered th {
+                                font-size: 7pt;
+                                font-weight: bold;
+                            }
+                            .table-bordered td {
+                                font-size: 7pt;
+                                font-weight: normal;
+                            }
                             table {
                                 page-break-inside: auto;
                             }
@@ -31,6 +76,102 @@
                             }
                             .table-bordered tr {
                                 break-inside: avoid;
+                            }
+                            .po-table {
+                                width: 100%;
+                                border-collapse: collapse;
+                                font-size: 9pt;
+                                font-weight: bold;
+                            }
+                            .po-table td {
+                                padding-left: 5px;
+                                border: 1px solid black;
+                                font-size: 9pt;
+                                font-weight: bold;
+                            }
+                            .po-table .text-center {
+                                text-align: center;
+                            }
+                            .po-table .text-left {
+                                text-align: left;
+                            }
+                            .po-table .text-left-padded {
+                                text-align: left;
+                                padding-left: 5px !important;
+                            }
+                            .po-table .width-60 {
+                                width: 60%;
+                            }
+                            .po-table .width-50 {
+                                width: 50%;
+                            }
+                            .po-table .width-21 {
+                                width: 21%;
+                            }
+                            .po-table .width-39 {
+                                width: 39%;
+                            }
+                            .po-table .width-18 {
+                                width: 18%;
+                            }
+                            .po-table .width-22 {
+                                width: 22%;
+                            }
+                            .po-table .width-35 {
+                                width: 35%;
+                            }
+                            .po-table .width-45 {
+                                width: 45%;
+                            }
+                            .po-table .width-40 {
+                                width: 40%;
+                            }
+                            .po-table .width-1 {
+                                width: 1%;
+                                text-align: center;
+                                padding-right:3px;
+                            }
+                            .po-table .width-34 {
+                                width: 35%;
+                            }
+                            .po-table .width-44 {
+                                width: 45%;
+                            }
+                            .po-table .width-65 {
+                                width: 64%;
+                            }
+                            .po-table .width-55 {
+                                width: 54%;
+                            }
+                            .po-table .border-right {
+                                border-right: 1px solid black !important;
+                            }
+                            .po-table .inner-table {
+                                width: 100%;
+                                border-collapse: collapse;
+                            }
+                            .po-table .inner-table td {
+                                border: none;
+                                padding-left: 0;
+                                font-size: 9pt;
+                                font-weight: bold;
+                            }
+                            .po-table .inner-table .text-left-padded {
+                                padding-left: 5px !important;
+                            }
+                            .header-table {
+                                width: 40%;
+                                margin-left: auto;
+                                border-collapse: collapse;
+                                font-size: 9pt;
+                                font-weight: bold;
+                            }
+                            .header-table td {
+                                border: 1px solid black;
+                                padding: 5px;
+                                text-align: center;
+                                font-size: 9pt;
+                                font-weight: bold;
                             }
                         </style>
                     </t>
@@ -249,6 +390,5 @@
                 </t>
              </t>
          </t>
-<!--        </xpath>-->
     </template>
 </odoo>

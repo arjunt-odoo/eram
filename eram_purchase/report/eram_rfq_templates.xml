@@ -9,36 +9,100 @@
                     <style>
                         .page {
                             font-family: 'Calibri', sans-serif;
-                            font-size: 12pt;
+                            font-size: 0.7em;
                         }
-
-                        /* Default padding for ALL bordered tables */
+                        h3 {
+                            font-size: 14pt !important;
+                            font-weight: bold !important;
+                            text-align: center;
+                            text-decoration: underline;
+                        }
+                        .body-text {
+                            font-size: 9pt;
+                            font-weight: bold;
+                        }
+                        .body-text * {
+                            font-size: 9pt;
+                            font-weight: bold;
+                        }
+                        .terms {
+                            font-size: 9pt;
+                            font-weight: bold;
+                        }
+                        .terms * {
+                            font-size: 9pt;
+                            font-weight: bold;
+                        }
+                        .signatures {
+                            font-size: 9pt;
+                            font-weight: bold;
+                        }
+                        .signatures * {
+                            font-size: 9pt;
+                            font-weight: bold;
+                        }
+                        .table-bordered th {
+                            font-size: 7pt;
+                            font-weight: bold;
+                        }
+                        .table-bordered td {
+                            font-size: 7pt;
+                            font-weight: normal;
+                        }
+                        table {
+                            page-break-inside: auto;
+                        }
+                        tr {
+                            page-break-inside: avoid;
+                            page-break-after: auto;
+                        }
+                        thead {
+                            display: table-header-group;
+                        }
+                        .table-bordered {
+                            border: 1px solid black;
+                            border-collapse: collapse;
+                            width: 100%;
+                        }
                         .table-bordered th,
                         .table-bordered td {
-                            border: 1px solid black !important;
-                            padding: 6px 10px !important;
-                            vertical-align: middle;
+                            border: 1px solid black;
+                            padding: 5px;
                         }
-
-                        /* Tighter padding ONLY for the product items table */
+                        .table-bordered tr {
+                            break-inside: avoid;
+                        }
+                        /* Tighter padding ONLY for the product items table (matches PO line items) */
                         #product-items-table th,
                         #product-items-table td {
-                            padding: 4px 6px !important;
-                            font-size: 11pt;
+                            padding: 5px !important;
+                            font-size: 7pt;
+                            font-weight: normal;
+                        }
+                        #product-items-table th {
+                            font-weight: bold;
                         }
 
-                        /* Explicit padding for REF block (small table) */
-                        .ref-block td {
-                            padding: 4px 8px !important;
-                            font-size: 11pt;
-                        }
-
-                        /* BID INFO table – good readable padding */
+                        /* Explicit padding for BID INFO block (small table) */
                         #bid-info-table td {
-                            padding: 6px 12px !important;
+                            padding: 5px !important;
+                            font-size: 9pt;
+                            font-weight: bold;
                         }
 
-                        /* Right-aligned reference block */
+                        /* General text and headings */
+                        h5, h6 {
+                            font-weight: bold;
+                        }
+                        p, li, td {
+                            font-size: 9pt;
+                            font-weight: bold;
+                        }
+                        strong {
+                            font-weight: bold;
+                        }
+
+                        /* Right-aligned reference block (not used but kept for consistency) */
                         .ref-block {
                             max-width: 35%;
                             float: right;
@@ -68,7 +132,7 @@
                         <div class="clearfix"></div> <!-- Clear float -->
 
                         <!-- ==================== INTRO TEXT ==================== -->
-                        <p class="mb-3">
+                        <p class="mb-3 body-text">
                             Please submit your most competitive price and the best delivery time for the item(s) as per the attached list of items,
                             all in accordance with the specification, terms and conditions of this RFQ. In case you are unable to submit a bid,
                             please inform us in the form of a regret letter prior to the bid closing date.
@@ -89,9 +153,9 @@
                         </div>
 
                         <!-- ==================== GENERAL TERMS ==================== -->
-                        <h5 class="mb-2 fw-bold"><u>GENERAL TERMS &amp; CONDITIONS TO BIDDERS.</u></h5>
+                        <h5 class="mb-2"><u>GENERAL TERMS &amp; CONDITIONS TO BIDDERS.</u></h5>
 
-                        <ol class="pl-3 mb-4" style="line-height:1.6;">
+                        <ol class="pl-3 mb-4 terms" style="line-height:1.6;">
                             <li>Total number of item(s) <strong t-esc="len(o.line_ids)"/></li>
                             <li>Please find enclosed Nil page catalogues / drawings / samples for your reference.</li>
                             <li>Our serial number of item(s) should be maintained / mentioned in your offer.</li>
@@ -106,7 +170,7 @@
                                 <br/>Plot No 110-L/1, Survey No 68, Electronic City Phase-1, Bengaluru-560100.</li>
                             <li>Suppliers should deliver the items only during Monday to Friday from 08.00 am to 04.00 pm.</li>
                         </ol>
-                        <div class="row mt-5">
+                        <div class="row mt-5 signatures">
                             <div class="col">
                                 <p class="mb-0">_________________________</p>
                                 <p class="mb-0"><strong>Mark Dass</strong></p>

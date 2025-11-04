@@ -12,12 +12,12 @@
                             <table class="table table-sm text-center" style="width: 30%; display: inline-table; border-collapse: collapse;">
                                 <tbody>
                                     <tr>
-                                        <td style="border: 1px solid black; padding: 4px;"><strong>OUR REF</strong></td>
-                                        <td style="border: 1px solid black; padding: 4px;"><span t-esc="e_our_ref"/></td>
+                                        <td style="border: 1px solid black; padding: 4px; font-family: 'Calibri', sans-serif;font-size: 0.7em;"><strong>OUR REF</strong></td>
+                                        <td style="border: 1px solid black; padding: 4px; font-family: 'Calibri', sans-serif;font-size: 0.7em;"><span t-esc="e_our_ref"/></td>
                                     </tr>
                                     <tr>
-                                        <td style="border: 1px solid black; padding: 4px;"><strong>DATE</strong></td>
-                                        <td style="border: 1px solid black; padding: 4px;"><span t-esc="e_date" t-options="{'widget': 'date'}"/></td>
+                                        <td style="border: 1px solid black; padding: 4px; font-family: 'Calibri', sans-serif;font-size: 0.7em;"><strong>DATE</strong></td>
+                                        <td style="border: 1px solid black; padding: 4px; font-family: 'Calibri', sans-serif;font-size: 0.7em;"><span t-esc="e_date" t-options="{'widget': 'date'}"/></td>
                                     </tr>
                                 </tbody>
                             </table>
