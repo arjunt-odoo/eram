@@ -8,8 +8,7 @@
                 <t t-call="web.external_layout">
                     <style>
                         .page {
-                            font-family: 'Calibri', sans-serif;
-                            font-size: 0.7em;
+                            font-family: "Cambria", serif;
                         }
                         h3 {
                             font-size: 14pt !important;
@@ -18,27 +17,27 @@
                             text-decoration: underline;
                         }
                         .body-text {
-                            font-size: 9pt;
+                            font-size: 11pt;
                             font-weight: bold;
                         }
                         .body-text * {
-                            font-size: 9pt;
+                            font-size: 11pt;
                             font-weight: bold;
                         }
                         .terms {
-                            font-size: 9pt;
+                            font-size: 11pt;
                             font-weight: bold;
                         }
                         .terms * {
-                            font-size: 9pt;
+                            font-size: 11pt;
                             font-weight: bold;
                         }
                         .signatures {
-                            font-size: 9pt;
+                            font-size: 11pt;
                             font-weight: bold;
                         }
                         .signatures * {
-                            font-size: 9pt;
+                            font-size: 11pt;
                             font-weight: bold;
                         }
                         .table-bordered th {
@@ -72,15 +71,17 @@
                         .table-bordered tr {
                             break-inside: avoid;
                         }
-                        /* Tighter padding ONLY for the product items table (matches PO line items) */
+                        /* LARGER FONT SIZE for ALL content in product items table */
                         #product-items-table th,
-                        #product-items-table td {
-                            padding: 5px !important;
-                            font-size: 7pt;
+                        #product-items-table td,
+                        #product-items-table th *,
+                        #product-items-table td * {
+                            font-size: 12pt !important;
                             font-weight: normal;
                         }
-                        #product-items-table th {
-                            font-weight: bold;
+                        #product-items-table th,
+                        #product-items-table th * {
+                            font-weight: bold !important;
                         }
 
                         /* Explicit padding for BID INFO block (small table) */
@@ -122,13 +123,13 @@
                             page-break-before: always;
                         }
                     </style>
-
                     <div class="page">
                         <div class="row mb-3">
                             <div class="text-center">
                                 <h6 class="m-0 fw-bold"><u>REQUEST FOR QUOTATION (RFQ)</u></h6>
                             </div>
                         </div>
+                        <br/>
                         <div class="clearfix"></div> <!-- Clear float -->
 
                         <!-- ==================== INTRO TEXT ==================== -->
@@ -154,9 +155,10 @@
 
                         <!-- ==================== GENERAL TERMS ==================== -->
                         <h5 class="mb-2"><u>GENERAL TERMS &amp; CONDITIONS TO BIDDERS.</u></h5>
+                        <br/>
 
                         <ol class="pl-3 mb-4 terms" style="line-height:1.6;">
-                            <li>Total number of item(s) <strong t-esc="len(o.line_ids)"/></li>
+                            <li>Total number of item(s) : <strong t-esc="len(o.line_ids)"/></li>
                             <li>Please find enclosed Nil page catalogues / drawings / samples for your reference.</li>
                             <li>Our serial number of item(s) should be maintained / mentioned in your offer.</li>
                             <li>Any deviation from the stipulated delivery date in the Purchase Order would attract penalty strictly
