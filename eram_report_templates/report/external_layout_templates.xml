@@ -3,11 +3,17 @@
     <template id="external_layout_inherit_custom" inherit_id="web.external_layout_standard">
         <xpath expr="//div[@t-attf-class='header o_company_#{company.id}_layout']" position="replace">
             <div t-attf-class="header o_company_#{company.id}_layout">
+                <div class="text-start">
+                    <t t-if="e_our_ref and e_date">
+                        <img src="/eram_report_templates/static/src/img/triangle.png" style="position: absolute; top: 0; left: -10px; width: 15%; margin: 0; padding: 0; z-index: 1;"/>
+                    </t>
+                </div>
                 <div class="text-end">
                     <div class="d-flex justify-content-end mb-2">
                         <img t-if="company.logo" class="o_company_logo_small" t-att-src="image_data_uri(company.logo)" alt="Logo"/>
                     </div>
                     <t t-if="e_our_ref and e_date">
+                        <br/>
                         <div class="ref-block">
                             <table class="table table-sm text-center" style="width: 30%; display: inline-table; border-collapse: collapse;">
                                 <tbody>
