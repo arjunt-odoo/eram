@@ -76,8 +76,10 @@
                         #product-items-table td,
                         #product-items-table th *,
                         #product-items-table td * {
-                            font-size: 12pt !important;
+                            font-size: 10pt !important;
                             font-weight: normal;
+                            margin: 1px;
+                            vertical-align: middle;
                         }
                         #product-items-table th,
                         #product-items-table th * {
@@ -130,7 +132,7 @@
                             </div>
                         </div>
                         <br/>
-                        <div class="clearfix"></div> <!-- Clear float -->
+                        <div class="clearfix"/> <!-- Clear float -->
 
                         <!-- ==================== INTRO TEXT ==================== -->
                         <p class="mb-3 body-text">
@@ -198,12 +200,12 @@
                             <table id="product-items-table" class="table table-bordered">
                                 <thead class="thead-light">
                                     <tr>
-                                        <th class="text-center">S.NO.</th>
+                                        <th class="text-center" style="width: 10%;">S.NO.</th>
                                         <th class="text-center">ITEM NO.</th>
                                         <th class="text-center">DESCRIPTION</th>
                                         <th class="text-center">PART NO.</th>
                                         <th class="text-center">UOM</th>
-                                        <th class="text-center">QTY</th>
+                                        <th class="text-center" style="width: 10%;">QTY</th>
                                     </tr>
                                 </thead>
                                 <tbody>

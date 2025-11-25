@@ -56,7 +56,8 @@ class EramSupplierQuote(models.Model):
             }))
         self.purchase_id = self.purchase_id.create({
             'partner_id': self.partner_id.id,
-            'order_line': order_lines
+            'order_line': order_lines,
+            'e_supplier_quote_id': self.id
         })
 
 

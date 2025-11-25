@@ -7,6 +7,7 @@ class PurchaseOrder(models.Model):
     partner_id = fields.Many2one("res.partner", required=False)
     state = fields.Selection(selection_add=[('draft', "Draft"),
                                             ('sent', "Sent")])
+    e_supplier_quote_id = fields.Many2one("eram.supplier.quote")
 
     def action_set_as_sent(self):
         self.write({

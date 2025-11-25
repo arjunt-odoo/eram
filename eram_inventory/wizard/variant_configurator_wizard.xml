@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_variant_configurator_form" model="ir.ui.view">
+        <field name="name">variant.configurator.form</field>
+        <field name="model">variant.configurator.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="product_id" invisible="1"/>
+                        <field name="current_level"/>
+                        <field name="available_children" widget="many2many_tags"/>
+                        <field name="config_path" readonly="1"/>
+                        <field name="final_variant_id" readonly="1"/>
+                    </group>
+                    <footer>
+                        <button name="action_next_level" string="Next Level" type="object" class="btn-primary"/>
+                        <button name="action_generate_variant" string="Generate Variant" type="object" class="btn-success"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_variant_configurator" model="ir.actions.act_window">
+        <field name="name">Configure Hierarchical Variant</field>
+        <field name="res_model">variant.configurator.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>
