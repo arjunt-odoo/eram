@@ -254,7 +254,7 @@
 
                         <!-- Signature Section -->
                         <div class="row mt-4">
-                            <div class="col-4 text-center">
+                            <div class="col-6 text-center">
                                 <p><strong>PREPARED BY</strong></p>
                                 <br/>
                                 <br/>
@@ -262,15 +262,15 @@
                                 <p><strong>SNEHA V JOHN</strong></p>
                                 <p><strong>PROJECT MANAGER</strong></p>
                             </div>
-                            <div class="col-4 text-center">
-                                <p><strong>VERIFIED BY</strong></p>
-                                <br/>
-                                <br/>
-                                <div style="width: 50%; margin: 0 auto; border-top: 1px solid black;"/>
-                                <p><strong>MOHAMMED SIRAJUDHEEN K</strong></p>
-                                <p><strong>SENIOR ACCOUNTANT</strong></p>
-                            </div>
-                            <div class="col-4 text-center">
+<!--                            <div class="col-4 text-center">-->
+<!--                                <p><strong>VERIFIED BY</strong></p>-->
+<!--                                <br/>-->
+<!--                                <br/>-->
+<!--                                <div style="width: 50%; margin: 0 auto; border-top: 1px solid black;"/>-->
+<!--                                <p><strong>MOHAMMED SIRAJUDHEEN K</strong></p>-->
+<!--                                <p><strong>SENIOR ACCOUNTANT</strong></p>-->
+<!--                            </div>-->
+                            <div class="col-6 text-center">
                                 <p><strong>APPROVED BY</strong></p>
                                 <br/>
                                 <br/>

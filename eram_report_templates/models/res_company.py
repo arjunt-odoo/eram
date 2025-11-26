@@ -6,3 +6,6 @@ class ResCompany(models.Model):
 
     alert_user_ids = fields.Many2many("res.users",
                                       relation="eram_alert_user_company_rel")
+    footer_image = fields.Image(
+        string='Footer Image',
+        help='Upload the image to use as dynamic footer in reports. It can be updated over time.')

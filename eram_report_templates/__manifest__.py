@@ -21,6 +21,7 @@
         'views/eram_customer_po_views.xml',
         'views/account_move_views.xml',
         'views/purchase_order_views.xml',
+        'views/res_company_views.xml',
         'views/res_config_settings_views.xml',
         'views/sale_order_views.xml',
         'views/stock_picking_views.xml',
