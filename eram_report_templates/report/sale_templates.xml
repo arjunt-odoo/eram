@@ -382,7 +382,7 @@
                                     </div>
                                 </li>
                                 <li>Warranty: Standard warranty terms as provided by the manufacturer.</li>
-                                <li>Validity: Our offer is firm and valid for your acceptance until 30 days from the date of this offer and subject to our written confirmation thereafter. If an order does not result till this period, we shall be pleased to review our proposal in an effort to extend the pricing and the offered delivery.</li>
+                                <li>Validity: Our offer is firm and valid for your acceptance until <span t-field="doc.e_validity_text"/> from the date of this offer and subject to our written confirmation thereafter. If an order does not result till this period, we shall be pleased to review our proposal in an effort to extend the pricing and the offered delivery.</li>
                                 <li>Packing: Manufacturer Standard Packing Extra.</li>
                                 <li>Country of Origin: India</li>
                                 <li>Apart from above terms and conditions specific to this quotation, our offer / quote is subject to our standard terms and conditions of sale, which is applicable without exceptions, so far as not contrary to any of the terms and conditions modified above.</li>

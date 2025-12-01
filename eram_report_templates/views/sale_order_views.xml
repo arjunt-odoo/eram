@@ -72,6 +72,9 @@
                     </field>
                 </page>
             </xpath>
+            <xpath expr="//notebook//page[@name='other_information']//field[@name='tag_ids']" position="after">
+                <field name="e_validity_text"/>
+            </xpath>
             <xpath expr="//notebook//page[@name='other_information']//field[@name='invoice_status']" position="after">
                 <field name="payment_term_id"/>
             </xpath>
