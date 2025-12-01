@@ -7,6 +7,52 @@
                     <t t-call="web.internal_layout">
                         <t t-set="o" t-value="o.with_context(lang=o.partner_id.lang)"/>
                         <style>
+                            .page {
+                                font-family: 'Calibri', sans-serif;
+                                font-size: 0.7em;
+                            }
+                            h1 {
+                                font-size: 14pt !important;
+                                font-weight: bold !important;
+                                text-align: center;
+                                text-decoration: underline;
+                            }
+                            h5 {
+                                font-size: 9pt !important;
+                                font-weight: bold !important;
+                            }
+                            .body-text {
+                                font-size: 9pt;
+                                font-weight: bold;
+                            }
+                            .body-text * {
+                                font-size: 9pt;
+                                font-weight: bold;
+                            }
+                            .terms {
+                                font-size: 9pt;
+                                font-weight: bold;
+                            }
+                            .terms * {
+                                font-size: 9pt;
+                                font-weight: bold;
+                            }
+                            .signatures {
+                                font-size: 9pt;
+                                font-weight: bold;
+                            }
+                            .signatures * {
+                                font-size: 9pt;
+                                font-weight: bold;
+                            }
+                            .table-bordered th {
+                                font-size: 7pt;
+                                font-weight: bold;
+                            }
+                            .table-bordered td {
+                                font-size: 7pt;
+                                font-weight: normal;
+                            }
                             table {
                                 page-break-inside: auto;
                                 width: 100%;
@@ -21,13 +67,14 @@
                             }
                             .table-bordered {
                                 border: 1px solid black;
+                                border-collapse: collapse;
                                 width: 100%;
                             }
                             .table-bordered th,
                             .table-bordered td {
                                 border: 1px solid black;
                                 padding: 5px;
-                                vertical-align: middle; /* Ensure content is vertically centered */
+                                vertical-align: middle;
                             }
                             .table-bordered tr {
                                 break-inside: avoid;
@@ -37,11 +84,130 @@
                             .table-bordered table td {
                                 vertical-align: middle;
                             }
+                            .po-table {
+                                width: 100%;
+                                border-collapse: collapse;
+                                font-size: 9pt;
+                                font-weight: bold;
+                            }
+                            .po-table td {
+                                padding-left: 5px;
+                                border: 1px solid black;
+                                font-size: 9pt;
+                                font-weight: bold;
+                            }
+                            .po-table .text-center {
+                                text-align: center;
+                            }
+                            .po-table .text-left {
+                                text-align: left;
+                            }
+                            .po-table .text-left-padded {
+                                text-align: left;
+                                padding-left: 5px !important;
+                            }
+                            .po-table .width-60 {
+                                width: 60%;
+                            }
+                            .po-table .width-50 {
+                                width: 50%;
+                            }
+                            .po-table .width-21 {
+                                width: 21%;
+                            }
+                            .po-table .width-39 {
+                                width: 39%;
+                            }
+                            .po-table .width-18 {
+                                width: 18%;
+                            }
+                            .po-table .width-22 {
+                                width: 22%;
+                            }
+                            .po-table .width-35 {
+                                width: 35%;
+                            }
+                            .po-table .width-45 {
+                                width: 45%;
+                            }
+                            .po-table .width-40 {
+                                width: 40%;
+                            }
+                            .po-table .width-1 {
+                                width: 1%;
+                                text-align: center;
+                                padding-right:3px;
+                            }
+                            .po-table .width-34 {
+                                width: 35%;
+                            }
+                            .po-table .width-44 {
+                                width: 45%;
+                            }
+                            .po-table .width-65 {
+                                width: 64%;
+                            }
+                            .po-table .width-55 {
+                                width: 54%;
+                            }
+                            .po-table .border-right {
+                                border-right: 1px solid black !important;
+                            }
+                            .po-table .inner-table {
+                                width: 100%;
+                                border-collapse: collapse;
+                            }
+                            .po-table .inner-table td {
+                                border: none;
+                                padding-left: 0;
+                                font-size: 9pt;
+                                font-weight: bold;
+                            }
+                            .po-table .inner-table .text-left-padded {
+                                padding-left: 5px !important;
+                            }
+                            .header-table {
+                                width: 40%;
+                                margin-left: auto;
+                                border-collapse: collapse;
+                                font-size: 9pt;
+                                font-weight: bold;
+                            }
+                            .header-table td {
+                                border: 1px solid black;
+                                padding: 5px;
+                                text-align: center;
+                                font-size: 9pt;
+                                font-weight: bold;
+                            }
+                            .invoice-header {
+                                font-size: 9pt;
+                                font-weight: bold;
+                            }
+                            .invoice-header td {
+                                font-size: 9pt;
+                                font-weight: bold;
+                            }
+                            .invoice-title {
+                                font-size: 30px !important;
+                                font-weight: bold !important;
+                                text-align: center;
+                                color: #000000;
+                                font-family: serif;
+                            }
+                            .narration-table td {
+                                font-size: 9pt;
+                                font-weight: bold;
+                            }
+                            .bill-ship-header {
+                                background-color: #91b9f7;
+                                font-size: 18px;
+                            }
                         </style>
                     </t>
                     <div class="page">
                         <div>
-                            <table class="table table-bordered">
+                            <table class="table table-bordered invoice-header">
                                 <thead>
                                     <tr>
                                         <td colspan="2">
@@ -56,51 +222,51 @@
                                         </td>
                                     </tr>
                                     <tr style="background-color:#99b9f7;">
-                                        <td colspan="2" class="text-center"
-                                            style="color:#000000;font-size: 30px; font-family:serif; font-weight:bold; vertical-align: middle;">
+                                        <td colspan="2" class="text-center invoice-title"
+                                            style="vertical-align: middle;">
                                             TAX INVOICE
                                         </td>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td class="w-50" style="padding-left: 3px;">Invoice No: <span t-field="o.name"/> </td>
-                                        <td class="w-50">Transport Mode: <span t-field="o.e_transport_mode"/> </td>
+                                        <td class="w-50" style="padding-left: 5px;">Invoice No: <span t-field="o.name"/> </td>
+                                        <td class="w-50 text-left-padded">Transport Mode: <span t-field="o.e_transport_mode"/> </td>
                                     </tr>
                                     <tr>
-                                        <td style="padding-left: 3px; vertical-align: middle;">Invoice Date: <span t-field="o.invoice_date"/> </td>
-                                        <td>Payment Terms: <span t-field="o.invoice_payment_term_id"/> </td>
+                                        <td class="w-50" style="padding-left: 5px;">Invoice Date: <span t-field="o.invoice_date"/> </td>
+                                        <td class="text-left-padded">Payment Terms: <span t-field="o.invoice_payment_term_id"/> </td>
                                     </tr>
                                     <tr>
-                                        <td class="text-start" style="padding-left: 3px;">Reverse Charge (Y/N):
+                                        <td class="w-50" style="padding-left: 5px;">Reverse Charge (Y/N):
                                             <t t-if="o.e_reverse_charge">
                                                 <span>Y</span>
                                             </t>
                                             <t t-else="">N</t>
                                         </td>
-                                        <td style="padding-left: 3px;">Buyer's Order No: <span t-field="o.e_buyer_order_no"/></td>
+                                        <td class="text-left-padded">Buyer's Order No: <span t-field="o.e_buyer_order_no"/></td>
                                     </tr>
                                     <tr>
-                                        <td class="text-start" style="padding-left: 3px; vertical-align: middle;">State: <span t-field="o.partner_id.state_id"/></td>
-                                        <td>Shipment Terms: <span t-field="o.e_shipment_terms"/> </td>
+                                        <td class="w-50" style="padding-left: 5px;">State: <span t-field="o.l10n_in_state_id"/></td>
+                                        <td class="text-left-padded">Shipment Terms: <span t-field="o.e_shipment_terms"/> </td>
                                     </tr>
-                                    <tr style="background-color:#91b9f7; font-size: 18px;">
-                                        <td style="padding-left: 3px; vertical-align: middle;"><b>Bill to Party</b></td>
-                                        <td style="vertical-align: middle;"><b>Ship to Party</b></td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding-left: 3px;">Name: <span t-field="o.partner_id"/></td>
-                                        <td>Name: <span t-field="o.e_ship_to_party"/></td>
+                                    <tr class="bill-ship-header">
+                                        <td class="w-50" style="padding-left: 5px;"><b>Bill to Party</b></td>
+                                        <td><b>Ship to Party</b></td>
                                     </tr>
                                     <tr>
-                                        <td style="padding-left: 3px;">
+                                        <td class="w-50" style="padding-left: 5px;">Name: <span t-field="o.partner_id"/></td>
+                                        <td class="text-left-padded">Name: <span t-field="o.e_ship_to_party"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="w-50" style="padding-left: 5px;">
                                             Address: <span t-field="o.partner_id.street"/>,
                                                     <span t-field="o.partner_id.city"/>,
                                                     <span t-field="o.partner_id.state_id"/><br/>
                                             TEL: <span t-field="o.partner_id.phone"/> <br/>
                                             E-mail: <span t-field="o.partner_id.email"/> <br/>
                                         </td>
-                                        <td>
+                                        <td class="text-left-padded">
                                             Address: <span t-field="o.e_ship_to_party.street"/>,
                                                     <span t-field="o.e_ship_to_party.city"/>,
                                                     <span t-field="o.e_ship_to_party.state_id"/><br/>
@@ -109,8 +275,8 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td style="padding-left: 3px;">GSTIN - <span t-field="o.e_bill_vat"/></td>
-                                        <td>GSTIN - <span t-field="o.e_ship_vat"/></td>
+                                        <td class="w-50" style="padding-left: 5px;">GSTIN - <span t-field="o.e_bill_vat"/></td>
+                                        <td class="text-left-padded">GSTIN - <span t-field="o.e_ship_vat"/></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -164,11 +330,11 @@
                                         <t t-foreach="o.invoice_line_ids" t-as="line">
                                             <tr>
                                                 <td class="text-center"><span t-esc="line_index + 1"/></td>
-                                                <td><span t-field="line.product_id"/><br/><span t-field="line.e_description"/></td>
-                                                <td><span t-field="line.l10n_in_hsn_code"/></td>
+                                                <td class="text-center"><span t-field="line.product_id"/><br/><span t-field="line.e_description"/></td>
+                                                <td class="text-center"><span t-field="line.l10n_in_hsn_code"/></td>
                                                 <td class="text-center"><span t-field="line.quantity"/></td>
-                                                <td class="text-end"><span t-field="currency.symbol"/><span t-field="line.price_unit"/></td>
-                                                <td class="text-end"><span t-field="line.price_subtotal"/></td>
+                                                <td class="text-center"><span t-field="currency.symbol"/><span t-field="line.price_unit"/></td>
+                                                <td class="text-center"><span t-field="line.price_subtotal"/></td>
                                                 <!-- Calculate tax amounts for each tax in sorted_taxes -->
                                                 <t t-set="line_taxes" t-value="{}"/>
                                                 <t t-foreach="line.tax_ids" t-as="tax">
@@ -183,20 +349,20 @@
                                                 </t>
                                                 <!-- Display tax amounts for each tax in sorted_taxes -->
                                                 <t t-foreach="sorted_taxes" t-as="tax">
-                                                    <td class="text-end">
+                                                    <td class="text-center">
                                                         <t t-if="line_taxes.get(tax.id)">
                                                             <span t-field="currency.symbol"/><span t-esc="'%.2f' % line_taxes[tax.id]"/>
                                                         </t>
                                                         <t t-else="">-</t>
                                                     </td>
                                                 </t>
-                                                <td class="text-end" style="padding-right: 3px;"><span t-field="line.price_total"/></td>
+                                                <td class="text-center" style="padding-right: 3px;"><span t-field="line.price_total"/></td>
                                             </tr>
                                         </t>
                                         <!-- Total row -->
                                         <tr class="text-end">
-                                            <td colspan="5">Total Amount(<span t-field="currency.name"/>)</td>
-                                            <td><span t-field="o.amount_untaxed"/></td>
+                                            <td colspan="5" style="font-weight: bold;">Total Amount(<span t-field="currency.name"/>)</td>
+                                            <td class="text-center"><strong><span t-field="o.amount_untaxed"/></strong></td>
                                             <!-- Calculate total taxes for each tax in sorted_taxes -->
                                             <t t-set="total_taxes" t-value="{}"/>
                                             <t t-foreach="o.invoice_line_ids" t-as="line">
@@ -213,49 +379,43 @@
                                             </t>
                                             <!-- Display total tax amounts -->
                                             <t t-foreach="sorted_taxes" t-as="tax">
-                                                <td>
+                                                <td class="text-center">
                                                     <t t-if="total_taxes.get(tax.id)">
-                                                        <span t-field="currency.symbol"/><span t-esc="'%.2f' % total_taxes[tax.id]"/>
+                                                        <strong><span t-field="currency.symbol"/> <span t-esc="'%.2f' % total_taxes[tax.id]"/></strong>
                                                     </t>
                                                     <t t-else="">-</t>
                                                 </td>
                                             </t>
-                                            <td style="padding-right: 3px;"><span t-field="o.amount_total"/></td>
+                                            <td class="text-center"><strong><span t-field="o.amount_total"/></strong></td>
                                         </tr>
                                         <tr class="text-start">
-                                            <td colspan="100%" style="padding-left: 5px;">
+                                            <td colspan="100%" style="padding-left: 5px; font-weight: bold;">
                                                 Total Invoice Amount In Words: <span t-field="o.e_amount_total_words"/>
                                             </td>
                                         </tr>
                                     </tbody>
                                 </table>
                                 <!-- Rest of the table for narration and certification -->
-                                <table class="table table-bordered">
+                                <table class="table table-bordered narration-table">
                                     <tr>
-                                        <td style="width: 50%; vertical-align: middle; padding: 8px;">
+                                        <td style="width: 50%; vertical-align: middle; padding: 8px;" rowspan="4">
                                             <span t-field="o.narration"/>
                                         </td>
-                                        <td style="width: 50%; padding: 0;">
-                                            <table class="table table-bordered" style="height: 100%;">
-                                                <tr>
-                                                    <td style="padding: 8px;">
-                                                        Certified that the particulars given above are true and correct
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td style="padding: 8px;">
-                                                        For Eram Power Electronics Private Limited
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td style="height: 75px;"/>
-                                                </tr>
-                                                <tr>
-                                                    <td style="padding: 8px;">
-                                                        Authorised signatory
-                                                    </td>
-                                                </tr>
-                                            </table>
+                                        <td style="padding: 8px;" class="text-center">
+                                            Certified that the particulars given above are true and correct
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px;" class="text-center">
+                                            For Eram Power Electronics Private Limited
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="height: 75px;"/>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px;" class="text-center">
+                                            Authorised signatory
                                         </td>
                                     </tr>
                                 </table>

@@ -72,6 +72,12 @@
                     </field>
                 </page>
             </xpath>
+            <xpath expr="//notebook//page[@name='other_information']//field[@name='invoice_status']" position="after">
+                <field name="payment_term_id"/>
+            </xpath>
+            <xpath expr="//notebook//page[@name='other_information']//field[@name='delivery_status']" position="after">
+                <field name="e_delivery_text"/>
+            </xpath>
         </field>
     </record>
     <record id="view_order_quote_list_inherit_eram" model="ir.ui.view">

@@ -18,6 +18,7 @@ class SaleOrder(models.Model):
                                           string="Ref#")
     e_customer_po_ids = fields.One2many("eram.customer.po", "sale_id")
     e_ref = fields.Char(string="Ref#")
+    e_delivery_text = fields.Char("Delivered in")
 
     def _prepare_invoice(self):
         values = super()._prepare_invoice()

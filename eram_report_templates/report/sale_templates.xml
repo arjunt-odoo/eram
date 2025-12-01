@@ -175,7 +175,7 @@
                             }
                         </style>
                     </t>
-                    <t t-set="doc" t-value="doc.with_context(lang=doc.partner_id.lang)" />
+                    <t t-set="doc" t-value="doc.with_context(lang=doc.partner_id.lang)"/>
                     <div class="page">
                         <div class="text-center">
                             <h1>QUOTATION</h1>
@@ -188,46 +188,46 @@
                                     <tr>
                                         <td><strong>Quotation No</strong></td>
                                         <td>:</td>
-                                        <td><span t-field="doc.name"/></td>
+                                        <td><strong><span t-field="doc.name"/></strong></td>
                                     </tr>
                                     <tr>
                                         <td><strong>Revision</strong></td>
                                         <td>:</td>
-                                        <td><span t-field="doc.e_revision"/></td>
+                                        <td><strong><span t-field="doc.e_revision"/></strong></td>
                                     </tr>
                                     <tr>
                                         <td><strong>Place</strong></td>
                                         <td>:</td>
-                                        <td><span t-field="doc.e_place"/></td>
+                                        <td><strong><span t-field="doc.e_place"/></strong></td>
                                     </tr>
                                     <tr>
                                         <td><strong>Date</strong></td>
                                         <td>:</td>
-                                        <td><span t-field="doc.date_order" t-options='{"widget": "date"}'/></td>
+                                        <td><strong><span t-field="doc.date_order" t-options="{&quot;widget&quot;: &quot;date&quot;}"/></strong></td>
                                     </tr>
                                     <tr>
                                         <td><strong>Bill To</strong></td>
                                         <td>:</td>
-                                        <td><span t-field="doc.partner_id.name"/></td>
+                                        <td><strong><span t-field="doc.partner_id.name"/></strong></td>
                                     </tr>
                                     <tr>
                                         <td><strong>Attn</strong></td>
                                         <td>:</td>
-                                        <td><span t-field="doc.e_attn"/></td>
+                                        <td><strong><span t-field="doc.e_attn"/></strong></td>
                                     </tr>
                                     <tr>
                                         <td><strong>Sub</strong></td>
                                         <td>:</td>
-                                        <td><span t-field="doc.e_subject"/></td>
+                                        <td><strong><span t-field="doc.e_subject"/></strong></td>
                                     </tr>
                                 </table>
                             </div>
                             <div class="col-6">
                                 <table class="table table-borderless">
                                     <tr>
-                                        <td><strong>REF # </strong></td>
+                                        <td class="text-end" style="width: 50%"><strong>REF # </strong></td>
                                         <td>:</td>
-                                        <td><span t-field="doc.e_ref"/></td>
+                                        <td><strong><span t-field="doc.e_ref"/></strong></td>
                                     </tr>
                                 </table>
                             </div>
@@ -251,6 +251,9 @@
                             <span>Yours truly,</span><br/>
                             <p><b><strong>Eram Power Electronics Pvt Ltd.</strong></b></p>
                         </div>
+                        <br/>
+                        <br/>
+                        <br/>
 
                         <!-- Signature Section -->
                         <div class="row mt-4">
@@ -282,7 +285,7 @@
                         </div>
                         <t t-set="currency" t-value="doc.currency_id"/>
                         <!-- Priced Schedule (Annexure 1) -->
-                        <div class="mb-4" style="page-break-inside: avoid;">
+                        <div class="mb-4" style="page-break-inside: avoid; page-break-before: always;">
                             <h5 class="text-center"><strong>ANNEXURE - 1</strong></h5>
                             <h5><strong><u>PRICED SCHEDULE:</u></strong></h5>
 
@@ -323,7 +326,7 @@
                                             <tr class="o_taxes">
                                                 <t t-if="same_tax_base or tax_group['display_base_amount_currency'] is None">
                                                     <td colspan="6" class="text-end">
-                                                        <span class="text-nowrap" t-out="tax_group['group_name']">Tax 15%</span>
+                                                        <strong><span class="text-nowrap" t-out="tax_group['group_name']">Tax 15%</span></strong>
                                                     </td>
                                                     <td class="text-end o_price_total">
                                                         <span class="text-nowrap"
@@ -334,7 +337,7 @@
                                                 </t>
                                                 <t t-else="">
                                                     <td colspan="6" class="text-end">
-                                                        <span t-out="tax_group['group_name']">Tax 15%</span>
+                                                        <strong><span t-out="tax_group['group_name']">Tax 15%</span></strong>
                                                     </td>
                                                     <td class="text-end o_price_total">
                                                         <span class="text-nowrap"
@@ -360,11 +363,11 @@
                             <h5><strong><u>COMMERCIAL TERMS AND CONDITIONS:</u></strong></h5>
 
                             <ol>
-                                <li>The quoted prices are in INR.</li>
+                                <li>The quoted prices are in <span t-field="doc.currency_id"/>.</li>
                                 <li>The considered mode of shipment is by Courier</li>
                                 <li>Since the associated expenses are estimated based on the quoted quantity, the partial purchase order shall need a price revision.</li>
-                                <li>Delivery: 4-6 weeks from the date of the PO.</li>
-                                <li>Payment Terms: 100% Against the Invoice.</li>
+                                <li>Delivery: <span t-field="doc.e_delivery_text"/></li>
+                                <li>Payment Terms: <span t-field="doc.payment_term_id"/></li>
                                 <li>
                                     <div class="row">
                                         <div class="col-4">
