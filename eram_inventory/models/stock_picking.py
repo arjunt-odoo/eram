@@ -5,7 +5,7 @@ from odoo import api, models, fields
 class StockPicking(models.Model):
     _inherit = 'stock.picking'
 
-    e_grn_no = fields.Char("Grn. No:")
+    e_grn_id = fields.Many2one("eram.grn", string="Grn. No:")
     e_bill_id = fields.Many2one("account.move", "Invoice No:")
     e_pr_no = fields.Char("PR. No:", related="purchase_id.e_supplier_quote_id.rfq_id.eram_pr_id.pr_number")
     e_project_code = fields.Char("Project Code",  related="purchase_id.e_supplier_quote_id.rfq_id.eram_pr_id.project_code")
@@ -29,6 +29,8 @@ class StockMove(models.Model):
 
     currency_id = fields.Many2one("res.currency",
                                   related="purchase_line_id.currency_id")
+    e_grn_id = fields.Many2one("eram.grn",
+                               related="picking_id.e_grn_id", store=True)
     e_si_no = fields.Integer("SI. NO", default=1, store=True,
                              compute="_compute_e_si_no")
     e_item_code = fields.Html("ITEM CODE", readonly=False)
@@ -47,6 +49,9 @@ class StockMove(models.Model):
                                           ("wrong_part", "Wrong Part"),
                                           ("damaged", "Damaged Material")],
                                          string="RECEIVED STATUS")
+    e_qty_accepted = fields.Float("Quantity Accepted")
+    e_qty_rejected = fields.Float("Quantity Received")
+    e_remarks = fields.Html("Remarks")
 
     @api.depends('picking_id', 'picking_id.move_ids')
     def _compute_e_si_no(self):

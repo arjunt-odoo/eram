@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="eram_grn_view_form" model="ir.ui.view">
+        <field name="name">eram.grn.view.form</field>
+        <field name="model">eram.grn</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="print_grn" string="Print" type="object" class="btn btn-primary"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="partner_id"/>
+                            <field name="project_code"/>
+                            <field name="pr_no"/>
+                        </group>
+                        <group>
+                            <field name="picking_id" domain="[('e_grn_id', '=', id)]"/>
+                            <field name="date_received"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page name="order_lines" string="Order Lines">
+                            <field name="line_ids">
+                                <list editable="bottom">
+                                    <field name="e_si_no" readonly="1"/>
+                                    <field name="e_description" readonly="1"/>
+                                    <field name="e_make" readonly="1"/>
+                                    <field name="e_part_no" readonly="1"/>
+                                    <field name="e_uom_id" readonly="1"/>
+                                    <field name="product_uom_qty" readonly="1"/>
+                                    <field name="quantity" readonly="1"/>
+                                    <field name="e_qty_accepted"/>
+                                    <field name="e_qty_rejected"/>
+                                    <field name="e_remarks"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

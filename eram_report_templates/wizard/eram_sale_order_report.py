@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from odoo import fields, models
-from odoo.tools import json_default
+from odoo.tools import json_default, html2plaintext
 from datetime import datetime
 import json
 import io
@@ -593,6 +593,7 @@ class EramSaleOrderReport(models.TransientModel):
                     line = order_lines[product_row_index]
                     row_span = product_row_spans[product_row_index]
                     if i < sum(product_row_spans[:product_row_index + 1]):
+                        description = html2plaintext(line.e_description) if line.e_description else "N/A"
                         if row_span > 1 and i == sum(
                                 product_row_spans[:product_row_index]):
                             safe_merge(sheet, current_row + i, 4,
@@ -600,7 +601,7 @@ class EramSaleOrderReport(models.TransientModel):
                                        line.product_id.name, row_fmt)
                             safe_merge(sheet, current_row + i, 5,
                                        current_row + i + row_span - 1, 5,
-                                       line.e_description or "N/A", row_fmt)
+                                       description, row_fmt)
                             safe_merge(sheet, current_row + i, 6,
                                        current_row + i + row_span - 1, 6,
                                        line.product_uom_qty, row_fmt)
@@ -611,7 +612,7 @@ class EramSaleOrderReport(models.TransientModel):
                             write_center(sheet, current_row + i, 4,
                                          line.product_id.name, row_fmt)
                             write_center(sheet, current_row + i, 5,
-                                         line.e_description or "N/A", row_fmt)
+                                         description, row_fmt)
                             write_center(sheet, current_row + i, 6,
                                          line.product_uom_qty, row_fmt)
                             write_center(sheet, current_row + i, 7,
@@ -1355,7 +1356,7 @@ class EramSaleOrderReport(models.TransientModel):
                     row_span = product_row_spans[product_row_index]
                     if i < sum(product_row_spans[:product_row_index + 1]):
                         product_name = line.product_id.name
-                        description = line.e_description or 'N/A'
+                        description = html2plaintext(line.e_description) if line.e_description else 'N/A'
                         quantity = line.product_uom_qty
                         unit_price = line.price_unit
                         if row_span > 1 and i == sum(

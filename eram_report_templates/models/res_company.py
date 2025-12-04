@@ -9,3 +9,9 @@ class ResCompany(models.Model):
     footer_image = fields.Image(
         string='Footer Image',
         help='Upload the image to use as dynamic footer in reports. It can be updated over time.')
+
+
+class BaseDocumentLayout(models.TransientModel):
+    _inherit = "base.document.layout"
+
+    footer_image = fields.Image(related='company_id.footer_image')

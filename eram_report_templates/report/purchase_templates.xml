@@ -455,7 +455,7 @@
                                                     <td colspan="6" class="text-end fw-bold">
                                                         <span t-out="tax_group['group_name']">Tax 15%</span>
                                                     </td>
-                                                    <td class="text-end o_price_total">
+                                                    <td class="text-center o_price_total">
                                                         <span class="text-nowrap p-1"
                                                               t-out="tax_group['tax_amount_currency']"
                                                               t-options='{"widget": "monetary", "display_currency": currency}'

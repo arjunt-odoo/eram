@@ -3,8 +3,8 @@
     <template id="eram_report_rfq">
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="o">
-                <t t-set="e_our_ref" t-value="o.our_ref"/>
-                <t t-set="e_date" t-value="o.date"/>
+                <t t-set="show_red_ribbon" t-value="True"/>
+                <t t-set="show_ref_block" t-value="True"/>
                 <t t-call="web.external_layout">
                     <style>
                         .page {

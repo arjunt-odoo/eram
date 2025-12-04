@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="eram_report_grn">
+        <t t-call="web.html_container">
+            <t t-set="show_red_ribbon" t-value="True"/>
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.external_layout">
+                    <style>
+                        .page {
+                            font-family: "Cambria", serif;
+                        }
+                        p, span, li, td {
+                            font-size: 9pt;
+                            font-weight: bold;
+                        }
+                        .table-bordered {
+                            border: 1px solid black;
+                            border-collapse: collapse;
+                            width: 100%;
+                        }
+                        .table-bordered th,
+                        .table-bordered td {
+                            border: 1px solid black;
+                            padding: 5px;
+                        }
+                    </style>
+                    <div class="page">
+                        <div class="text-center">
+                            <h3><u>GOODS RECEIVED NOTE</u></h3>
+                        </div>
+                        <div class="text-end">
+                            <span>GR NO: <span t-field="doc.name"/></span>
+                        </div>
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th colspan="3" rowspan="4" style="padding-left: 5px;"><strong>Supplier: </strong><span t-field="doc.partner_id"/></th>
+                                    <th colspan="5" rowspan="4"><strong>Project Code: </strong><span t-field="doc.project_code"/></th>
+                                    <th><strong>Date of Receival</strong></th>
+                                    <th><span t-field="doc.date_received"/></th>
+                                </tr>
+                                <tr>
+                                    <th style="padding-left: 5px;"><strong>P.R.No. </strong></th>
+                                    <th><span t-field="doc.pr_no"/></th>
+                                </tr>
+                                <tr>
+                                    <th style="padding-left: 5px;"><strong>P.O.No. </strong></th>
+                                    <th><span t-field="doc.purchase_id"/></th>
+                                </tr>
+                                <tr>
+                                    <th style="padding-left: 5px;"><strong>Invoice No. </strong></th>
+                                    <th><span t-field="doc.bill_id"/></th>
+                                </tr>
+                                <tr>
+                                    <th class="text-center" style="padding-left: 5px;"><strong>SI.NO.</strong></th>
+                                    <th class="text-center"><strong>Description</strong></th>
+                                    <th class="text-center"><strong>Manufacture</strong></th>
+                                    <th class="text-center"><strong>Part No.</strong></th>
+                                    <th class="text-center"><strong>UOM</strong></th>
+                                    <th class="text-center"><strong>PO Quantity</strong></th>
+                                    <th class="text-center"><strong>Quantity Received</strong></th>
+                                    <th class="text-center"><strong>Quantity Accepted</strong></th>
+                                    <th class="text-center"><strong>Quantity Rejected</strong></th>
+                                    <th class="text-center" style="padding-right: 5px;"><strong>Remarks</strong></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="doc.line_ids" t-as="line">
+                                    <td class="text-center" style="padding-left: 5px;"><span t-field="line.e_si_no"/></td>
+                                    <td class="text-center"><span t-field="line.e_description"/></td>
+                                    <td class="text-center"><span t-field="line.e_make"/></td>
+                                    <td class="text-center"><span t-field="line.e_part_no"/></td>
+                                    <td class="text-center"><span t-field="line.e_uom_id"/></td>
+                                    <td class="text-center"><span t-field="line.product_uom_qty"/></td>
+                                    <td class="text-center"><span t-field="line.quantity"/></td>
+                                    <td class="text-center"><span t-field="line.e_qty_accepted"/></td>
+                                    <td class="text-center"><span t-field="line.e_qty_rejected"/></td>
+                                    <td class="text-center" style="padding-right: 5px;"><span t-field="line.e_remarks"/></td>
+                                </tr>
+                                <tr class="text-start">
+                                    <td colspan="3" style="padding-left: 5px;">
+                                        <span>Received By &amp; Checked By:</span><br/>
+                                        <span>Name:</span><br/>
+                                        <span>Sign:</span><br/>
+                                        <span>Date:</span><br/>
+                                    </td>
+                                    <td colspan="4">
+                                        <span>Reviewed By &amp; Verified By:</span><br/>
+                                        <span>Name:</span><br/>
+                                        <span>Sign:</span><br/>
+                                        <span>Date:</span><br/>
+                                    </td>
+                                    <td colspan="3">
+                                        <span>Approved By:</span><br/>
+                                        <span>Name:</span><br/>
+                                        <span>Sign:</span><br/>
+                                        <span>Date:</span><br/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

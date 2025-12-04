@@ -11,6 +11,9 @@
             <xpath expr="//button[@name='action_rfq_send']" position="after">
                 <button name="action_set_as_sent" invisible="state != 'draft'" type="object" class="btn btn-primary" string="Mark as Sent"/>
             </xpath>
+            <field name="currency_id" position="after">
+                <field name="e_supplier_quote_id" readonly="state == 'purchase'"/>
+            </field>
         </field>
     </record>
 </odoo>
