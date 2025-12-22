@@ -1,3 +1,5 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_eram_categ_user,access.eram.categ.user,model_eram_categ,base.group_user,1,1,1,1
 access_eram_grn_user,access.eram.grn.user,model_eram_grn,base.group_user,1,1,1,1
+access_eram_material_inspection_user,access.eram.material.inspection.user,model_eram_material_inspection,base.group_user,1,1,1,1
+access_eram_receival_status_user,access.eram.receival.status.user,model_eram_receival_status,base.group_user,1,1,1,1

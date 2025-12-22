@@ -29,6 +29,8 @@ class AccountMove(models.Model):
         <span>Bank IFSC: HDFC0000549</span><br/>
         <span>Branch: Electronic City</span>""")
     invoice_date = fields.Date(default=fields.Date.context_today)
+    e_invoice_received_date = fields.Date(default=fields.Date.context_today,
+                                          string="Received Date")
     e_amount_total_words = fields.Char(
         string="Total amount in words",
     )

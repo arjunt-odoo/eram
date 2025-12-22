@@ -67,7 +67,8 @@ class EramPurchaseReqLine(models.Model):
                 'description': line.description,
                 'qty': line.qty,
                 'part_no': line.part_no,
-                'item_no': line.item_no
+                'item_no': line.item_no,
+                'purchase_req_line_id': line.id
             }))
         self.request_id.write({
             'rfq_ids': [fields.Command.create({

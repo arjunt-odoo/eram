@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="eram_material_inspection" model="ir.actions.report">
+            <field name="name">Material Inspection</field>
+            <field name="model">eram.material.inspection</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">eram_inventory.eram_report_material_inspection</field>
+            <field name="report_file">eram_inventory.eram_report_material_inspection</field>
+            <field name="print_report_name">'Material Inspection - %s' % (object.name)</field>
+            <field name="binding_model_id" ref="model_eram_material_inspection"/>
+            <field name="binding_type">report</field>
+        </record>
+    </data>
+</odoo>

@@ -36,6 +36,9 @@
                                     <field name="sl_no"/>
                                     <field name="product_id"/>
                                     <field name="description"/>
+                                    <field name="item_code"/>
+                                    <field name="part_no"/>
+                                    <field name="make"/>
                                     <field name="qty"/>
                                     <field name="currency_id" column_invisible="1"/>
                                     <field name="price_unit"/>

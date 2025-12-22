@@ -53,6 +53,7 @@ class EramSupplierQuote(models.Model):
                 'e_description': line.description,
                 'product_qty': line.qty,
                 'price_unit': line.price_unit,
+                'e_supplier_quote_line_id': line.id
             }))
         self.purchase_id = self.purchase_id.create({
             'partner_id': self.partner_id.id,
@@ -69,6 +70,9 @@ class EramSupplierQuoteLine(models.Model):
     sl_no = fields.Integer("Sl No", compute="_compute_sl_no")
     product_id = fields.Many2one("product.product", "Item")
     description = fields.Html()
+    make = fields.Html()
+    part_no = fields.Html()
+    item_code = fields.Html()
     qty = fields.Float()
     company_id = fields.Many2one("res.company", related="quote_id.company_id")
     currency_id = fields.Many2one("res.currency",  default=lambda self: self.env.company.currency_id)

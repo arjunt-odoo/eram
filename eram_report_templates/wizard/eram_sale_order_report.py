@@ -23,7 +23,6 @@ class EramSaleOrderReport(models.TransientModel):
     type = fields.Selection([('xlsx', "XLSX")], string="Report Type",
                             default='xlsx', required=True)
 
-
     def action_print_report(self):
         if self.type == 'xlsx':
             domain = []
@@ -71,13 +70,47 @@ class EramSaleOrderReport(models.TransientModel):
 
         # Group sales by currency
         sales_by_currency = defaultdict(list)
-        for o in sales:
-            sales_by_currency[o.currency_id].append(o)
+        # Process parent-child relationships for sales
+        processed_sales = set()
+        for order in sales:
+            if order.id in processed_sales:
+                continue
+            # If order has a parent, skip it (will be processed with parent)
+            if order.e_sale_id and order.e_sale_id in sales:
+                continue
+            # Add parent and all its children
+            order_group = [order]
+            if order.e_sale_ids:
+                order_group.extend(
+                    order.e_sale_ids.filtered(lambda o: o.state == 'sale').sorted(lambda s: s.date_order))
+            # Add all orders in group to processed set
+            for o in order_group:
+                processed_sales.add(o.id)
+            # Add group to currency grouping
+            for o in order_group:
+                sales_by_currency[o.currency_id].append(o)
 
         # Group quotations by currency
         quotations_by_currency = defaultdict(list)
-        for o in quotations:
-            quotations_by_currency[o.currency_id].append(o)
+        # Process parent-child relationships for quotations
+        processed_quotations = set()
+        for order in quotations:
+            if order.id in processed_quotations:
+                continue
+            # If order has a parent, skip it (will be processed with parent)
+            if order.e_sale_id and order.e_sale_id in quotations:
+                continue
+            # Add parent and all its children
+            order_group = [order]
+            if order.e_sale_ids:
+                order_group.extend(
+                    order.e_sale_ids.filtered(lambda o: o.state in ('draft', 'sent')).sorted(lambda s: s.date_order))
+            # Add all orders in group to processed set
+            for o in order_group:
+                processed_quotations.add(o.id)
+            # Add group to currency grouping
+            for o in order_group:
+                quotations_by_currency[o.currency_id].append(o)
 
         # First, create sheets for sales
         for currency, orders in sales_by_currency.items():
@@ -95,6 +128,7 @@ class EramSaleOrderReport(models.TransientModel):
         output.seek(0)
         response.stream.write(output.read())
         output.close()
+
     def write_sale_sheet(self, workbook, sheet, order_ids, doc_no,
                          formatted_datetime, currency):
         light_green = '#daeef3'
@@ -360,26 +394,6 @@ class EramSaleOrderReport(models.TransientModel):
                 })
             return workbook.add_format(format_props)
 
-        merged_ranges = set()
-
-        def safe_merge(sheet, first_row, first_col, last_row, last_col, data,
-                       cell_format=None):
-            merge_key = f"{first_row}:{first_col}:{last_row}:{last_col}"
-            if merge_key in merged_ranges:
-                return
-            is_even_order = ((first_row - 5) // max_rows_per_order) % 2 == 0
-            if cell_format is None:
-                if is_even_order:
-                    cell_format = even_row_format
-                else:
-                    cell_format = odd_row_format
-            if first_row == last_row and first_col == last_col:
-                sheet.write(first_row, first_col, data, cell_format)
-            else:
-                sheet.merge_range(first_row, first_col, last_row, last_col,
-                                  data, cell_format)
-            merged_ranges.add(merge_key)
-
         def calculate_row_distribution(product_count, po_count, invoice_count):
             if product_count == 0 and po_count == 0 and invoice_count == 0:
                 return [], [], [], 1
@@ -410,75 +424,338 @@ class EramSaleOrderReport(models.TransientModel):
                     range(invoice_count)]
             return product_row_spans, po_row_spans, invoice_row_spans, max_count
 
-        for order_idx, order in enumerate(order_ids):
-            order_start_row = row
-            full_name = order.e_attn or 'N/A'
-            account_name = order.partner_id.name
-            current_si_no = si_no
-            is_even_order = (order_idx % 2 == 0)
+        # Group orders by parent-child relationship
+        order_groups = []
+        processed_orders = set()
 
-            if order.state == 'sale':
-                order_invoices = order.invoice_ids.filtered(
-                    lambda i: i.state == 'posted').sorted(
-                    key=lambda i: i.e_sequence)
-            else:
-                order_invoices = self.env['account.move']
-            order_lines = order.order_line
-            purchase_orders = order.e_customer_po_ids
+        for order in order_ids:
+            if order.id in processed_orders:
+                continue
 
-            # Modified delivery date handling
-            picking_ids = order.picking_ids.filtered(
-                lambda p: p.state != 'cancel')
-            delivery_date = 'N/A'
-            if len(picking_ids) == 1:
-                date_done = picking_ids[0].date_done
-                if date_done:
-                    if isinstance(date_done, str):
-                        formatted_date = fields.Date.from_string(
-                            date_done).strftime('%d-%m-%Y')
-                    else:
-                        formatted_date = date_done.strftime('%d-%m-%Y')
-                    delivery_date = formatted_date
-            elif len(picking_ids) > 1:
-                delivery_info = []
-                for picking in picking_ids:
-                    if picking.date_done:
-                        date_done = picking.date_done
+            # If order has a parent, it will be processed with parent
+            if order.e_sale_id and order.e_sale_id.id in [o.id for o in order_ids]:
+                continue
+
+            # Create group: parent + children
+            group = [order]
+            processed_orders.add(order.id)
+
+            # Add children if any
+            if order.e_sale_ids:
+                children = order.e_sale_ids.filtered(lambda o: o.state == 'sale').sorted(lambda s: s.date_order)
+                for child in children:
+                    if child.id not in processed_orders:
+                        group.append(child)
+                        processed_orders.add(child.id)
+
+            order_groups.append(group)
+
+        # Store invoice data for post-processing merging
+        group_invoice_data = []  # List of tuples: (group_start_row, total_group_rows, invoices)
+
+        for group_idx, order_group in enumerate(order_groups):
+            group_start_row = row
+
+            # Collect all invoices from all orders in the group
+            group_invoices = []
+            for order in order_group:
+                if order.state == 'sale':
+                    order_invoices = order.invoice_ids.filtered(
+                        lambda i: i.state == 'posted').sorted(
+                        key=lambda i: i.e_sequence)
+                    group_invoices.extend(order_invoices)
+
+            # Remove duplicate invoices
+            unique_invoices = []
+            seen_invoice_ids = set()
+            for inv in group_invoices:
+                if inv.id not in seen_invoice_ids:
+                    unique_invoices.append(inv)
+                    seen_invoice_ids.add(inv.id)
+            group_invoices = unique_invoices
+
+            # Store group invoice data for post-processing
+            total_group_rows = 0
+
+            for order_idx_in_group, order in enumerate(order_group):
+                order_start_row = row
+                full_name = order.e_attn or 'N/A'
+                account_name = order.partner_id.name
+                current_si_no = si_no if order_idx_in_group == 0 else ''
+                is_even_order = (group_idx % 2 == 0)
+
+                order_lines = order.order_line
+                purchase_orders = order.e_customer_po_ids
+
+                # Modified delivery date handling
+                picking_ids = order.picking_ids.filtered(
+                    lambda p: p.state != 'cancel')
+                delivery_date = 'N/A'
+                if len(picking_ids) == 1:
+                    date_done = picking_ids[0].date_done
+                    if date_done:
                         if isinstance(date_done, str):
                             formatted_date = fields.Date.from_string(
                                 date_done).strftime('%d-%m-%Y')
                         else:
                             formatted_date = date_done.strftime('%d-%m-%Y')
-                        if picking.e_invoice_id:
-                            delivery_info.append(f"{picking.e_invoice_id.name} - {formatted_date}")
-                        else:
-                            delivery_info.append(
-                                f"{picking.name} - {formatted_date}")
-                delivery_date = '\n'.join(delivery_info) if delivery_info else 'N/A'
+                        delivery_date = formatted_date
+                elif len(picking_ids) > 1:
+                    delivery_info = []
+                    for picking in picking_ids:
+                        if picking.date_done:
+                            date_done = picking.date_done
+                            if isinstance(date_done, str):
+                                formatted_date = fields.Date.from_string(
+                                    date_done).strftime('%d-%m-%Y')
+                            else:
+                                formatted_date = date_done.strftime('%d-%m-%Y')
+                            if picking.e_invoice_id:
+                                delivery_info.append(f"{picking.e_invoice_id.name} - {formatted_date}")
+                            else:
+                                delivery_info.append(
+                                    f"{picking.name} - {formatted_date}")
+                    delivery_date = '\n'.join(delivery_info) if delivery_info else 'N/A'
 
-            if order.state == 'draft':
-                shipment_status = 'Under Production'
-            elif picking_ids:
-                if all(picking.state == 'done' for picking in picking_ids):
-                    shipment_status = 'Shipped'
-                elif all(picking.state != 'done' for picking in picking_ids):
-                    shipment_status = 'Not Shipped'
+                if order.state == 'draft':
+                    shipment_status = 'Under Production'
+                elif picking_ids:
+                    if all(picking.state == 'done' for picking in picking_ids):
+                        shipment_status = 'Shipped'
+                    elif all(picking.state != 'done' for picking in picking_ids):
+                        shipment_status = 'Not Shipped'
+                    else:
+                        shipment_status = 'Partially Shipped'
                 else:
-                    shipment_status = 'Partially Shipped'
-            else:
-                shipment_status = 'Nothing to Ship'
+                    shipment_status = 'Nothing to Ship'
 
-            product_count = len(order_lines)
-            po_count = len(purchase_orders)
-            invoice_count = len(order_invoices)
+                product_count = len(order_lines)
+                po_count = len(purchase_orders)
+                invoice_count = len(group_invoices) if order_idx_in_group == 0 else 0
 
-            product_row_spans, po_row_spans, invoice_row_spans, max_rows_per_order = calculate_row_distribution(
-                product_count, po_count, invoice_count
-            )
+                product_row_spans, po_row_spans, invoice_row_spans, max_rows_per_order = calculate_row_distribution(
+                    product_count, po_count, invoice_count
+                )
 
-            merged_ranges = set()
+                if is_even_order:
+                    row_fmt = even_row_format
+                    date_fmt = even_date_format
+                    red_fmt = even_red_format
+                else:
+                    row_fmt = odd_row_format
+                    date_fmt = odd_date_format
+                    red_fmt = odd_red_format
 
-            if is_even_order:
+                order_currency = currency  # Since grouped by currency
+                order_currency_format = get_currency_format(workbook,
+                                                            order_currency,
+                                                            is_even=is_even_order)
+
+                current_row = row
+                product_row_index = 0
+                po_row_index = 0
+                invoice_row_index = 0
+                merge_invoice_columns = order.state != 'sale' or invoice_count == 0 or order_idx_in_group > 0
+
+                # First pass: Write all non-invoice data
+                for i in range(max_rows_per_order):
+                    # Write SI No
+                    if i == 0:
+                        sheet.write(current_row + i, 1, current_si_no, row_fmt)
+
+                    # Write customer and account name (only first row)
+                    if i == 0:
+                        sheet.write(current_row + i, 2, full_name, row_fmt)
+                        sheet.write(current_row + i, 3, account_name, row_fmt)
+
+                    # Write quote info (only first row)
+                    if i == 0:
+                        sheet.write(current_row + i, 8, order.name, row_fmt)
+                        if order.date_order:
+                            if isinstance(order.date_order, str):
+                                quote_date = fields.Date.from_string(
+                                    order.date_order).strftime('%d-%m-%Y')
+                            else:
+                                quote_date = order.date_order.strftime('%d-%m-%Y')
+                            sheet.write(current_row + i, 9, quote_date, date_fmt)
+                        else:
+                            sheet.write(current_row + i, 9, '', row_fmt)
+                        sheet.write(current_row + i, 10, order.amount_total, order_currency_format)
+
+                    # Write product info
+                    if product_row_index < len(order_lines):
+                        line = order_lines[product_row_index]
+                        row_span = product_row_spans[product_row_index]
+                        if i < sum(product_row_spans[:product_row_index + 1]):
+                            description = html2plaintext(line.e_description) if line.e_description else "N/A"
+
+                            if row_span > 1 and i == sum(product_row_spans[:product_row_index]):
+                                sheet.merge_range(current_row + i, 4,
+                                                  current_row + i + row_span - 1, 4,
+                                                  line.product_id.name, row_fmt)
+                                sheet.merge_range(current_row + i, 5,
+                                                  current_row + i + row_span - 1, 5,
+                                                  description, row_fmt)
+                                sheet.merge_range(current_row + i, 6,
+                                                  current_row + i + row_span - 1, 6,
+                                                  line.product_uom_qty, row_fmt)
+                                sheet.merge_range(current_row + i, 7,
+                                                  current_row + i + row_span - 1, 7,
+                                                  line.price_unit, order_currency_format)
+                            elif row_span == 1:
+                                sheet.write(current_row + i, 4, line.product_id.name, row_fmt)
+                                sheet.write(current_row + i, 5, description, row_fmt)
+                                sheet.write(current_row + i, 6, line.product_uom_qty, row_fmt)
+                                sheet.write(current_row + i, 7, line.price_unit, order_currency_format)
+
+                            grand_total_qty += line.product_uom_qty if i == sum(
+                                product_row_spans[:product_row_index]) else 0
+                            grand_total_unit_price += line.price_unit if i == sum(
+                                product_row_spans[:product_row_index]) else 0
+
+                            if i == sum(product_row_spans[:product_row_index + 1]) - 1:
+                                product_row_index += 1
+                        else:
+                            sheet.write(current_row + i, 4, '', row_fmt)
+                            sheet.write(current_row + i, 5, '', row_fmt)
+                            sheet.write(current_row + i, 6, '', row_fmt)
+                            sheet.write(current_row + i, 7, '', row_fmt)
+
+                    # Write PO information
+                    if po_count == 0:
+                        if i == 0:
+                            sheet.merge_range(current_row, 11,
+                                              current_row + max_rows_per_order - 1, 11,
+                                              'N/A', row_fmt)
+                            sheet.merge_range(current_row, 12,
+                                              current_row + max_rows_per_order - 1, 12,
+                                              'N/A', row_fmt)
+                            sheet.merge_range(current_row, 13,
+                                              current_row + max_rows_per_order - 1, 13,
+                                              0.0, order_currency_format)
+                    else:
+                        if po_row_index < len(purchase_orders):
+                            po = purchase_orders[po_row_index]
+                            row_span = po_row_spans[po_row_index]
+                            po_currency = po.currency_id or order_currency
+                            po_currency_format = get_currency_format(workbook,
+                                                                     po_currency,
+                                                                     is_even=is_even_order)
+                            if i < sum(po_row_spans[:po_row_index + 1]):
+                                po_name = po.name or 'N/A'
+                                po_date = 'N/A'
+                                if po.date:
+                                    if isinstance(po.date, str):
+                                        po_date = fields.Date.from_string(
+                                            po.date).strftime('%d-%m-%Y')
+                                    else:
+                                        po_date = po.date.strftime('%d-%m-%Y')
+                                po_value = po.amount_total or 0.0
+
+                                if row_span > 1 and i == sum(po_row_spans[:po_row_index]):
+                                    sheet.merge_range(current_row + i, 11,
+                                                      current_row + i + row_span - 1, 11,
+                                                      po_name, row_fmt)
+                                    sheet.merge_range(current_row + i, 12,
+                                                      current_row + i + row_span - 1, 12,
+                                                      po_date,
+                                                      date_fmt if po_date != 'N/A' else row_fmt)
+                                    sheet.merge_range(current_row + i, 13,
+                                                      current_row + i + row_span - 1, 13,
+                                                      po_value, po_currency_format)
+                                elif row_span == 1:
+                                    sheet.write(current_row + i, 11, po_name, row_fmt)
+                                    sheet.write(current_row + i, 12, po_date,
+                                                date_fmt if po_date != 'N/A' else row_fmt)
+                                    sheet.write(current_row + i, 13, po_value, po_currency_format)
+
+                                grand_total_po_value += po_value if i == sum(po_row_spans[:po_row_index]) else 0
+
+                                if i == sum(po_row_spans[:po_row_index + 1]) - 1:
+                                    po_row_index += 1
+                            else:
+                                sheet.write(current_row + i, 11, '', row_fmt)
+                                sheet.write(current_row + i, 12, '', date_fmt)
+                                sheet.write(current_row + i, 13, '', po_currency_format)
+                        else:
+                            sheet.write(current_row + i, 11, '', row_fmt)
+                            sheet.write(current_row + i, 12, '', date_fmt)
+                            sheet.write(current_row + i, 13, '', order_currency_format)
+
+                    # Write shipment status and delivery date (only first row)
+                    if i == 0:
+                        sheet.write(current_row + i, 24, shipment_status, row_fmt)
+                        sheet.write(current_row + i, 25, delivery_date, row_fmt)
+                        sheet.write(current_row + i, 26, 'N/A', row_fmt)
+
+                    # For child orders or orders without invoices, leave invoice columns empty
+                    if merge_invoice_columns:
+                        for col in range(14, 24):
+                            sheet.write(current_row + i, col, '', row_fmt)
+
+                # Merge common columns for the entire order if needed
+                if max_rows_per_order > 1:
+                    # Merge SI No
+                    if max_rows_per_order > 1:
+                        sheet.merge_range(row, 1, row + max_rows_per_order - 1, 1,
+                                          current_si_no, row_fmt)
+
+                    # Merge customer and account name
+                    sheet.merge_range(row, 2, row + max_rows_per_order - 1, 2,
+                                      full_name, row_fmt)
+                    sheet.merge_range(row, 3, row + max_rows_per_order - 1, 3,
+                                      account_name, row_fmt)
+
+                    # Merge quote info
+                    sheet.merge_range(row, 8, row + max_rows_per_order - 1, 8,
+                                      order.name, row_fmt)
+                    if order.date_order:
+                        if isinstance(order.date_order, str):
+                            quote_date = fields.Date.from_string(
+                                order.date_order).strftime('%d-%m-%Y')
+                        else:
+                            quote_date = order.date_order.strftime('%d-%m-%Y')
+                        sheet.merge_range(row, 9, row + max_rows_per_order - 1, 9,
+                                          quote_date, date_fmt)
+                    else:
+                        sheet.merge_range(row, 9, row + max_rows_per_order - 1, 9,
+                                          '', row_fmt)
+                    sheet.merge_range(row, 10, row + max_rows_per_order - 1, 10,
+                                      order.amount_total, order_currency_format)
+
+                    # Merge shipment status and delivery date
+                    sheet.merge_range(row, 24, row + max_rows_per_order - 1, 24,
+                                      shipment_status, row_fmt)
+                    sheet.merge_range(row, 25, row + max_rows_per_order - 1, 25,
+                                      delivery_date, row_fmt)
+                    sheet.merge_range(row, 26, row + max_rows_per_order - 1, 26,
+                                      'N/A', row_fmt)
+
+                grand_total_quote_value += order.amount_total
+                row += max_rows_per_order
+                total_group_rows += max_rows_per_order
+
+            # Store group invoice data for post-processing
+            if group_invoices:
+                group_invoice_data.append({
+                    'group_start_row': group_start_row,
+                    'total_group_rows': total_group_rows,
+                    'invoices': group_invoices,
+                    'is_even_group': (group_idx % 2 == 0),
+                    'currency': currency
+                })
+
+            si_no += 1
+
+        # Now process invoice merging across groups
+        for group_data in group_invoice_data:
+            group_start_row = group_data['group_start_row']
+            total_group_rows = group_data['total_group_rows']
+            invoices = group_data['invoices']
+            is_even_group = group_data['is_even_group']
+            currency = group_data['currency']
+
+            if is_even_group:
                 row_fmt = even_row_format
                 date_fmt = even_date_format
                 red_fmt = even_red_format
@@ -487,406 +764,149 @@ class EramSaleOrderReport(models.TransientModel):
                 date_fmt = odd_date_format
                 red_fmt = odd_red_format
 
-            order_currency = currency  # Since grouped by currency
-            order_currency_format = get_currency_format(workbook,
-                                                        order_currency,
-                                                        is_even=is_even_order)
+            order_currency_format = get_currency_format(workbook, currency,
+                                                        is_even=is_even_group)
 
-            current_row = row
-            product_row_index = 0
-            po_row_index = 0
-            invoice_row_index = 0
-            merge_invoice_columns = order.state != 'sale' or invoice_count == 0
+            # Distribute invoices across the group rows
+            invoice_count = len(invoices)
 
-            for i in range(max_rows_per_order):
-                write_center(sheet, current_row + i, 1,
-                             current_si_no if i == 0 else '', row_fmt)
-                write_center(sheet, current_row + i, 2,
-                             full_name if i == 0 else '', row_fmt)
-                write_center(sheet, current_row + i, 3,
-                             account_name if i == 0 else '', row_fmt)
+            # Calculate row spans for each invoice
+            invoice_row_spans = []
+            base_span = total_group_rows // invoice_count
+            remainder = total_group_rows % invoice_count
 
-                write_center(sheet, current_row + i, 8,
-                             order.name if i == 0 else '', row_fmt)
-                if i == 0 and order.date_order:
-                    if isinstance(order.date_order, str):
-                        quote_date = fields.Date.from_string(
-                            order.date_order).strftime('%d-%m-%Y')
-                    else:
-                        quote_date = order.date_order.strftime('%d-%m-%Y')
-                    write_center(sheet, current_row + i, 9, quote_date,
-                                 date_fmt)
+            for i in range(invoice_count):
+                span = base_span + 1 if i < remainder else base_span
+                invoice_row_spans.append(span)
+
+            # Write invoice data
+            current_invoice_row = group_start_row
+            for invoice_idx, invoice in enumerate(invoices):
+                invoice_row_span = invoice_row_spans[invoice_idx]
+
+                invoice_amount = invoice.amount_total
+                amount_residual = invoice.amount_residual
+                matched_payments = invoice.matched_payment_ids.filtered(
+                    lambda p: p.state in ('in_process', 'paid')
+                )
+                advance_amount = sum(matched_payments.mapped('amount'))
+                latest_payment_date = \
+                    matched_payments.sorted(key=lambda p: p.date,
+                                            reverse=True)[
+                        0].date if matched_payments else None
+
+                days_overdue = 0
+                payment_due_display = 'N/A'
+                is_overdue = False
+                if invoice.invoice_date_due:
+                    today = fields.Date.today()
+                    due_date = fields.Date.from_string(
+                        invoice.invoice_date_due)
+                    if today > due_date:
+                        days_overdue = (today - due_date).days
+                        payment_due_display = "Please refer to the remarks column."
+                        is_overdue = True
+
+                if invoice.payment_state == 'paid':
+                    payment_status = 'Received'
+                    advance_date = latest_payment_date or invoice.invoice_date
+                    balance_payment = 0.0
+                    due_date = 'N/A'
+                    payment_due_display = 'N/A'
+                elif invoice.payment_state == 'partial':
+                    payment_status = 'Partially Received'
+                    advance_date = latest_payment_date or 'N/A'
+                    balance_payment = amount_residual
                 else:
-                    write_center(sheet, current_row + i, 9, '', row_fmt)
-                write_center(sheet, current_row + i, 10,
-                             order.amount_total if i == 0 else 0.0,
-                             order_currency_format)
+                    payment_status = 'Not Received'
+                    advance_date = 'N/A'
+                    balance_payment = amount_residual
 
-                # Write PO information
-                if po_count == 0:
-                    if i == 0:
-                        safe_merge(sheet, current_row, 11,
-                                   current_row + max_rows_per_order - 1, 11,
-                                   'N/A', row_fmt)
-                        safe_merge(sheet, current_row, 12,
-                                   current_row + max_rows_per_order - 1, 12,
-                                   'N/A', row_fmt)
-                        safe_merge(sheet, current_row, 13,
-                                   current_row + max_rows_per_order - 1, 13,
-                                   0.0, order_currency_format)
+                payment_terms = invoice.invoice_payment_term_id.name or 'N/A'
+
+                invoice_date = 'N/A'
+                if invoice.invoice_date:
+                    if isinstance(invoice.invoice_date, str):
+                        invoice_date = fields.Date.from_string(
+                            invoice.invoice_date).strftime('%d-%m-%Y')
+                    else:
+                        invoice_date = invoice.invoice_date.strftime('%d-%m-%Y')
+
+                due_date_str = 'N/A'
+                if invoice.invoice_date_due:
+                    if isinstance(invoice.invoice_date_due, str):
+                        due_date_str = fields.Date.from_string(
+                            invoice.invoice_date_due).strftime('%d-%m-%Y')
+                    else:
+                        due_date_str = invoice.invoice_date_due.strftime('%d-%m-%Y')
+
+                advance_date_formatted = 'N/A'
+                if advance_date and advance_date != 'N/A':
+                    if isinstance(advance_date, str):
+                        advance_date_formatted = fields.Date.from_string(
+                            advance_date).strftime('%d-%m-%Y')
+                    else:
+                        advance_date_formatted = advance_date.strftime('%d-%m-%Y')
+
+                # Merge invoice columns across the span
+                if invoice_row_span > 1:
+                    sheet.merge_range(current_invoice_row, 14,
+                                      current_invoice_row + invoice_row_span - 1, 14,
+                                      invoice.name or 'N/A', row_fmt)
+                    sheet.merge_range(current_invoice_row, 15,
+                                      current_invoice_row + invoice_row_span - 1, 15,
+                                      invoice_date,
+                                      date_fmt if invoice_date != 'N/A' else row_fmt)
+                    sheet.merge_range(current_invoice_row, 16,
+                                      current_invoice_row + invoice_row_span - 1, 16,
+                                      invoice_amount, order_currency_format)
+                    sheet.merge_range(current_invoice_row, 17,
+                                      current_invoice_row + invoice_row_span - 1, 17,
+                                      payment_terms, row_fmt)
+                    sheet.merge_range(current_invoice_row, 18,
+                                      current_invoice_row + invoice_row_span - 1, 18,
+                                      payment_status, row_fmt)
+                    sheet.merge_range(current_invoice_row, 19,
+                                      current_invoice_row + invoice_row_span - 1, 19,
+                                      advance_amount, order_currency_format)
+                    sheet.merge_range(current_invoice_row, 20,
+                                      current_invoice_row + invoice_row_span - 1, 20,
+                                      advance_date_formatted,
+                                      date_fmt if advance_date_formatted != 'N/A' else row_fmt)
+                    sheet.merge_range(current_invoice_row, 21,
+                                      current_invoice_row + invoice_row_span - 1, 21,
+                                      balance_payment, order_currency_format)
+                    sheet.merge_range(current_invoice_row, 22,
+                                      current_invoice_row + invoice_row_span - 1, 22,
+                                      payment_due_display,
+                                      red_fmt if is_overdue and payment_due_display != 'N/A' else row_fmt)
+                    sheet.merge_range(current_invoice_row, 23,
+                                      current_invoice_row + invoice_row_span - 1, 23,
+                                      due_date_str,
+                                      date_fmt if due_date_str != 'N/A' else row_fmt)
                 else:
-                    if po_row_index < len(purchase_orders):
-                        po = purchase_orders[po_row_index]
-                        row_span = po_row_spans[po_row_index]
-                        po_currency = po.currency_id or order_currency
-                        po_currency_format = get_currency_format(workbook,
-                                                                 po_currency,
-                                                                 is_even=is_even_order)
-                        if i < sum(po_row_spans[:po_row_index + 1]):
-                            po_name = po.name or 'N/A'
-                            po_date = 'N/A'
-                            if po.date:
-                                if isinstance(po.date, str):
-                                    po_date = fields.Date.from_string(
-                                        po.date).strftime('%d-%m-%Y')
-                                else:
-                                    po_date = po.date.strftime('%d-%m-%Y')
-                            po_value = po.amount_total or 0.0
-                            if row_span > 1 and i == sum(
-                                    po_row_spans[:po_row_index]):
-                                safe_merge(sheet, current_row + i, 11,
-                                           current_row + i + row_span - 1, 11,
-                                           po_name, row_fmt)
-                                safe_merge(sheet, current_row + i, 12,
-                                           current_row + i + row_span - 1, 12,
-                                           po_date,
-                                           date_fmt if po_date != 'N/A' else row_fmt)
-                                safe_merge(sheet, current_row + i, 13,
-                                           current_row + i + row_span - 1, 13,
-                                           po_value, po_currency_format)
-                            elif row_span == 1:
-                                write_center(sheet, current_row + i, 11,
-                                             po_name, row_fmt)
-                                write_center(sheet, current_row + i, 12,
-                                             po_date,
-                                             date_fmt if po_date != 'N/A' else row_fmt)
-                                write_center(sheet, current_row + i, 13,
-                                             po_value, po_currency_format)
-                            grand_total_po_value += po_value if i == sum(
-                                po_row_spans[:po_row_index]) else 0
-                            if i == sum(po_row_spans[:po_row_index + 1]) - 1:
-                                po_row_index += 1
-                        else:
-                            write_center(sheet, current_row + i, 11, '',
-                                         row_fmt)
-                            write_center(sheet, current_row + i, 12, '',
-                                         date_fmt)
-                            write_center(sheet, current_row + i, 13, '',
-                                         po_currency_format)
-                    else:
-                        write_center(sheet, current_row + i, 11, '', row_fmt)
-                        write_center(sheet, current_row + i, 12, '', date_fmt)
-                        write_center(sheet, current_row + i, 13, '',
-                                     order_currency_format)
+                    sheet.write(current_invoice_row, 14, invoice.name or 'N/A', row_fmt)
+                    sheet.write(current_invoice_row, 15, invoice_date,
+                                date_fmt if invoice_date != 'N/A' else row_fmt)
+                    sheet.write(current_invoice_row, 16, invoice_amount, order_currency_format)
+                    sheet.write(current_invoice_row, 17, payment_terms, row_fmt)
+                    sheet.write(current_invoice_row, 18, payment_status, row_fmt)
+                    sheet.write(current_invoice_row, 19, advance_amount, order_currency_format)
+                    sheet.write(current_invoice_row, 20, advance_date_formatted,
+                                date_fmt if advance_date_formatted != 'N/A' else row_fmt)
+                    sheet.write(current_invoice_row, 21, balance_payment, order_currency_format)
+                    sheet.write(current_invoice_row, 22, payment_due_display,
+                                red_fmt if is_overdue and payment_due_display != 'N/A' else row_fmt)
+                    sheet.write(current_invoice_row, 23, due_date_str,
+                                date_fmt if due_date_str != 'N/A' else row_fmt)
 
-                if product_row_index < len(order_lines):
-                    line = order_lines[product_row_index]
-                    row_span = product_row_spans[product_row_index]
-                    if i < sum(product_row_spans[:product_row_index + 1]):
-                        description = html2plaintext(line.e_description) if line.e_description else "N/A"
-                        if row_span > 1 and i == sum(
-                                product_row_spans[:product_row_index]):
-                            safe_merge(sheet, current_row + i, 4,
-                                       current_row + i + row_span - 1, 4,
-                                       line.product_id.name, row_fmt)
-                            safe_merge(sheet, current_row + i, 5,
-                                       current_row + i + row_span - 1, 5,
-                                       description, row_fmt)
-                            safe_merge(sheet, current_row + i, 6,
-                                       current_row + i + row_span - 1, 6,
-                                       line.product_uom_qty, row_fmt)
-                            safe_merge(sheet, current_row + i, 7,
-                                       current_row + i + row_span - 1, 7,
-                                       line.price_unit, order_currency_format)
-                        elif row_span == 1:
-                            write_center(sheet, current_row + i, 4,
-                                         line.product_id.name, row_fmt)
-                            write_center(sheet, current_row + i, 5,
-                                         description, row_fmt)
-                            write_center(sheet, current_row + i, 6,
-                                         line.product_uom_qty, row_fmt)
-                            write_center(sheet, current_row + i, 7,
-                                         line.price_unit, order_currency_format)
-                        grand_total_qty += line.product_uom_qty if i == sum(
-                            product_row_spans[:product_row_index]) else 0
-                        grand_total_unit_price += line.price_unit if i == sum(
-                            product_row_spans[:product_row_index]) else 0
-                        if i == sum(
-                                product_row_spans[:product_row_index + 1]) - 1:
-                            product_row_index += 1
-                    else:
-                        write_center(sheet, current_row + i, 4, '', row_fmt)
-                        write_center(sheet, current_row + i, 5, '', row_fmt)
-                        write_center(sheet, current_row + i, 6, '', row_fmt)
-                        write_center(sheet, current_row + i, 7, '', row_fmt)
+                grand_total_value += invoice_amount
+                grand_total_advance += advance_amount
+                grand_total_balance += balance_payment
 
-                if merge_invoice_columns:
-                    for col in range(14, 24):  # Adjusted range (14 to 23)
-                        format_to_use = row_fmt
-                        if col in (15, 20, 23):  # Adjusted dates
-                            format_to_use = date_fmt
-                        elif col in (16, 19, 21):  # Adjusted currencies
-                            format_to_use = order_currency_format
-                        write_center(sheet, current_row + i, col, '',
-                                     format_to_use)
-                else:
-                    if invoice_row_index < len(order_invoices):
-                        invoice = order_invoices[invoice_row_index]
-                        row_span = invoice_row_spans[invoice_row_index]
-                        if i < sum(invoice_row_spans[:invoice_row_index + 1]):
-                            invoice_amount = invoice.amount_total
-                            amount_residual = invoice.amount_residual
-                            matched_payments = invoice.matched_payment_ids.filtered(
-                                lambda p: p.state in ('in_process', 'paid')
-                            )
-                            advance_amount = sum(
-                                matched_payments.mapped('amount'))
-                            latest_payment_date = \
-                            matched_payments.sorted(key=lambda p: p.date,
-                                                    reverse=True)[
-                                0].date if matched_payments else None
+                current_invoice_row += invoice_row_span
 
-                            days_overdue = 0
-                            payment_due_display = 'N/A'
-                            is_overdue = False
-                            if invoice.invoice_date_due:
-                                today = fields.Date.today()
-                                due_date = fields.Date.from_string(
-                                    invoice.invoice_date_due)
-                                if today > due_date:
-                                    days_overdue = (today - due_date).days
-                                    # payment_due_display = f"{days_overdue} days overdue"
-                                    payment_due_display = "Please refer to the remarks column."
-                                    is_overdue = True
-
-                            if invoice.payment_state == 'paid':
-                                payment_status = 'Received'
-                                advance_date = latest_payment_date or invoice.invoice_date
-                                balance_payment = 0.0
-                                due_date = 'N/A'
-                                payment_due_display = 'N/A'
-                            elif invoice.payment_state == 'partial':
-                                payment_status = 'Partially Received'
-                                advance_date = latest_payment_date or 'N/A'
-                                balance_payment = amount_residual
-                            else:
-                                payment_status = 'Not Received'
-                                advance_date = 'N/A'
-                                balance_payment = amount_residual
-
-                            payment_terms = invoice.invoice_payment_term_id.name or 'N/A'
-
-                            invoice_date = 'N/A'
-                            if invoice.invoice_date:
-                                if isinstance(invoice.invoice_date, str):
-                                    invoice_date = fields.Date.from_string(
-                                        invoice.invoice_date).strftime(
-                                        '%d-%m-%Y')
-                                else:
-                                    invoice_date = invoice.invoice_date.strftime(
-                                        '%d-%m-%Y')
-
-                            due_date = 'N/A'
-                            if invoice.invoice_date_due:
-                                if isinstance(invoice.invoice_date_due, str):
-                                    due_date = fields.Date.from_string(
-                                        invoice.invoice_date_due).strftime(
-                                        '%d-%m-%Y')
-                                else:
-                                    due_date = invoice.invoice_date_due.strftime(
-                                        '%d-%m-%Y')
-
-                            advance_date_formatted = 'N/A'
-                            if advance_date and advance_date != 'N/A':
-                                if isinstance(advance_date, str):
-                                    advance_date_formatted = fields.Date.from_string(
-                                        advance_date).strftime('%d-%m-%Y')
-                                else:
-                                    advance_date_formatted = advance_date.strftime(
-                                        '%d-%m-%Y')
-
-                            if row_span > 1 and i == sum(
-                                    invoice_row_spans[:invoice_row_index]):
-                                safe_merge(sheet, current_row + i, 14,
-                                           current_row + i + row_span - 1, 14,
-                                           invoice.name or 'N/A', row_fmt)
-                                safe_merge(sheet, current_row + i, 15,
-                                           current_row + i + row_span - 1, 15,
-                                           invoice_date,
-                                           date_fmt if invoice_date != 'N/A' else row_fmt)
-                                safe_merge(sheet, current_row + i, 16,
-                                           current_row + i + row_span - 1, 16,
-                                           invoice_amount,
-                                           order_currency_format)
-                                safe_merge(sheet, current_row + i, 17,
-                                           current_row + i + row_span - 1, 17,
-                                           payment_terms, row_fmt)
-                                safe_merge(sheet, current_row + i, 18,
-                                           current_row + i + row_span - 1, 18,
-                                           payment_status, row_fmt)
-                                safe_merge(sheet, current_row + i, 19,
-                                           current_row + i + row_span - 1, 19,
-                                           advance_amount,
-                                           order_currency_format)
-                                safe_merge(sheet, current_row + i, 20,
-                                           current_row + i + row_span - 1, 20,
-                                           advance_date_formatted,
-                                           date_fmt if advance_date_formatted != 'N/A' else row_fmt)
-                                safe_merge(sheet, current_row + i, 21,
-                                           current_row + i + row_span - 1, 21,
-                                           balance_payment,
-                                           order_currency_format)
-                                safe_merge(sheet, current_row + i, 22,
-                                           current_row + i + row_span - 1, 22,
-                                           payment_due_display,
-                                           red_fmt if is_overdue and payment_due_display != 'N/A' else row_fmt)
-                                safe_merge(sheet, current_row + i, 23,
-                                           current_row + i + row_span - 1, 23,
-                                           due_date,
-                                           date_fmt if due_date != 'N/A' else row_fmt)
-                            elif row_span == 1:
-                                write_center(sheet, current_row + i, 14,
-                                             invoice.name or 'N/A', row_fmt)
-                                write_center(sheet, current_row + i, 15,
-                                             invoice_date,
-                                             date_fmt if invoice_date != 'N/A' else row_fmt)
-                                write_center(sheet, current_row + i, 16,
-                                             invoice_amount,
-                                             order_currency_format)
-                                write_center(sheet, current_row + i, 17,
-                                             payment_terms, row_fmt)
-                                write_center(sheet, current_row + i, 18,
-                                             payment_status, row_fmt)
-                                write_center(sheet, current_row + i, 19,
-                                             advance_amount,
-                                             order_currency_format)
-                                write_center(sheet, current_row + i, 20,
-                                             advance_date_formatted,
-                                             date_fmt if advance_date_formatted != 'N/A' else row_fmt)
-                                write_center(sheet, current_row + i, 21,
-                                             balance_payment,
-                                             order_currency_format)
-                                write_center(sheet, current_row + i, 22,
-                                             payment_due_display,
-                                             red_fmt if is_overdue and payment_due_display != 'N/A' else row_fmt)
-                                write_center(sheet, current_row + i, 23,
-                                             due_date,
-                                             date_fmt if due_date != 'N/A' else row_fmt)
-                            grand_total_value += invoice_amount if i == sum(
-                                invoice_row_spans[:invoice_row_index]) else 0
-                            grand_total_advance += advance_amount if i == sum(
-                                invoice_row_spans[:invoice_row_index]) else 0
-                            grand_total_balance += balance_payment if i == sum(
-                                invoice_row_spans[:invoice_row_index]) else 0
-                            if i == sum(invoice_row_spans[
-                                        :invoice_row_index + 1]) - 1:
-                                invoice_row_index += 1
-                        else:
-                            write_center(sheet, current_row + i, 14, '',
-                                         row_fmt)
-                            write_center(sheet, current_row + i, 15, '',
-                                         date_fmt)
-                            write_center(sheet, current_row + i, 16, '',
-                                         order_currency_format)
-                            write_center(sheet, current_row + i, 17, '',
-                                         row_fmt)
-                            write_center(sheet, current_row + i, 18, '',
-                                         row_fmt)
-                            write_center(sheet, current_row + i, 19, '',
-                                         order_currency_format)
-                            write_center(sheet, current_row + i, 20, '',
-                                         date_fmt)
-                            write_center(sheet, current_row + i, 21, '',
-                                         order_currency_format)
-                            write_center(sheet, current_row + i, 22, '',
-                                         row_fmt)
-                            write_center(sheet, current_row + i, 23, '',
-                                         date_fmt)
-                    else:
-                        write_center(sheet, current_row + i, 14, '', row_fmt)
-                        write_center(sheet, current_row + i, 15, '', date_fmt)
-                        write_center(sheet, current_row + i, 16, '',
-                                     order_currency_format)
-                        write_center(sheet, current_row + i, 17, '', row_fmt)
-                        write_center(sheet, current_row + i, 18, '', row_fmt)
-                        write_center(sheet, current_row + i, 19, '',
-                                     order_currency_format)
-                        write_center(sheet, current_row + i, 20, '', date_fmt)
-                        write_center(sheet, current_row + i, 21, '',
-                                     order_currency_format)
-                        write_center(sheet, current_row + i, 22, '', row_fmt)
-                        write_center(sheet, current_row + i, 23, '', date_fmt)
-
-                write_center(sheet, current_row + i, 24,
-                             shipment_status if i == 0 else '', row_fmt)
-                write_center(sheet, current_row + i, 25,
-                             delivery_date if i == 0 else '', row_fmt)
-                write_center(sheet, current_row + i, 26,
-                             'N/A' if i == 0 else '', row_fmt)
-
-            grand_total_quote_value += order.amount_total
-
-            if max_rows_per_order > 1:
-                safe_merge(sheet, row, 1, row + max_rows_per_order - 1, 1,
-                           current_si_no, row_fmt)
-                safe_merge(sheet, row, 2, row + max_rows_per_order - 1, 2,
-                           full_name, row_fmt)
-                safe_merge(sheet, row, 3, row + max_rows_per_order - 1, 3,
-                           account_name, row_fmt)
-                safe_merge(sheet, row, 8, row + max_rows_per_order - 1, 8,
-                           order.name, row_fmt)
-                if order.date_order:
-                    if isinstance(order.date_order, str):
-                        quote_date = fields.Date.from_string(
-                            order.date_order).strftime('%d-%m-%Y')
-                    else:
-                        quote_date = order.date_order.strftime('%d-%m-%Y')
-                    safe_merge(sheet, row, 9, row + max_rows_per_order - 1, 9,
-                               quote_date, date_fmt)
-                else:
-                    safe_merge(sheet, row, 9, row + max_rows_per_order - 1, 9,
-                               '', row_fmt)
-                safe_merge(sheet, row, 10, row + max_rows_per_order - 1, 10,
-                           order.amount_total, order_currency_format)
-                safe_merge(sheet, row, 24, row + max_rows_per_order - 1, 24,
-                           shipment_status, row_fmt)
-                safe_merge(sheet, row, 25, row + max_rows_per_order - 1, 25,
-                           delivery_date, row_fmt)
-                safe_merge(sheet, row, 26, row + max_rows_per_order - 1, 26,
-                           'N/A', row_fmt)
-
-                if merge_invoice_columns:
-                    for col in range(14, 24):
-                        format_to_use = row_fmt
-                        if col in (15, 20, 23):
-                            format_to_use = date_fmt
-                        elif col in (16, 19, 21):
-                            format_to_use = order_currency_format
-                        safe_merge(sheet, row, col,
-                                   row + max_rows_per_order - 1, col, '',
-                                   format_to_use)
-
-                if po_count == 0:
-                    safe_merge(sheet, row, 11, row + max_rows_per_order - 1, 11,
-                               'N/A', row_fmt)
-                    safe_merge(sheet, row, 12, row + max_rows_per_order - 1, 12,
-                               'N/A', row_fmt)
-                    safe_merge(sheet, row, 13, row + max_rows_per_order - 1, 13,
-                               0.0, order_currency_format)
-
-            row += max_rows_per_order
-            si_no += 1
-
+        # Write grand totals
         currency_format = get_currency_format(workbook, currency, is_total=True)
         symbol = currency.symbol
         position = currency.position
@@ -1268,26 +1288,6 @@ class EramSaleOrderReport(models.TransientModel):
                 })
             return workbook.add_format(format_props)
 
-        merged_ranges = set()
-
-        def safe_merge(sheet, first_row, first_col, last_row, last_col, data,
-                       cell_format=None):
-            merge_key = f"{first_row}:{first_col}:{last_row}:{last_col}"
-            if merge_key in merged_ranges:
-                return
-            is_even_order = ((first_row - 5) // max_rows_per_order) % 2 == 0
-            if cell_format is None:
-                if is_even_order:
-                    cell_format = even_row_format
-                else:
-                    cell_format = odd_row_format
-            if first_row == last_row and first_col == last_col:
-                sheet.write(first_row, first_col, data, cell_format)
-            else:
-                sheet.merge_range(first_row, first_col, last_row, last_col,
-                                  data, cell_format)
-            merged_ranges.add(merge_key)
-
         def calculate_row_distribution(product_count, po_count):
             max_count = max(product_count, po_count or 1)
             if product_count == 0:
@@ -1307,287 +1307,284 @@ class EramSaleOrderReport(models.TransientModel):
                                 for i in range(po_count)]
             return product_row_spans, po_row_spans, max_count
 
-        for order_idx, order in enumerate(order_ids):
-            order_start_row = row
-            full_name = order.e_attn
-            account_name = order.partner_id.name
-            current_si_no = si_no
-            is_even_order = (order_idx % 2 == 0)
+        # Group orders by parent-child relationship for quotations
+        order_groups = []
+        processed_orders = set()
 
-            order_lines = order.order_line
-            purchase_orders = order.e_customer_po_ids
+        for order in order_ids:
+            if order.id in processed_orders:
+                continue
 
-            product_count = len(order_lines)
-            po_count = len(purchase_orders)
+            # If order has a parent, it will be processed with parent
+            if order.e_sale_id and order.e_sale_id.id in [o.id for o in order_ids]:
+                continue
 
-            product_row_spans, po_row_spans, max_rows_per_order = calculate_row_distribution(
-                product_count, po_count
-            )
+            # Create group: parent + children
+            group = [order]
+            processed_orders.add(order.id)
 
-            merged_ranges = set()
+            # Add children if any
+            if order.e_sale_ids:
+                children = order.e_sale_ids.filtered(lambda o: o.state in ('draft', 'sent')).sorted(
+                    lambda s: s.date_order)
+                for child in children:
+                    if child.id not in processed_orders:
+                        group.append(child)
+                        processed_orders.add(child.id)
 
-            if is_even_order:
-                row_fmt = even_row_format
-                date_fmt = even_date_format
-            else:
-                row_fmt = odd_row_format
-                date_fmt = odd_date_format
+            order_groups.append(group)
 
-            order_currency = currency
-            order_currency_format = get_currency_format(workbook,
-                                                        order_currency,
-                                                        is_even=is_even_order)
+        for group_idx, order_group in enumerate(order_groups):
+            for order_idx_in_group, order in enumerate(order_group):
+                order_start_row = row
+                full_name = order.e_attn
+                account_name = order.partner_id.name
+                current_si_no = si_no if order_idx_in_group == 0 else ''
+                is_even_order = (group_idx % 2 == 0)
 
-            current_row = row
-            product_row_index = 0
-            po_row_index = 0
+                order_lines = order.order_line
+                purchase_orders = order.e_customer_po_ids
 
-            for i in range(max_rows_per_order):
-                write_center(sheet, current_row + i, 1,
-                             current_si_no if i == 0 else '', row_fmt)
-                write_center(sheet, current_row + i, 2,
-                             full_name if i == 0 else '', row_fmt)
-                write_center(sheet, current_row + i, 3,
-                             account_name if i == 0 else '', row_fmt)
+                product_count = len(order_lines)
+                po_count = len(purchase_orders)
 
-                # Product info
-                if product_row_index < len(order_lines):
-                    line = order_lines[product_row_index]
-                    row_span = product_row_spans[product_row_index]
-                    if i < sum(product_row_spans[:product_row_index + 1]):
-                        product_name = line.product_id.name
-                        description = html2plaintext(line.e_description) if line.e_description else 'N/A'
-                        quantity = line.product_uom_qty
-                        unit_price = line.price_unit
-                        if row_span > 1 and i == sum(
-                                product_row_spans[:product_row_index]):
-                            safe_merge(sheet, current_row + i, 4,
-                                       current_row + i + row_span - 1, 4,
-                                       product_name, row_fmt)
-                            safe_merge(sheet, current_row + i, 5,
-                                       current_row + i + row_span - 1, 5,
-                                       description, row_fmt)
-                            safe_merge(sheet, current_row + i, 6,
-                                       current_row + i + row_span - 1, 6,
-                                       quantity, row_fmt)
-                            safe_merge(sheet, current_row + i, 11,
-                                       current_row + i + row_span - 1, 11,
-                                       unit_price, order_currency_format)
-                        elif row_span == 1:
-                            write_center(sheet, current_row + i, 4,
-                                         product_name, row_fmt)
-                            write_center(sheet, current_row + i, 5, description,
-                                         row_fmt)
-                            write_center(sheet, current_row + i, 6, quantity,
-                                         row_fmt)
-                            write_center(sheet, current_row + i, 11, unit_price,
-                                         order_currency_format)
-                        if i == sum(
-                                product_row_spans[:product_row_index + 1]) - 1:
-                            product_row_index += 1
-                    else:
-                        write_center(sheet, current_row + i, 4, '', row_fmt)
-                        write_center(sheet, current_row + i, 5, '', row_fmt)
-                        write_center(sheet, current_row + i, 6, '', row_fmt)
-                        write_center(sheet, current_row + i, 11, '',
-                                     order_currency_format)
+                product_row_spans, po_row_spans, max_rows_per_order = calculate_row_distribution(
+                    product_count, po_count
+                )
 
-                # Quote info
-                write_center(sheet, current_row + i, 7,
-                             order.name if i == 0 else '', row_fmt)
-                if i == 0 and order.date_order:
-                    if isinstance(order.date_order, str):
-                        quote_date = fields.Date.from_string(
-                            order.date_order).strftime('%d-%m-%Y')
-                    else:
-                        quote_date = order.date_order.strftime('%d-%m-%Y')
-                    write_center(sheet, current_row + i, 8, quote_date,
-                                 date_fmt)
+                if is_even_order:
+                    row_fmt = even_row_format
+                    date_fmt = even_date_format
                 else:
-                    write_center(sheet, current_row + i, 8, '', row_fmt)
+                    row_fmt = odd_row_format
+                    date_fmt = odd_date_format
 
-                # PO info, including Total Price, Total Value with GST, Advance Payment, and Delivery Date
-                if po_count == 0:
+                order_currency = currency
+                order_currency_format = get_currency_format(workbook,
+                                                            order_currency,
+                                                            is_even=is_even_order)
+
+                current_row = row
+                product_row_index = 0
+                po_row_index = 0
+
+                for i in range(max_rows_per_order):
+                    # Write SI No
                     if i == 0:
-                        safe_merge(sheet, current_row, 9,
-                                   current_row + max_rows_per_order - 1, 9,
-                                   'N/A', row_fmt)
-                        safe_merge(sheet, current_row, 10,
-                                   current_row + max_rows_per_order - 1, 10,
-                                   'N/A', row_fmt)
-                        safe_merge(sheet, current_row, 12,
-                                   current_row + max_rows_per_order - 1, 12,
-                                   0.0, order_currency_format)
-                        safe_merge(sheet, current_row, 13,
-                                   current_row + max_rows_per_order - 1, 13,
-                                   0.0, order_currency_format)
-                        safe_merge(sheet, current_row, 14,
-                                   current_row + max_rows_per_order - 1, 14,
-                                   0.0, order_currency_format)
-                        safe_merge(sheet, current_row, 15,
-                                   current_row + max_rows_per_order - 1, 15,
-                                   'N/A', date_fmt)
-                        safe_merge(sheet, current_row, 16,
-                                   current_row + max_rows_per_order - 1, 16,
-                                   'N/A', date_fmt)
-                else:
-                    if po_row_index < len(purchase_orders):
-                        po = purchase_orders[po_row_index]
-                        row_span = po_row_spans[po_row_index]
-                        if i < sum(po_row_spans[:po_row_index + 1]):
-                            po_name = po.name or 'N/A'
-                            po_date = 'N/A'
-                            if po.date:
-                                if isinstance(po.date, str):
-                                    po_date = fields.Date.from_string(
-                                        po.date).strftime('%d-%m-%Y')
-                                else:
-                                    po_date = po.date.strftime('%d-%m-%Y')
-                            total_price = po.amount or 0.0  # Use PO's amount field
-                            total_gst = po.amount_total or 0.0  # Use PO's amount_total field
-                            advance_amount = po.advance_amount or 0.0
-                            advance_date = po.advance_date
-                            delivery_date = po.delivery_date
-                            advance_date_formatted = 'N/A'
-                            if advance_date:
-                                if isinstance(advance_date, str):
-                                    advance_date_formatted = fields.Date.from_string(
-                                        advance_date).strftime('%d-%m-%Y')
-                                else:
-                                    advance_date_formatted = advance_date.strftime(
-                                        '%d-%m-%Y')
-                            delivery_date_formatted = 'N/A'
-                            if delivery_date:
-                                if isinstance(delivery_date, str):
-                                    delivery_date_formatted = fields.Date.from_string(
-                                        delivery_date).strftime('%d-%m-%Y')
-                                else:
-                                    delivery_date_formatted = delivery_date.strftime(
-                                        '%d-%m-%Y')
-                            if row_span > 1 and i == sum(
-                                    po_row_spans[:po_row_index]):
-                                safe_merge(sheet, current_row + i, 9,
-                                           current_row + i + row_span - 1, 9,
-                                           po_name, row_fmt)
-                                safe_merge(sheet, current_row + i, 10,
-                                           current_row + i + row_span - 1, 10,
-                                           po_date,
-                                           date_fmt if po_date != 'N/A' else row_fmt)
-                                safe_merge(sheet, current_row + i, 12,
-                                           current_row + i + row_span - 1, 12,
-                                           total_price, order_currency_format)
-                                safe_merge(sheet, current_row + i, 13,
-                                           current_row + i + row_span - 1, 13,
-                                           total_gst, order_currency_format)
-                                safe_merge(sheet, current_row + i, 14,
-                                           current_row + i + row_span - 1, 14,
-                                           advance_amount,
-                                           order_currency_format)
-                                safe_merge(sheet, current_row + i, 15,
-                                           current_row + i + row_span - 1, 15,
-                                           advance_date_formatted,
-                                           date_fmt if advance_date_formatted != 'N/A' else row_fmt)
-                                safe_merge(sheet, current_row + i, 16,
-                                           current_row + i + row_span - 1, 16,
-                                           delivery_date_formatted,
-                                           date_fmt if delivery_date_formatted != 'N/A' else row_fmt)
-                            elif row_span == 1:
-                                write_center(sheet, current_row + i, 9, po_name,
-                                             row_fmt)
-                                write_center(sheet, current_row + i, 10,
-                                             po_date,
-                                             date_fmt if po_date != 'N/A' else row_fmt)
-                                write_center(sheet, current_row + i, 12,
-                                             total_price, order_currency_format)
-                                write_center(sheet, current_row + i, 13,
-                                             total_gst, order_currency_format)
-                                write_center(sheet, current_row + i, 14,
-                                             advance_amount,
-                                             order_currency_format)
-                                write_center(sheet, current_row + i, 15,
-                                             advance_date_formatted,
-                                             date_fmt if advance_date_formatted != 'N/A' else row_fmt)
-                                write_center(sheet, current_row + i, 16,
-                                             delivery_date_formatted,
-                                             date_fmt if delivery_date_formatted != 'N/A' else row_fmt)
-                            if i == sum(po_row_spans[:po_row_index]):
-                                grand_total_price += total_price
-                                grand_total_gst += total_gst
-                                grand_total_advance += advance_amount
-                            if i == sum(po_row_spans[:po_row_index + 1]) - 1:
-                                po_row_index += 1
+                        sheet.write(current_row + i, 1, current_si_no, row_fmt)
+
+                    # Write customer and account name (only first row)
+                    if i == 0:
+                        sheet.write(current_row + i, 2, full_name, row_fmt)
+                        sheet.write(current_row + i, 3, account_name, row_fmt)
+
+                    # Write quote info (only first row)
+                    if i == 0:
+                        sheet.write(current_row + i, 7, order.name, row_fmt)
+                        if order.date_order:
+                            if isinstance(order.date_order, str):
+                                quote_date = fields.Date.from_string(
+                                    order.date_order).strftime('%d-%m-%Y')
+                            else:
+                                quote_date = order.date_order.strftime('%d-%m-%Y')
+                            sheet.write(current_row + i, 8, quote_date, date_fmt)
                         else:
-                            write_center(sheet, current_row + i, 9, '', row_fmt)
-                            write_center(sheet, current_row + i, 10, '',
-                                         date_fmt)
-                            write_center(sheet, current_row + i, 12, '',
-                                         order_currency_format)
-                            write_center(sheet, current_row + i, 13, '',
-                                         order_currency_format)
-                            write_center(sheet, current_row + i, 14, '',
-                                         order_currency_format)
-                            write_center(sheet, current_row + i, 15, '',
-                                         date_fmt)
-                            write_center(sheet, current_row + i, 16, '',
-                                         date_fmt)
+                            sheet.write(current_row + i, 8, '', row_fmt)
+
+                    # Product info
+                    if product_row_index < len(order_lines):
+                        line = order_lines[product_row_index]
+                        row_span = product_row_spans[product_row_index]
+                        if i < sum(product_row_spans[:product_row_index + 1]):
+                            product_name = line.product_id.name
+                            description = html2plaintext(line.e_description) if line.e_description else 'N/A'
+                            quantity = line.product_uom_qty
+                            unit_price = line.price_unit
+
+                            if row_span > 1 and i == sum(product_row_spans[:product_row_index]):
+                                sheet.merge_range(current_row + i, 4,
+                                                  current_row + i + row_span - 1, 4,
+                                                  product_name, row_fmt)
+                                sheet.merge_range(current_row + i, 5,
+                                                  current_row + i + row_span - 1, 5,
+                                                  description, row_fmt)
+                                sheet.merge_range(current_row + i, 6,
+                                                  current_row + i + row_span - 1, 6,
+                                                  quantity, row_fmt)
+                                sheet.merge_range(current_row + i, 11,
+                                                  current_row + i + row_span - 1, 11,
+                                                  unit_price, order_currency_format)
+                            elif row_span == 1:
+                                sheet.write(current_row + i, 4, product_name, row_fmt)
+                                sheet.write(current_row + i, 5, description, row_fmt)
+                                sheet.write(current_row + i, 6, quantity, row_fmt)
+                                sheet.write(current_row + i, 11, unit_price, order_currency_format)
+
+                            if i == sum(product_row_spans[:product_row_index + 1]) - 1:
+                                product_row_index += 1
+                        else:
+                            sheet.write(current_row + i, 4, '', row_fmt)
+                            sheet.write(current_row + i, 5, '', row_fmt)
+                            sheet.write(current_row + i, 6, '', row_fmt)
+                            sheet.write(current_row + i, 11, '', order_currency_format)
+
+                    # PO info
+                    if po_count == 0:
+                        if i == 0:
+                            sheet.merge_range(current_row, 9,
+                                              current_row + max_rows_per_order - 1, 9,
+                                              'N/A', row_fmt)
+                            sheet.merge_range(current_row, 10,
+                                              current_row + max_rows_per_order - 1, 10,
+                                              'N/A', row_fmt)
+                            sheet.merge_range(current_row, 12,
+                                              current_row + max_rows_per_order - 1, 12,
+                                              0.0, order_currency_format)
+                            sheet.merge_range(current_row, 13,
+                                              current_row + max_rows_per_order - 1, 13,
+                                              0.0, order_currency_format)
+                            sheet.merge_range(current_row, 14,
+                                              current_row + max_rows_per_order - 1, 14,
+                                              0.0, order_currency_format)
+                            sheet.merge_range(current_row, 15,
+                                              current_row + max_rows_per_order - 1, 15,
+                                              'N/A', date_fmt)
+                            sheet.merge_range(current_row, 16,
+                                              current_row + max_rows_per_order - 1, 16,
+                                              'N/A', date_fmt)
                     else:
-                        write_center(sheet, current_row + i, 9, '', row_fmt)
-                        write_center(sheet, current_row + i, 10, '', date_fmt)
-                        write_center(sheet, current_row + i, 12, '',
-                                     order_currency_format)
-                        write_center(sheet, current_row + i, 13, '',
-                                     order_currency_format)
-                        write_center(sheet, current_row + i, 14, '',
-                                     order_currency_format)
-                        write_center(sheet, current_row + i, 15, '', date_fmt)
-                        write_center(sheet, current_row + i, 16, '', date_fmt)
+                        if po_row_index < len(purchase_orders):
+                            po = purchase_orders[po_row_index]
+                            row_span = po_row_spans[po_row_index]
+                            if i < sum(po_row_spans[:po_row_index + 1]):
+                                po_name = po.name or 'N/A'
+                                po_date = 'N/A'
+                                if po.date:
+                                    if isinstance(po.date, str):
+                                        po_date = fields.Date.from_string(
+                                            po.date).strftime('%d-%m-%Y')
+                                    else:
+                                        po_date = po.date.strftime('%d-%m-%Y')
+                                total_price = po.amount or 0.0
+                                total_gst = po.amount_total or 0.0
+                                advance_amount = po.advance_amount or 0.0
+                                advance_date = po.advance_date
+                                delivery_date = po.delivery_date
+                                advance_date_formatted = 'N/A'
+                                if advance_date:
+                                    if isinstance(advance_date, str):
+                                        advance_date_formatted = fields.Date.from_string(
+                                            advance_date).strftime('%d-%m-%Y')
+                                    else:
+                                        advance_date_formatted = advance_date.strftime('%d-%m-%Y')
+                                delivery_date_formatted = 'N/A'
+                                if delivery_date:
+                                    if isinstance(delivery_date, str):
+                                        delivery_date_formatted = fields.Date.from_string(
+                                            delivery_date).strftime('%d-%m-%Y')
+                                    else:
+                                        delivery_date_formatted = delivery_date.strftime('%d-%m-%Y')
 
-                # Remarks
-                write_center(sheet, current_row + i, 17, 'Under Production',
-                             row_fmt)
-                write_center(sheet, current_row + i, 18, '', row_fmt)
+                                if row_span > 1 and i == sum(po_row_spans[:po_row_index]):
+                                    sheet.merge_range(current_row + i, 9,
+                                                      current_row + i + row_span - 1, 9,
+                                                      po_name, row_fmt)
+                                    sheet.merge_range(current_row + i, 10,
+                                                      current_row + i + row_span - 1, 10,
+                                                      po_date,
+                                                      date_fmt if po_date != 'N/A' else row_fmt)
+                                    sheet.merge_range(current_row + i, 12,
+                                                      current_row + i + row_span - 1, 12,
+                                                      total_price, order_currency_format)
+                                    sheet.merge_range(current_row + i, 13,
+                                                      current_row + i + row_span - 1, 13,
+                                                      total_gst, order_currency_format)
+                                    sheet.merge_range(current_row + i, 14,
+                                                      current_row + i + row_span - 1, 14,
+                                                      advance_amount, order_currency_format)
+                                    sheet.merge_range(current_row + i, 15,
+                                                      current_row + i + row_span - 1, 15,
+                                                      advance_date_formatted,
+                                                      date_fmt if advance_date_formatted != 'N/A' else row_fmt)
+                                    sheet.merge_range(current_row + i, 16,
+                                                      current_row + i + row_span - 1, 16,
+                                                      delivery_date_formatted,
+                                                      date_fmt if delivery_date_formatted != 'N/A' else row_fmt)
+                                elif row_span == 1:
+                                    sheet.write(current_row + i, 9, po_name, row_fmt)
+                                    sheet.write(current_row + i, 10, po_date,
+                                                date_fmt if po_date != 'N/A' else row_fmt)
+                                    sheet.write(current_row + i, 12, total_price, order_currency_format)
+                                    sheet.write(current_row + i, 13, total_gst, order_currency_format)
+                                    sheet.write(current_row + i, 14, advance_amount, order_currency_format)
+                                    sheet.write(current_row + i, 15, advance_date_formatted,
+                                                date_fmt if advance_date_formatted != 'N/A' else row_fmt)
+                                    sheet.write(current_row + i, 16, delivery_date_formatted,
+                                                date_fmt if delivery_date_formatted != 'N/A' else row_fmt)
 
-            if max_rows_per_order > 1:
-                safe_merge(sheet, row, 1, row + max_rows_per_order - 1, 1,
-                           current_si_no, row_fmt)
-                safe_merge(sheet, row, 2, row + max_rows_per_order - 1, 2,
-                           full_name, row_fmt)
-                safe_merge(sheet, row, 3, row + max_rows_per_order - 1, 3,
-                           account_name, row_fmt)
-                safe_merge(sheet, row, 7, row + max_rows_per_order - 1, 7,
-                           order.name, row_fmt)
-                if order.date_order:
-                    quote_date = fields.Date.from_string(
-                        order.date_order) if isinstance(order.date_order,
-                                                        str) else order.date_order
-                    quote_date = quote_date.strftime('%d-%m-%Y')
-                    safe_merge(sheet, row, 8, row + max_rows_per_order - 1, 8,
-                               quote_date, date_fmt)
-                else:
-                    safe_merge(sheet, row, 8, row + max_rows_per_order - 1, 8,
-                               '', row_fmt)
-                if po_count == 0:
-                    safe_merge(sheet, row, 9, row + max_rows_per_order - 1, 9,
-                               'N/A', row_fmt)
-                    safe_merge(sheet, row, 10, row + max_rows_per_order - 1, 10,
-                               'N/A', row_fmt)
-                    safe_merge(sheet, row, 12, row + max_rows_per_order - 1, 12,
-                               0.0, order_currency_format)
-                    safe_merge(sheet, row, 13, row + max_rows_per_order - 1, 13,
-                               0.0, order_currency_format)
-                    safe_merge(sheet, row, 14, row + max_rows_per_order - 1, 14,
-                               0.0, order_currency_format)
-                    safe_merge(sheet, row, 15, row + max_rows_per_order - 1, 15,
-                               'N/A', date_fmt)
-                    safe_merge(sheet, row, 16, row + max_rows_per_order - 1, 16,
-                               'N/A', date_fmt)
-                safe_merge(sheet, row, 17, row + max_rows_per_order - 1, 17,
-                           'Under Production', row_fmt)
-                safe_merge(sheet, row, 18, row + max_rows_per_order - 1, 18, '',
-                           row_fmt)
+                                if i == sum(po_row_spans[:po_row_index]):
+                                    grand_total_price += total_price
+                                    grand_total_gst += total_gst
+                                    grand_total_advance += advance_amount
 
-            row += max_rows_per_order
-            si_no += 1
+                                if i == sum(po_row_spans[:po_row_index + 1]) - 1:
+                                    po_row_index += 1
+                            else:
+                                sheet.write(current_row + i, 9, '', row_fmt)
+                                sheet.write(current_row + i, 10, '', date_fmt)
+                                sheet.write(current_row + i, 12, '', order_currency_format)
+                                sheet.write(current_row + i, 13, '', order_currency_format)
+                                sheet.write(current_row + i, 14, '', order_currency_format)
+                                sheet.write(current_row + i, 15, '', date_fmt)
+                                sheet.write(current_row + i, 16, '', date_fmt)
+                        else:
+                            sheet.write(current_row + i, 9, '', row_fmt)
+                            sheet.write(current_row + i, 10, '', date_fmt)
+                            sheet.write(current_row + i, 12, '', order_currency_format)
+                            sheet.write(current_row + i, 13, '', order_currency_format)
+                            sheet.write(current_row + i, 14, '', order_currency_format)
+                            sheet.write(current_row + i, 15, '', date_fmt)
+                            sheet.write(current_row + i, 16, '', date_fmt)
+
+                    # Remarks
+                    if i == 0:
+                        sheet.write(current_row + i, 17, 'Under Production', row_fmt)
+                        sheet.write(current_row + i, 18, '', row_fmt)
+
+                # Merge common columns for the entire order if needed
+                if max_rows_per_order > 1:
+                    # Merge SI No
+                    sheet.merge_range(row, 1, row + max_rows_per_order - 1, 1,
+                                      current_si_no, row_fmt)
+
+                    # Merge customer and account name
+                    sheet.merge_range(row, 2, row + max_rows_per_order - 1, 2,
+                                      full_name, row_fmt)
+                    sheet.merge_range(row, 3, row + max_rows_per_order - 1, 3,
+                                      account_name, row_fmt)
+
+                    # Merge quote info
+                    sheet.merge_range(row, 7, row + max_rows_per_order - 1, 7,
+                                      order.name, row_fmt)
+                    if order.date_order:
+                        quote_date = fields.Date.from_string(
+                            order.date_order) if isinstance(order.date_order,
+                                                            str) else order.date_order
+                        quote_date = quote_date.strftime('%d-%m-%Y')
+                        sheet.merge_range(row, 8, row + max_rows_per_order - 1, 8,
+                                          quote_date, date_fmt)
+                    else:
+                        sheet.merge_range(row, 8, row + max_rows_per_order - 1, 8,
+                                          '', row_fmt)
+
+                    # Merge remarks
+                    sheet.merge_range(row, 17, row + max_rows_per_order - 1, 17,
+                                      'Under Production', row_fmt)
+                    sheet.merge_range(row, 18, row + max_rows_per_order - 1, 18,
+                                      '', row_fmt)
+
+                row += max_rows_per_order
+                si_no += 1 if order_idx_in_group == 0 else 0
 
         currency_format = get_currency_format(workbook, currency, is_total=True)
         total_qty_format = workbook.add_format({
@@ -1658,7 +1655,6 @@ class EramSaleOrderReport(models.TransientModel):
         sheet.merge_range(f'D{row}:D{row + 1}', grand_total_advance, total_advance_payment_format)
 
         row += 3
-
 
         note_format = workbook.add_format({
             'bold': True,

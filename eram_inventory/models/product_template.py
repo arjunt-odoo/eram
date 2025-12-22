@@ -6,6 +6,7 @@ class ProductTemplate(models.Model):
     _inherit = 'product.template'
 
     e_categ_ids = fields.Many2many("eram.categ")
+    e_allow_inspection = fields.Boolean("Allow Inspection", default=False)
 
     def _get_leaf_categories(self):
         """Get all leaf categories from selected e_categ_ids"""

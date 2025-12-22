@@ -19,6 +19,9 @@
                         name="action_create_eram_variants"
                         invisible="not e_categ_ids"/>
             </xpath>
+            <field name="invoice_policy" position="after">
+                <field name="e_allow_inspection"/>
+            </field>
         </field>
     </record>
 </odoo>

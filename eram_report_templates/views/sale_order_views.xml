@@ -17,6 +17,9 @@
             <xpath expr="//group[@name='order_details']" position="after">
                 <group>
                     <field name="e_ref" readonly="state == 'sale'"/>
+                    <field name="e_sale_id" invisible="1"/>
+                    <field name="e_sale_ids" domain="[('e_sale_id', '=', False)]"
+                           widget="many2many_tags" invisible="e_sale_id"/>
                 </group>
             </xpath>
             <field name="partner_id" position="after">

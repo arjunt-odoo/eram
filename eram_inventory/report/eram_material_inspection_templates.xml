@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="eram_report_material_inspection">
+        <t t-call="web.html_container">
+            <t t-set="show_red_ribbon" t-value="True"/>
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.external_layout">
+                    <style>
+                        .page {
+                            font-family: "Cambria", serif;
+                        }
+                        p, span, li, td {
+                            font-size: 9pt;
+                            font-weight: bold;
+                        }
+                        .table-bordered {
+                            border: 1px solid black;
+                            border-collapse: collapse;
+                            width: 100%;
+                        }
+                        .table-bordered th,
+                        .table-bordered td {
+                            border: 1px solid black;
+                            padding: 5px;
+                        }
+                    </style>
+                    <div class="page">
+                        <div class="text-center">
+                            <h3>
+                                <u>MATERIAL INSPECTION REPORT</u>
+                            </h3>
+                        </div>
+                        <div class="text-end">
+                            <span>Doc NO:
+                                <span t-field="doc.name"/>
+                            </span>
+                        </div>
+                        <div class="text-end">
+                            <span>Inspected Date:
+                                <span t-field="doc.inspected_date"/>
+                            </span>
+                        </div>
+                        <table class="table table-bordered">
+                            <tbody>
+                                <tr>
+                                    <th colspan="3" rowspan="4" style="padding-left: 5px;"><strong>Supplier Name: </strong><span t-field="doc.partner_id"/></th>
+                                    <th colspan="6" rowspan="4"><strong>Project Code: </strong><span t-field="doc.project_code"/></th>
+                                    <th><strong>Date of item Receival in Inventory</strong></th>
+                                    <th><span t-field="doc.date_received"/></th>
+                                </tr>
+                                <tr>
+                                    <th style="padding-left: 5px;"><strong>P.R. No</strong></th>
+                                    <th><span t-field="doc.pr_no"/></th>
+                                </tr>
+                                <tr>
+                                    <th style="padding-left: 5px;"><strong>P.O.No</strong></th>
+                                    <th><span t-field="doc.purchase_id"/></th>
+                                </tr>
+                                <tr>
+                                    <th style="padding-left: 5px;"><strong>Invoice/DC No</strong></th>
+                                    <th><span t-field="doc.bill_id"/></th>
+                                </tr>
+                                <tr>
+                                    <td style="padding-left: 5px;">SL No.</td>
+                                    <td>Manufacturer</td>
+                                    <td>Part No.</td>
+                                    <td>Part Description</td>
+                                    <td>Visual Inspection (Pass/Fail)</td>
+                                    <td>Dimensional Inspection (Pass/Fail)</td>
+                                    <td>Functional Inspection(Pass/Fail)</td>
+                                    <td>Remarks</td>
+                                    <td>Quantity Accepted</td>
+                                    <td>Quantity Rejected</td>
+                                    <td>Reason for Rejection</td>
+                                </tr>
+                                <t t-foreach="doc.line_ids" t-as="line">
+                                    <tr>
+                                        <td style="padding-left: 5px;"><span t-field="line.e_si_no"/></td>
+                                        <td><span t-field="line.e_make"/></td>
+                                        <td><span t-field="line.e_part_no"/></td>
+                                        <td><span t-field="line.e_description"/></td>
+                                        <td>
+                                            <t t-if="line.e_visual_inspection">
+                                                Pass
+                                            </t>
+                                            <t t-else="">
+                                                Fail
+                                            </t>
+                                        </td>
+                                        <td>
+                                            <t t-if="line.e_dimensional_inspection">
+                                                Pass
+                                            </t>
+                                            <t t-else="">
+                                                Fail
+                                            </t>
+                                        </td>
+                                        <td>
+                                            <t t-if="line.e_functional_inspection">
+                                                Pass
+                                            </t>
+                                            <t t-else="">
+                                                Fail
+                                            </t>
+                                        </td>
+                                        <td><span t-field="line.e_remarks"/></td>
+                                        <td><span t-field="line.e_qty_accepted"/></td>
+                                        <td><span t-field="line.e_qty_rejected"/></td>
+                                        <td><span t-field="line.e_rejection_reason"/></td>
+                                    </tr>
+                                </t>
+                                <tr>
+                                    <td style="padding-left: 5px;" colspan="3">Visually Inspected by(Inventory)</td>
+                                    <td colspan="3">Inspected by</td>
+                                    <td colspan="3">Verified by</td>
+                                    <td colspan="2">Approved by</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding-left: 5px;" colspan="3">
+                                        Name:<br/>
+                                        Sign:<br/>
+                                    </td>
+                                    <td colspan="3">
+                                        Name:<br/>
+                                        Sign:<br/>
+                                    </td>
+                                    <td colspan="3">
+                                        Name:<br/>
+                                        Sign:<br/>
+                                    </td>
+                                    <td colspan="2">
+                                        Name:<br/>
+                                        Sign:<br/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding-left: 5px;" colspan="3">
+                                        Date:<br/>
+                                    </td>
+                                    <td colspan="3">
+                                        Date:<br/>
+                                    </td>
+                                    <td colspan="3">
+                                        Date:<br/>
+                                    </td>
+                                    <td colspan="2">
+                                        Date:<br/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

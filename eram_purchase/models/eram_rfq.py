@@ -47,6 +47,7 @@ class EramRfqLine(models.Model):
     uom = fields.Many2one("uom.uom")
     qty = fields.Float("Quantity")
     rfq_id = fields.Many2one("eram.rfq")
+    purchase_req_line_id = fields.Many2one("eram.purchase.req.line")
 
     @api.depends('rfq_id', 'rfq_id.line_ids')
     def _compute_sl_no(self):

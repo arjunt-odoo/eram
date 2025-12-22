@@ -14,5 +14,11 @@ class PurchaseOrder(models.Model):
             'state': 'sent'
         })
 
+class PurchaseOrderLine(models.Model):
+    _inherit = 'purchase.order.line'
+
+    e_supplier_quote_line_id = fields.Many2one("eram.supplier.quote.line")
+
+
 
 

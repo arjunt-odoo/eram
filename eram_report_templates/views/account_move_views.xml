@@ -20,6 +20,8 @@
                         <field name="invoice_date" string="Bill Date"
                                readonly="state == 'posted'"
                                invisible="move_type in ('out_invoice', 'out_refund', 'out_receipt')"/>
+                        <field name="e_invoice_received_date"
+                               invisible="move_type in ('out_invoice', 'out_refund', 'out_receipt')"/>
                         <label for="partner_id" string="Supplier Details"/>
                         <field name="partner_id" widget="res_partner_many2one" nolabel="1"
                                context="{'res_partner_search_mode': (context.get('default_move_type', 'entry') in ('out_invoice', 'out_refund', 'out_receipt') and 'customer') or (context.get('default_move_type', 'entry') in ('in_invoice', 'in_refund', 'in_receipt') and 'supplier') or False, 'show_address': 1, 'default_is_company': True, 'show_vat': True}"

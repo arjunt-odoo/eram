@@ -7,14 +7,18 @@ class StockPicking(models.Model):
 
     e_grn_id = fields.Many2one("eram.grn", string="Grn. No:")
     e_bill_id = fields.Many2one("account.move", "Invoice No:")
-    e_pr_no = fields.Char("PR. No:", related="purchase_id.e_supplier_quote_id.rfq_id.eram_pr_id.pr_number")
-    e_project_code = fields.Char("Project Code",  related="purchase_id.e_supplier_quote_id.rfq_id.eram_pr_id.project_code")
-    e_invoice_date = fields.Date("Invoice Date", related="e_bill_id.invoice_date")
-    e_invoice_received_date = fields.Date("Invoice Received Date", related="e_bill_id.invoice_date")
+    e_pr_no = fields.Char("PR. No:", related="purchase_id.e_supplier_quote_id.rfq_id.eram_pr_id.pr_number",
+                          store=True, readonly=False)
+    e_project_code = fields.Char("Project Code", readonly=False, store=True,
+                                 related="purchase_id.e_supplier_quote_id.rfq_id.eram_pr_id.project_code")
+    e_invoice_date = fields.Date("Invoice Date", related="e_bill_id.invoice_date", readonly=False)
+    e_invoice_received_date = fields.Date("Invoice Received Date", related="e_bill_id.e_invoice_received_date",
+                                          readonly=False)
     currency_id = fields.Many2one("res.currency",
                                   related="purchase_id.currency_id")
     e_total_untaxed = fields.Monetary("Sub Total", compute="_compute_amount", store=True)
     e_amount_total = fields.Monetary("Grand Total", compute="_compute_amount", store=True)
+    e_material_inspection_id = fields.Many2one("eram.material.inspection", string="Material Inspection")
 
     @api.depends('move_ids_without_package.e_total_untaxed',
                  'move_ids_without_package.e_price_total')
@@ -33,25 +37,26 @@ class StockMove(models.Model):
                                related="picking_id.e_grn_id", store=True)
     e_si_no = fields.Integer("SI. NO", default=1, store=True,
                              compute="_compute_e_si_no")
-    e_item_code = fields.Html("ITEM CODE", readonly=False)
-    e_description = fields.Html("DESCRIPTION")
-    e_part_no = fields.Html("PART NO.")
-    e_make = fields.Html("MAKE")
-    e_uom_id = fields.Many2one("uom.uom", "UOM")
-    e_price_unit = fields.Monetary("UNIT PRICE")
+    e_item_code = fields.Html("ITEM CODE", related="purchase_line_id.e_supplier_quote_line_id.item_code", readonly=False)
+    e_description = fields.Html("DESCRIPTION", related="purchase_line_id.e_description")
+    e_part_no = fields.Html("PART NO.", related="purchase_line_id.e_supplier_quote_line_id.part_no", readonly=False)
+    e_make = fields.Html("MAKE", related="purchase_line_id.e_supplier_quote_line_id.make", readonly=False)
+    e_uom_id = fields.Many2one("uom.uom", "UOM", related="purchase_line_id.product_uom",
+                               store=True, readonly=False)
+    e_price_unit = fields.Float("UNIT PRICE", related="purchase_line_id.price_unit")
     e_total_untaxed = fields.Monetary(compute="_compute_amount", store=True)
-    e_tax_ids = fields.Many2many("account.tax", string="TAX")
+    e_tax_ids = fields.Many2many("account.tax", string="TAX", related="purchase_line_id.taxes_id")
     e_price_total = fields.Monetary("TOTAL PRICE",store=True,
                                     compute="_compute_amount")
     e_discrepancy = fields.Html("DISCREPANCY DETAILS")
-    e_received_status = fields.Selection([("success", "Success"),
-                                          ("less_qty", "Less Quantity"),
-                                          ("wrong_part", "Wrong Part"),
-                                          ("damaged", "Damaged Material")],
-                                         string="RECEIVED STATUS")
+    e_receival_status = fields.Many2one("eram.receival.status", "Received Status")
     e_qty_accepted = fields.Float("Quantity Accepted")
     e_qty_rejected = fields.Float("Quantity Received")
     e_remarks = fields.Html("Remarks")
+    e_visual_inspection = fields.Boolean(string="Visual Inspection")
+    e_dimensional_inspection = fields.Boolean(string="Dimensional Inspection")
+    e_functional_inspection = fields.Boolean(string="Functional Inspection")
+    e_rejection_reason = fields.Char(string="Reason for Rejection")
 
     @api.depends('picking_id', 'picking_id.move_ids')
     def _compute_e_si_no(self):
@@ -60,7 +65,7 @@ class StockMove(models.Model):
                 line.e_si_no = index
 
     @api.depends('product_id', 'product_id.lst_price', 'e_price_unit',
-                 'e_total_untaxed', 'e_tax_ids')
+                 'e_total_untaxed', 'e_tax_ids', 'quantity', 'product_uom_qty')
     def _compute_amount(self):
         for rec in self:
             rec.e_total_untaxed = rec.quantity * rec.e_price_unit
