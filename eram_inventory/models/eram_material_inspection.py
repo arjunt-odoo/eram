@@ -4,6 +4,7 @@ from odoo import fields, models
 
 class EramMaterialInspection(models.Model):
     _name = "eram.material.inspection"
+    _description = "Eram Material Inspection"
 
     name = fields.Char("Doc No")
     inspected_date = fields.Date("Inspected Date")

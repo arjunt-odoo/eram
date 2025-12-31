@@ -4,6 +4,7 @@ from odoo import fields, models
 
 class EramGrn(models.Model):
     _name = "eram.grn"
+    _description = "Eram GRN"
 
     name = fields.Char()
     partner_id = fields.Many2one("res.partner", related="picking_id.partner_id", readonly=False)

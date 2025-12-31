@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
-from odoo import fields, models
+from odoo import  models
 
 
-class EramCateg(models.Model):
+class ProductTemplateAttributeValue(models.Model):
     _inherit = "product.template.attribute.value"
-    _rec_name = 'name'
+
+    def _compute_display_name(self):
+        for value in self:
+            value.display_name = value.name

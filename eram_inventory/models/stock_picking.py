@@ -7,11 +7,12 @@ class StockPicking(models.Model):
 
     e_grn_id = fields.Many2one("eram.grn", string="Grn. No:")
     e_bill_id = fields.Many2one("account.move", "Invoice No:")
+    e_bill_ids = fields.Many2many("account.move", compute="_compute_e_bill_ids")
     e_pr_no = fields.Char("PR. No:", related="purchase_id.e_supplier_quote_id.rfq_id.eram_pr_id.pr_number",
                           store=True, readonly=False)
     e_project_code = fields.Char("Project Code", readonly=False, store=True,
                                  related="purchase_id.e_supplier_quote_id.rfq_id.eram_pr_id.project_code")
-    e_invoice_date = fields.Date("Invoice Date", related="e_bill_id.invoice_date", readonly=False)
+    e_invoice_date = fields.Date("Invoice Date", related="e_bill_id.invoice_date")
     e_invoice_received_date = fields.Date("Invoice Received Date", related="e_bill_id.e_invoice_received_date",
                                           readonly=False)
     currency_id = fields.Many2one("res.currency",
@@ -26,6 +27,10 @@ class StockPicking(models.Model):
         for rec in self:
             rec.e_total_untaxed = sum(rec.move_ids_without_package.mapped('e_total_untaxed'))
             rec.e_amount_total = sum(rec.move_ids_without_package.mapped('e_price_total'))
+
+    def _compute_e_bill_ids(self):
+        for rec in self:
+            rec.e_bill_ids = rec.purchase_id.invoice_ids
 
 
 class StockMove(models.Model):

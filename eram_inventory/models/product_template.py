@@ -5,8 +5,9 @@ from odoo import models, fields
 class ProductTemplate(models.Model):
     _inherit = 'product.template'
 
-    e_categ_ids = fields.Many2many("eram.categ")
+    e_categ_ids = fields.One2many("eram.categ", "product_tmpl_id")
     e_allow_inspection = fields.Boolean("Allow Inspection", default=False)
+    is_storable = fields.Boolean(default=True)
 
     def _get_leaf_categories(self):
         """Get all leaf categories from selected e_categ_ids"""

@@ -7,7 +7,8 @@
         <field name="arch" type="xml">
             <xpath expr="//div[hasclass('o_td_label')]" position="before">
                 <field name="e_grn_id" invisible="picking_type_code != 'incoming'" domain="[('picking_id', '=', id)]"/>
-                <field name="e_bill_id" invisible="picking_type_code != 'incoming'"/>
+                <field name="e_bill_id" invisible="picking_type_code != 'incoming'" domain="[('id', 'in', e_bill_ids)]"/>
+                <field name="e_bill_ids" invisible="1"/>
                 <field name="purchase_id" string="P.O. No:" invisible="picking_type_code != 'incoming'"/>
                 <field name="e_pr_no" invisible="picking_type_code != 'incoming'"/>
                 <field name="e_project_code" invisible="picking_type_code != 'incoming'"/>
