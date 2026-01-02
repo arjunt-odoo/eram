@@ -7,7 +7,6 @@ class StockPicking(models.Model):
 
     e_grn_id = fields.Many2one("eram.grn", string="Grn. No:")
     e_bill_id = fields.Many2one("account.move", "Invoice No:")
-    e_bill_ids = fields.Many2many("account.move", compute="_compute_e_bill_ids")
     e_pr_no = fields.Char("PR. No:", related="purchase_id.e_supplier_quote_id.rfq_id.eram_pr_id.pr_number",
                           store=True, readonly=False)
     e_project_code = fields.Char("Project Code", readonly=False, store=True,
