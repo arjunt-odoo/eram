@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_department_form_inherit_eram" model="ir.ui.view">
+        <field name="name">hr.department.form</field>
+        <field name="model">hr.department</field>
+        <field name="inherit_id" ref="hr.view_department_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('oe_button_box')]" position="inside">
+                <button class="oe_stat_button" name="action_view_requested_mo" type="object" icon="fa-solid fa-bell">
+                    <field string="Requested Outwards" name="eram_outward_req_count" widget="statinfo"/>
+                </button>
+                <button class="oe_stat_button" name="action_view_approved_mo" type="object" icon="fa-regular fa-thumbs-up">
+                    <field string="Approved Outwards" name="eram_outward_app_count" widget="statinfo"/>
+                </button>
+            </xpath>
+        </field>
+    </record>
+</odoo>

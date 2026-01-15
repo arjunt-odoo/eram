@@ -11,6 +11,7 @@
                 <field name="purchase_id" string="P.O. No:" invisible="picking_type_code != 'incoming'"/>
                 <field name="e_pr_no" invisible="picking_type_code != 'incoming'"/>
                 <field name="e_project_code" invisible="picking_type_code != 'incoming'"/>
+                <field name="e_project_id" invisible="picking_type_code != 'incoming'"/>
                 <field name="currency_id" invisible="1"/>
             </xpath>
             <xpath expr="//div[hasclass('o_td_label')]/label[@for='partner_id'][2]" position="replace">

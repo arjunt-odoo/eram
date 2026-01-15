@@ -11,7 +11,8 @@ class EramPurchaseReq(models.Model):
     pr_number = fields.Char("PR No")
     pr_date = fields.Date("PR Date")
     closing_date = fields.Date()
-    project_code = fields.Char()
+    project_code = fields.Char("Project Code")
+    project_id = fields.Many2one("project.project")
     line_ids = fields.One2many("eram.purchase.req.line", "request_id")
     rfq_ids = fields.One2many("eram.rfq", "eram_pr_id")
 

@@ -356,6 +356,10 @@
                                 </tr>
                             </table>
                         </div>
+                        <div>
+                            <strong>Total value: </strong><span t-field="doc.amount_total_words"/>
+                        </div>
+                        <br/>
 
                         <!-- Commercial Terms (Annexure 2) -->
                         <div class="mb-4">

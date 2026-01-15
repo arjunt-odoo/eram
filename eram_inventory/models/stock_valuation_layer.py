@@ -5,4 +5,4 @@ class StockValuationLayer(models.Model):
     _inherit = 'stock.valuation.layer'
 
     department_id = fields.Many2one("hr.department", related="stock_move_id.department_id", readonly=False)
-    lot_id = fields.Many2one(string="Project Code")
+    project_id = fields.Many2one("project.project")

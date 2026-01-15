@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="eram_report_material_withdrawal">
+        <t t-call="web.html_container">
+            <t t-set="show_red_ribbon" t-value="True"/>
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.external_layout">
+                    <style>
+                        .page {
+                            font-family: "Cambria", serif;
+                        }
+                        p, span, li, td {
+                            font-size: 9pt;
+                            font-weight: bold;
+                        }
+                        .table-bordered {
+                            border: 1px solid black;
+                            border-collapse: collapse;
+                            width: 100%;
+                        }
+                        .table-bordered th,
+                        .table-bordered td {
+                            border: 1px solid black;
+                            padding: 5px;
+                        }
+                    </style>
+                    <div class="page">
+                        <div>
+                            <h5 class="text-end" t-field="doc.name"/>
+                        </div>
+                        <div class="text-center">
+                            <h3>
+                                <u>MATERIAL WITHDRAWAL FORM</u>
+                            </h3>
+                        </div>
+                        <div class="text-end">
+                            <span>Date:
+                                <span t-field="doc.e_date"/>
+                            </span>
+                        </div>
+                        <div class="text-end">
+                            <span>Project Code:
+                                <span t-field="doc.e_project_code"/>
+                            </span>
+                        </div>
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th class="text-center" style="padding-left: 5px;">SI. No.</th>
+                                    <th class="text-center">Item No.</th>
+                                    <th class="text-center">Description</th>
+                                    <th class="text-center">UOM</th>
+                                    <th class="text-center">Qty</th>
+                                    <th class="text-center">Required Date</th>
+                                    <th class="text-center" style="padding-right: 5px;">Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="doc.move_raw_ids" t-as="line">
+                                    <tr>
+                                        <td class="text-center" style="padding-left: 5px;"><span t-field="line.e_si_no"/></td>
+                                        <td class="text-center"><span t-field="line.product_id"/></td>
+                                        <td class="text-center"><span t-field="line.e_description_out"/></td>
+                                        <td class="text-center"><span t-field="line.e_uom_out_id"/></td>
+                                        <td class="text-center"><span t-field="line.e_required_date"/></td>
+                                        <td class="text-center"><span t-field="line.e_required_date"/></td>
+                                        <td class="text-center" style="padding-right: 5px;"><span t-field="line.e_remarks"/></td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                        <div>
+                            <div class="row">
+                               Justification: <span t-field="doc.e_justification"/>
+                            </div>
+                            <br/>
+                            <div class="row">
+                                <div class="col-4">
+                                    Requested By: <span t-field="doc.e_requested_by"/>
+                                </div>
+                                <div class="col-4">
+                                    Dept: <span t-field="doc.e_requested_by_dept_id"/>
+                                </div>
+                                <div class="col-4">
+                                    Signature:
+                                </div>
+                            </div>
+                            <br/>
+                            <div class="row">
+                                <div class="col-4">
+                                    Approved By: <span t-field="doc.e_approved_by"/>
+                                </div>
+                                <div class="col-4">
+                                    Dept: <span t-field="doc.e_approved_by_dept_id"/>
+                                </div>
+                                <div class="col-4">
+                                    Signature:
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

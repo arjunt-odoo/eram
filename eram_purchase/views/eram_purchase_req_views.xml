@@ -23,6 +23,7 @@
                             <field name="pr_date"/>
                             <field name="closing_date"/>
                             <field name="project_code"/>
+                            <field name="project_id"/>
                         </group>
                     </group>
                     <notebook>
@@ -53,6 +54,7 @@
                 <field name="pr_date"/>
                 <field name="closing_date"/>
                 <field name="project_code"/>
+                <field name="project_id"/>
             </list>
         </field>
     </record>

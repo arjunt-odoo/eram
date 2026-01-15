@@ -14,6 +14,7 @@
                             <field name="name"/>
                             <field name="partner_id"/>
                             <field name="project_code"/>
+                            <field name="project_id"/>
                             <field name="pr_no"/>
                             <field name="purchase_id"/>
                         </group>

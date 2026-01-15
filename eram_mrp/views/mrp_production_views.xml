@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="mrp_production_form_view_inherit_eram" model="ir.ui.view">
+        <field name="name">mrp.production.form.inherit.eram</field>
+        <field name="model">mrp.production</field>
+        <field name="inherit_id" ref="mrp.mrp_production_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//label[@for='date_start']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//field[@name='date_start']/ancestor::div[hasclass('o_row')][1]" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//label[@for='date_start']" position="before">
+                <field name="e_date"/>
+            </xpath>
+            <xpath expr="//div[@name='bom_div']" position="after">
+                <field name="e_requested_by"/>
+                <field name="e_approved_by"/>
+            </xpath>
+            <field name="user_id" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </field>
+            <field name="user_id" position="after">
+                <field name="project_id"/>
+                <field name="e_justification"/>
+                <field name="e_requested_by_dept_id" force_save="1"/>
+                <field name="e_approved_by_dept_id" force_save="1"/>
+            </field>
+            <xpath expr="//notebook/page[@name='components']/field[@name='move_raw_ids']/list/field[@name='product_id']" position="attributes">
+                <attribute name="string">Item Code No.</attribute>
+            </xpath>
+            <xpath expr="//notebook/page[@name='components']/field[@name='move_raw_ids']/list/field[@name='product_id']" position="before">
+                <field name="e_si_no"/>
+            </xpath>
+            <xpath expr="//notebook/page[@name='components']/field[@name='move_raw_ids']/list/field[@name='product_id']" position="after">
+                <field name="e_description_out"/>
+                <field name="e_part_no_out"/>
+                <field name="e_uom_out_id"/>
+            </xpath>
+            <xpath expr="//notebook/page[@name='components']/field[@name='move_raw_ids']/list/field[@name='product_qty']" position="before">
+                <field name="e_required_date"/>
+                <field name="e_remarks"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="edit_project_inherit_eram_purhcase" model="ir.ui.view">
+        <field name="name">project.project.form.inherit.eram.purhcase</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.edit_project"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page name="purchase_request" string="Purchase Requests">
+                    <field name="eram_purchase_request_ids"/>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

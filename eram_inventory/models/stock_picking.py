@@ -11,6 +11,8 @@ class StockPicking(models.Model):
                           store=True, readonly=False)
     e_project_code = fields.Char("Project Code", readonly=False, store=True,
                                  related="purchase_id.e_supplier_quote_id.rfq_id.eram_pr_id.project_code")
+    e_project_id = fields.Many2one("project.project", string="Project", store=True, readonly=False,
+                                   related="purchase_id.e_supplier_quote_id.rfq_id.eram_pr_id.project_id")
     e_invoice_date = fields.Date("Invoice Date", related="e_bill_id.invoice_date")
     e_invoice_received_date = fields.Date("Invoice Received Date", related="e_bill_id.e_invoice_received_date",
                                           readonly=False)
@@ -42,7 +44,7 @@ class StockMove(models.Model):
     e_si_no = fields.Integer("SI. NO", default=1, store=True,
                              compute="_compute_e_si_no")
     e_item_code = fields.Html("ITEM CODE", related="purchase_line_id.e_supplier_quote_line_id.item_code", readonly=False)
-    e_description = fields.Html("DESCRIPTION", related="purchase_line_id.e_description")
+    e_description = fields.Html("DESCRIPTION", related="purchase_line_id.e_description", readonly=False)
     e_part_no = fields.Html("PART NO.", related="purchase_line_id.e_supplier_quote_line_id.part_no", readonly=False)
     e_make = fields.Html("MAKE", related="purchase_line_id.e_supplier_quote_line_id.make", readonly=False)
     e_uom_id = fields.Many2one("uom.uom", "UOM", related="purchase_line_id.product_uom",
