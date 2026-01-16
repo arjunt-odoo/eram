@@ -5,27 +5,17 @@
         <field name="model">mrp.production</field>
         <field name="inherit_id" ref="mrp.mrp_production_form_view"/>
         <field name="arch" type="xml">
-            <xpath expr="//label[@for='date_start']" position="attributes">
-                <attribute name="invisible">1</attribute>
-            </xpath>
-            <xpath expr="//field[@name='date_start']/ancestor::div[hasclass('o_row')][1]" position="attributes">
-                <attribute name="invisible">1</attribute>
-            </xpath>
             <xpath expr="//label[@for='date_start']" position="before">
                 <field name="e_date"/>
-            </xpath>
-            <xpath expr="//div[@name='bom_div']" position="after">
-                <field name="e_requested_by"/>
-                <field name="e_approved_by"/>
             </xpath>
             <field name="user_id" position="attributes">
                 <attribute name="invisible">1</attribute>
             </field>
-            <field name="user_id" position="after">
+            <xpath expr="//group/group" position="inside">
                 <field name="project_id"/>
+            </xpath>
+            <field name="user_id" position="after">
                 <field name="e_justification"/>
-                <field name="e_requested_by_dept_id" force_save="1"/>
-                <field name="e_approved_by_dept_id" force_save="1"/>
             </field>
             <xpath expr="//notebook/page[@name='components']/field[@name='move_raw_ids']/list/field[@name='product_id']" position="attributes">
                 <attribute name="string">Item Code No.</attribute>
@@ -41,6 +31,18 @@
             <xpath expr="//notebook/page[@name='components']/field[@name='move_raw_ids']/list/field[@name='product_qty']" position="before">
                 <field name="e_required_date"/>
                 <field name="e_remarks"/>
+            </xpath>
+            <xpath expr="//notebook" position="before">
+                <group>
+                    <group>
+                        <field name="e_requested_by"/>
+                        <field name="e_approved_by"/>
+                    </group>
+                    <group>
+                        <field name="e_requested_by_dept_id" force_save="1"/>
+                        <field name="e_approved_by_dept_id" force_save="1"/>
+                    </group>
+                </group>
             </xpath>
         </field>
     </record>
