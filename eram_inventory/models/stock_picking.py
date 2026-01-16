@@ -24,13 +24,14 @@ class StockPicking(models.Model):
     e_total_untaxed = fields.Monetary("Sub Total", compute="_compute_amount", store=True)
     e_amount_total = fields.Monetary("Grand Total", compute="_compute_amount", store=True)
     e_material_inspection_id = fields.Many2one("eram.material.inspection", string="Material Inspection")
+    e_additional_charges = fields.Float("Additional Charges")
 
     @api.depends('move_ids_without_package.e_total_untaxed',
-                 'move_ids_without_package.e_price_total')
+                 'move_ids_without_package.e_price_total', 'e_additional_charges')
     def _compute_amount(self):
         for rec in self:
-            rec.e_total_untaxed = sum(rec.move_ids_without_package.mapped('e_total_untaxed'))
-            rec.e_amount_total = sum(rec.move_ids_without_package.mapped('e_price_total'))
+            rec.e_total_untaxed = sum(rec.move_ids_without_package.mapped('e_total_untaxed')) + rec.e_additional_charges
+            rec.e_amount_total = sum(rec.move_ids_without_package.mapped('e_price_total')) + rec.e_additional_charges
 
     def _compute_e_bill_ids(self):
         for rec in self:

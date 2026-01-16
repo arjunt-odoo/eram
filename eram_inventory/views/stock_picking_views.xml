@@ -60,6 +60,15 @@
                 <div class="text-end row">
                     <div class="col-8"/>
                     <div class="col-2 text-start">
+                        <label for="e_additional_charges"/>
+                    </div>
+                    <div class="col-2">
+                        <field name="e_additional_charges" widget='monetary'/>
+                    </div>
+                </div>
+                <div class="text-end row">
+                    <div class="col-8"/>
+                    <div class="col-2 text-start">
                         <label for="e_total_untaxed"/>
                     </div>
                     <div class="col-2">
