@@ -98,3 +98,12 @@ class ProductTemplate(models.Model):
                 )
                 if matching_leaf:
                     variant.e_categ_id = matching_leaf.id
+
+    def action_archive(self):
+        stock_move_ids = self.env['stock.move'].search([('product_id', 'in', self.product_variant_ids.mapped('id'))])
+        stock_move_ids.mapped('picking_id').action_archive()
+        stock_move_ids.action_archive()
+        self.env['stock.valuation.layer'].search([('product_id', 'in', self.product_variant_ids.mapped('id'))]).action_archive()
+        self.env['stock.quant'].search([('product_id', 'in', self.product_variant_ids.mapped('id'))]).action_archive()
+        self.env['stock.lot'].search([('product_id', 'in', self.product_variant_ids.mapped('id'))]).action_archive()
+        return super().action_archive()

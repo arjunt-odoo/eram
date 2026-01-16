@@ -7,6 +7,7 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='reference']" position="after">
                 <field name="department_id" string="Department" optional="show"/>
+                <field name="project_id" string="Project Code" optional="show"/>
             </xpath>
             <xpath expr="//list" position="attributes">
                 <attribute name="editable">bottom</attribute>

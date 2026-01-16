@@ -10,6 +10,7 @@
                 <field name="e_bill_id" invisible="picking_type_code != 'incoming'"/>
                 <field name="purchase_id" string="P.O. No:" invisible="picking_type_code != 'incoming'"/>
                 <field name="e_pr_no" invisible="picking_type_code != 'incoming'"/>
+                <field name="e_pr_id" invisible="picking_type_code != 'incoming'"/>
                 <field name="e_project_code" invisible="picking_type_code != 'incoming'"/>
                 <field name="e_project_id" invisible="picking_type_code != 'incoming'"/>
                 <field name="currency_id" invisible="1"/>
