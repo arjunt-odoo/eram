@@ -8,6 +8,7 @@
     'depends': ['eram_purchase', 'hr'],
     'data': [
         'security/ir.model.access.csv',
+        'views/account_move_line_views.xml',
         'views/eram_categ_views.xml',
         'views/eram_grn_views.xml',
         'views/eram_material_inspection_views.xml',

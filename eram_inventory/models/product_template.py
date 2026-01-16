@@ -107,3 +107,7 @@ class ProductTemplate(models.Model):
         self.env['stock.quant'].search([('product_id', 'in', self.product_variant_ids.mapped('id'))]).action_archive()
         self.env['stock.lot'].search([('product_id', 'in', self.product_variant_ids.mapped('id'))]).action_archive()
         return super().action_archive()
+
+    def action_view_invoice_lines(self):
+        self.ensure_one()
+        return self.product_variant_ids.action_view_invoice_lines()

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_account_move_line_list_service_product" model="ir.ui.view">
+        <field name="name">view.account.move.line.list.service.product</field>
+        <field name="model">account.move.line</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="date"/>
+                <field name="move_name"/>
+                <field name="partner_id"/>
+                <field name="price_subtotal" sum="Total"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="parent_state" widget="badge"
+                       decoration-success="parent_state == 'posted'"
+                       decoration-info="parent_state == 'draft'"/>
+            </list>
+        </field>
+    </record>
+</odoo>

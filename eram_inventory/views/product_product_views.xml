@@ -5,6 +5,14 @@
         <field name="model">product.template</field>
         <field name="inherit_id" ref="product.product_template_form_view"/>
         <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('oe_button_box')]" position="inside">
+                <button class="oe_stat_button" type="object" name="action_view_invoice_lines"
+                        invisible="type != 'service'" icon="fa-solid fa-list-ul">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_text">Invoice Lines</span>
+                    </div>
+                </button>
+            </xpath>
             <xpath expr="//page[@name='general_information']" position="after">
                 <page string="Categories">
                     <field name="e_categ_ids" domain="[('parent_id', '=', False)]">
