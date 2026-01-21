@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-from odoo import _, models
+from odoo import _, api, models
 
 
-class ProjectProject(models.Model):
-    _inherit = "project.project"
+class ProjectTask(models.Model):
+    _inherit = "project.task"
 
     def action_view_outwards(self):
         self.ensure_one()
@@ -12,5 +12,5 @@ class ProjectProject(models.Model):
             "res_model": "mrp.production",
             "name": _("Outwards"),
             "view_mode": "list,form",
-            "domain": [('e_project_id', '=', self.id)],
+            "domain": [('e_task_id', '=', self.id)],
         }

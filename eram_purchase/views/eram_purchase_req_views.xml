@@ -24,6 +24,7 @@
                             <field name="closing_date"/>
                             <field name="project_code"/>
                             <field name="project_id"/>
+                            <field name="task_id" domain="[('project_id', '=', project_id)]"/>
                         </group>
                     </group>
                     <notebook>

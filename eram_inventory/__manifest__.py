@@ -14,6 +14,7 @@
         'views/eram_material_inspection_views.xml',
         'views/product_product_views.xml',
         'views/project_project_views.xml',
+        'views/project_task_views.xml',
         'views/stock_move_views.xml',
         'views/stock_picking_views.xml',
         'views/stock_valuation_layer_views.xml',

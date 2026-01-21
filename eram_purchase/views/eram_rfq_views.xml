@@ -16,6 +16,11 @@
                                 <span class="o_stat_text">Purchase Request</span>
                             </div>
                         </button>
+                        <button class="oe_stat_button" name="action_view_po" type="object" icon="fa-pencil-square-o" invisible="not quote_ids">
+                            <div class="o_field_statinfo">
+                                <span class="o_stat_text">Purchase Orders</span>
+                            </div>
+                        </button>
                     </div>
                     <group>
                         <group>

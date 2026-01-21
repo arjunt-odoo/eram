@@ -13,8 +13,14 @@ class EramPurchaseReq(models.Model):
     closing_date = fields.Date()
     project_code = fields.Char("Project Code")
     project_id = fields.Many2one("project.project")
+    task_id = fields.Many2one("project.task")
     line_ids = fields.One2many("eram.purchase.req.line", "request_id")
     rfq_ids = fields.One2many("eram.rfq", "eram_pr_id")
+
+    @api.constrains('project_id', 'task_id')
+    def _constrain_project_id(self):
+        if self.project_id and self.task_id:
+            self.task_id.write({'project_id': self.project_id.id})
 
 
     def action_create_rfq(self):

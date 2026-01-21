@@ -11,6 +11,7 @@
         'views/hr_department_views.xml',
         'views/mrp_production_views.xml',
         'views/project_project_views.xml',
+        'views/project_task_views.xml',
         'report/eram_outward_templates.xml',
         'report/eram_outward_reports.xml',
     ],

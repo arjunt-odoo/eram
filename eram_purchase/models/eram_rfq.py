@@ -34,6 +34,16 @@ class EramPurchaseReq(models.Model):
     def print_rfq(self):
         return self.env.ref('eram_purchase.eram_rfq').report_action(self)
 
+    def action_view_po(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _("Purchase Orders"),
+            'res_model': 'purchase.order',
+            'view_mode': 'list,form',
+            'domain': [('id', 'in', self.quote_ids.purchase_id.ids)]
+        }
+
 
 class EramRfqLine(models.Model):
     _name = "eram.rfq.line"

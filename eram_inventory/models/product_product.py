@@ -18,4 +18,14 @@ class ProductProduct(models.Model):
             "domain": [('product_id', 'in', self.ids)],
         }
 
+    def action_view_stock_valuation(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "res_model": "stock.valuation.layer",
+            "name": _("Valuation"),
+            "view_mode": "list,form",
+            "domain": [('product_id', 'in', self.ids)],
+        }
+
 

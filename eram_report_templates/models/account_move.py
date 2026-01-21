@@ -9,7 +9,7 @@ _logger = logging.getLogger(__name__)
 
 class AccountMove(models.Model):
     _inherit = 'account.move'
-    _sql_constraints = [('name_unique', 'unique(name)',
+    _sql_constraints = [('name_unique', 'unique(company_id, name, partner_id)',
                          "Invoice name should be unique!")]
 
     e_transport_mode = fields.Char(string="Transport Mode")

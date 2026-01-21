@@ -16,7 +16,8 @@ class StockPicking(models.Model):
                                  related="purchase_id.e_supplier_quote_id.rfq_id.eram_pr_id.project_code")
     e_project_id = fields.Many2one("project.project", string="Project", store=True, readonly=False,
                                    related="purchase_id.e_supplier_quote_id.rfq_id.eram_pr_id.project_id")
-    e_task_id = fields.Many2one("project.task", string="Task")
+    e_task_id = fields.Many2one("project.task", string="Task", store=True, readonly=False,
+                                   related="purchase_id.e_supplier_quote_id.rfq_id.eram_pr_id.task_id")
     e_invoice_date = fields.Date("Invoice Date", related="e_bill_id.invoice_date")
     e_invoice_received_date = fields.Date("Invoice Received Date", related="e_bill_id.e_invoice_received_date",
                                           readonly=False)

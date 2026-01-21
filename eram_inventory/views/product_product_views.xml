@@ -12,6 +12,12 @@
                         <span class="o_stat_text">Invoice Lines</span>
                     </div>
                 </button>
+                <button class="oe_stat_button" type="object" name="action_view_stock_valuation"
+                        invisible="not is_storable" icon="fa-fw fa-dollar">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_text">Valuation</span>
+                    </div>
+                </button>
             </xpath>
             <xpath expr="//page[@name='general_information']" position="after">
                 <page string="Categories">

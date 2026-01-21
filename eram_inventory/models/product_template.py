@@ -111,3 +111,7 @@ class ProductTemplate(models.Model):
     def action_view_invoice_lines(self):
         self.ensure_one()
         return self.product_variant_ids.action_view_invoice_lines()
+
+    def action_view_stock_valuation(self):
+        self.ensure_one()
+        return self.product_variant_ids.action_view_stock_valuation()

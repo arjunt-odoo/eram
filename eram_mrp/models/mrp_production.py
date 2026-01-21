@@ -13,6 +13,8 @@ class MrpProduction(models.Model):
                                              related="e_requested_by.department_id", store=True)
     e_approved_by_dept_id = fields.Many2one("hr.department",string="Dept",
                                             related="e_approved_by.department_id", store=True)
+    e_project_id = fields.Many2one("project.project",string="Project")
+    e_task_id = fields.Many2one("project.task",string="Task")
 
     @api.model_create_multi
     def create(self, vals):

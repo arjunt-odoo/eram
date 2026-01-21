@@ -12,7 +12,47 @@ class ProjectTask(models.Model):
             "res_model": "stock.picking",
             "name": _("Inwards"),
             "view_mode": "list,form",
-            "domain": [('e_project_id', '=', self.id), ('picking_type_code', '=', 'incoming')],
+            "domain": [('e_task_id', '=', self.id), ('picking_type_code', '=', 'incoming')],
+        }
+
+    def action_view_purchase_order(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "res_model": "purchase.order",
+            "name": _("Purchase Order"),
+            "view_mode": "list,form",
+            "domain": [('task_id', '=', self.id)],
+        }
+
+    def action_view_locations(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "res_model": "stock.location",
+            "name": _("Locations"),
+            "view_mode": "list,form",
+            "domain": [('task_id', '=', self.id)],
+        }
+
+    def action_view_valuation(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "res_model": "stock.valuation.layer",
+            "name": _("Valuation"),
+            "view_mode": "list",
+            "domain": [('task_id', '=', self.id)],
+        }
+
+    def action_view_purchase_request(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "res_model": "eram.purchase.req",
+            "name": _("Purchase Request"),
+            "view_mode": "list",
+            "domain": [('task_id', '=', self.id)],
         }
 
     @api.model_create_multi
