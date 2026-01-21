@@ -4,6 +4,7 @@ from odoo import api, fields, models
 
 class EramCustomerPo(models.Model):
     _name = "eram.customer.po"
+    _description = "Eram Customer Po"
 
     name = fields.Char(string="PO No")
     date = fields.Date(string="PO Date")
@@ -34,6 +35,7 @@ class EramCustomerPo(models.Model):
 
 class EramCustomerPoLine(models.Model):
     _name = 'eram.customer.po.line'
+    _description = "Eram Customer Po Line"
 
     product_id = fields.Many2one("product.product")
     quantity = fields.Float()

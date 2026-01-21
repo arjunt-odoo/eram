@@ -13,6 +13,7 @@
                 <field name="e_pr_id" invisible="picking_type_code != 'incoming'"/>
                 <field name="e_project_code" invisible="picking_type_code != 'incoming'"/>
                 <field name="e_project_id" invisible="picking_type_code != 'incoming'"/>
+                <field name="e_task_id" invisible="picking_type_code != 'incoming'" domain="[('project_id', '=', e_project_id)]"/>
                 <field name="currency_id" invisible="1"/>
             </xpath>
             <xpath expr="//div[hasclass('o_td_label')]/label[@for='partner_id'][2]" position="replace">
@@ -30,6 +31,9 @@
                     <field name="e_invoice_received_date" invisible="picking_type_code != 'incoming'"/>
                     <field name="e_material_inspection_id" domain="[('picking_id', '=', id)]"
                            invisible="picking_type_code != 'incoming'"/>
+                    <field name="picking_type_id" invisible="picking_type_code != 'incoming'"
+                           domain="[('task_id', '=', e_task_id), ('code', '=', 'incoming')]"/>
+                    <field name="department_id" invisible="picking_type_code != 'incoming'"/>
                 </group>
             </xpath>
             <xpath expr="//notebook//page[@name='operations']//field[@name='product_id']" position="before">

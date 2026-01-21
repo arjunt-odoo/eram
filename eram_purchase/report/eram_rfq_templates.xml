@@ -5,6 +5,8 @@
             <t t-foreach="docs" t-as="o">
                 <t t-set="show_red_ribbon" t-value="True"/>
                 <t t-set="show_ref_block" t-value="True"/>
+                <t t-set="e_our_ref" t-value="o.our_ref"/>
+                <t t-set="e_date" t-value="o.date"/>
                 <t t-call="web.external_layout">
                     <style>
                         .page {

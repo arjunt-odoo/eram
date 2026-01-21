@@ -8,7 +8,7 @@ class StockMove(models.Model):
     active = fields.Boolean("Active", default=True)
     currency_id = fields.Many2one("res.currency",
                                   related="purchase_line_id.currency_id")
-    department_id = fields.Many2one("hr.department")
+    department_id = fields.Many2one("hr.department", related="picking_id.department_id", readonly=False)
     e_grn_id = fields.Many2one("eram.grn",
                                related="picking_id.e_grn_id", store=True)
     e_si_no = fields.Integer("SI. NO", default=1, store=True,
@@ -56,7 +56,9 @@ class StockMove(models.Model):
         for vals in svl_vals_list:
             move = self.filtered(lambda m: m.id == vals.get('stock_move_id', False))
             if move:
+                vals["department_id"] = move.move_line_ids[0].department_id.id if move.move_line_ids else False
                 vals["project_id"] = move.move_line_ids[0].project_id.id if move.move_line_ids else False
+                vals["task_id"] = move.move_line_ids[0].task_id.id if move.move_line_ids else False
         return svl_vals_list
 
     def _get_out_svl_vals(self, forced_quantity):
@@ -64,7 +66,9 @@ class StockMove(models.Model):
         for vals in svl_vals_list:
             move = self.filtered(lambda m: m.id == vals.get('stock_move_id', False))
             if move:
+                vals["department_id"] = move.move_line_ids[0].department_id.id if move.move_line_ids else False
                 vals["project_id"] = move.move_line_ids[0].project_id.id if move.move_line_ids else False
+                vals["task_id"] = move.move_line_ids[0].task_id.id if move.move_line_ids else False
         return svl_vals_list
 
     def _get_dropshipped_svl_vals(self, forced_quantity):
@@ -72,14 +76,18 @@ class StockMove(models.Model):
         for vals in svl_vals_list:
             move = self.filtered(lambda m: m.id == vals.get('stock_move_id', False))
             if move:
+                vals["department_id"] = move.move_line_ids[0].department_id.id if move.move_line_ids else False
                 vals["project_id"] = move.move_line_ids[0].project_id.id if move.move_line_ids else False
+                vals["task_id"] = move.move_line_ids[0].task_id.id if move.move_line_ids else False
         return svl_vals_list
 
 class StockMoveLine(models.Model):
     _inherit = 'stock.move.line'
 
     active = fields.Boolean("Active", default=True)
-    project_id = fields.Many2one("project.project")
+    department_id = fields.Many2one("hr.department", related="picking_id.department_id", readonly=False)
+    project_id = fields.Many2one("project.project", related="picking_id.e_project_id", readonly=False)
+    task_id = fields.Many2one("project.task", related="picking_id.e_task_id", readonly=False)
 
 
 class StockQuant(models.Model):

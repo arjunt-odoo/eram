@@ -20,7 +20,7 @@ class SaleOrder(models.Model):
     e_ref = fields.Char(string="Ref#")
     e_delivery_text = fields.Char("Delivered in")
     e_validity_text = fields.Char("Validity")
-    e_sale_id = fields.Many2one("sale.order", string="Related Sale Orders")
+    e_sale_id = fields.Many2one("sale.order", string="Related Sale Order")
     e_sale_ids = fields.One2many("sale.order","e_sale_id", string="Related Sale Orders")
 
     def _prepare_invoice(self):

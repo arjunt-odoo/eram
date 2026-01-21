@@ -16,6 +16,7 @@ class StockPicking(models.Model):
                                  related="purchase_id.e_supplier_quote_id.rfq_id.eram_pr_id.project_code")
     e_project_id = fields.Many2one("project.project", string="Project", store=True, readonly=False,
                                    related="purchase_id.e_supplier_quote_id.rfq_id.eram_pr_id.project_id")
+    e_task_id = fields.Many2one("project.task", string="Task")
     e_invoice_date = fields.Date("Invoice Date", related="e_bill_id.invoice_date")
     e_invoice_received_date = fields.Date("Invoice Received Date", related="e_bill_id.e_invoice_received_date",
                                           readonly=False)
@@ -25,6 +26,7 @@ class StockPicking(models.Model):
     e_amount_total = fields.Monetary("Grand Total", compute="_compute_amount", store=True)
     e_material_inspection_id = fields.Many2one("eram.material.inspection", string="Material Inspection")
     e_additional_charges = fields.Float("Additional Charges")
+    department_id = fields.Many2one("hr.department")
 
     @api.depends('move_ids_without_package.e_total_untaxed',
                  'move_ids_without_package.e_price_total', 'e_additional_charges')
