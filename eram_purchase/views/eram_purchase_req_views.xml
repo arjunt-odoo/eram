@@ -36,7 +36,6 @@
                                     <field name="item_no"/>
                                     <field name="description"/>
                                     <field name="make"/>
-                                    <field name="part_no"/>
                                     <field name="qty"/>
                                 </list>
                             </field>
@@ -80,7 +79,6 @@
                 <field name="product_id"/>
                 <field name="description"/>
                 <field name="make"/>
-                <field name="part_no"/>
                 <field name="item_no"/>
                 <field name="qty"/>
             </list>

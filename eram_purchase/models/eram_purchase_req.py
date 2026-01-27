@@ -54,7 +54,6 @@ class EramPurchaseReqLine(models.Model):
     product_id = fields.Many2one("product.product", string="Item")
     description = fields.Html()
     make = fields.Html()
-    part_no = fields.Html()
     item_no = fields.Html()
     qty = fields.Float("Quantity")
 
@@ -73,7 +72,6 @@ class EramPurchaseReqLine(models.Model):
                 'product_id': line.product_id.id,
                 'description': line.description,
                 'qty': line.qty,
-                'part_no': line.part_no,
                 'item_no': line.item_no,
                 'purchase_req_line_id': line.id
             }))

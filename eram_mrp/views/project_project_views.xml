@@ -14,4 +14,50 @@
             </xpath>
         </field>
     </record>
+        <record id="view_task_form2_inherit_eram_inventory" model="ir.ui.view">
+        <field name="name">project.task.form.inherit.eram.inventory</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('oe_button_box')]" position="inside">
+                <button class="oe_stat_button" type="object" name="action_view_outwards" icon="fa-solid fa-outdent">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_text">Outwards</span>
+                    </div>
+                </button>
+                 <button class="oe_stat_button" type="object" name="action_view_outward_items" icon="fa-solid fa-list">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_text">Outward Items</span>
+                    </div>
+                </button>
+                <button class="oe_stat_button" type="object" name="action_view_stock_moves" icon="fa-exchange">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_text">Moves</span>
+                    </div>
+                </button>
+                <button class="oe_stat_button" type="object" name="action_view_internal_transfers" icon="fa-exchange">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_text">Transfers</span>
+                    </div>
+                </button>
+            </xpath>
+            <xpath expr="//header" position="inside">
+                <button name="action_transfer_left_overs" class="btn btn-primary" string="Move Items" type="object"/>
+            </xpath>
+            <xpath expr="//notebook//page[@name='description_page']" position="before">
+                <page name="products" string="Products">
+                    <field name="e_product_stock_item_ids">
+                        <list>
+                            <field name="product_id"/>
+                            <field name="description"/>
+                            <field name="total_received" decoration-success="1"/>
+                            <field name="total_consumed" decoration-danger="1"/>
+                            <field name="balance" decoration-info="1"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
 </odoo>

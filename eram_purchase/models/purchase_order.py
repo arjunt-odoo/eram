@@ -14,6 +14,17 @@ class PurchaseOrder(models.Model):
     task_id = fields.Many2one("project.task", string="Task", readonly=False, store=True,
                                    related="e_supplier_quote_id.rfq_id.eram_pr_id.task_id")
 
+    @api.constrains('e_project_id', 'task_id')
+    def _constrain_project_id(self):
+        if self.e_project_id and self.task_id:
+            self.task_id.write({'project_id': self.e_project_id.id})
+
+    def _prepare_picking(self):
+        data = super()._prepare_picking()
+        data['e_project_id'] = self.e_project_id.id
+        data['e_task_id'] = self.task_id.id
+        return data
+
     def action_set_as_sent(self):
         self.write({
             'state': 'sent'

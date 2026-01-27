@@ -110,3 +110,20 @@ class PurchaseOrderLine(models.Model):
         for order in self.mapped('order_id'):
             for index, line in enumerate(order.order_line, start=1):
                 line.e_line_index = index
+
+    @api.onchange('product_id')
+    def _onchange_product_id(self):
+        if self.product_id:
+            description = self.product_id.name
+            if self.product_template_attribute_value_ids:
+                attribute_values = []
+                for value in self.product_template_attribute_value_ids:
+                    attr_str = f"{value.name} {value.attribute_id.name}"
+                    attribute_values.append(attr_str)
+
+                if attribute_values:
+                    description = f"{description} {' '.join(attribute_values)}"
+
+            self.e_description = description
+        else:
+            self.e_description = False
