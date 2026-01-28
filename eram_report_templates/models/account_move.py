@@ -3,14 +3,13 @@ import logging
 import time
 from datetime import date
 from odoo import api, fields, models
+from odoo.exceptions import ValidationError
 
 _logger = logging.getLogger(__name__)
 
 
 class AccountMove(models.Model):
     _inherit = 'account.move'
-    _sql_constraints = [('name_unique', 'unique(company_id, name, partner_id)',
-                         "Invoice name should be unique!")]
 
     e_transport_mode = fields.Char(string="Transport Mode")
     e_reverse_charge = fields.Boolean(string="Reverse Charge")
@@ -36,6 +35,14 @@ class AccountMove(models.Model):
     )
     e_sequence = fields.Integer("Sequence", defualt=1,
                                 help="The order in which the invoices are taken in sale order report")
+
+    @api.constrains('name', 'partner_id')
+    def _constrains_name_partner(self):
+        existing_record = self.search([('name', '=', self.name), ('name', '!=', False),
+                                       ('id', '!=', self.id),
+                                       ('partner_id', '=', self.partner_id.id)])
+        if existing_record:
+            raise ValidationError("A record with the same name already exists!")
 
     def _compute_tax_totals(self):
         """Override to sort tax groups alphabetically by group_name"""
