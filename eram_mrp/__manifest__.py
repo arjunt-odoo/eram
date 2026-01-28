@@ -9,6 +9,7 @@
     'data': [
         'security/ir.model.access.csv',
         'data/ir_sequence.xml',
+        'views/eram_outward_views.xml',
         'views/hr_department_views.xml',
         'views/mrp_production_views.xml',
         'views/project_project_views.xml',

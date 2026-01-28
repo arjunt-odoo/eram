@@ -10,8 +10,8 @@
             </xpath>
             <xpath expr="//group" position="inside">
                 <group>
-                    <field name="e_date"/>
-                    <field name="e_justification"/>
+<!--                    <field name="e_date"/>-->
+<!--                    <field name="e_justification"/>-->
                     <field name="picking_type_id" domain="[('code', '=', 'mrp_operation'), ('task_id', '=', e_task_id)]"/>
                 </group>
             </xpath>
@@ -23,7 +23,6 @@
             </xpath>
             <xpath expr="//notebook/page[@name='components']/field[@name='move_raw_ids']/list/field[@name='product_id']" position="after">
                 <field name="e_description_out"/>
-                <field name="e_part_no_out"/>
                 <field name="e_uom_out_id"/>
             </xpath>
             <xpath expr="//notebook/page[@name='components']/field[@name='move_raw_ids']/list/field[@name='product_qty']" position="before">
@@ -34,18 +33,23 @@
                 <group>
                     <group>
                         <field name="e_project_id"/>
-                        <field name="e_requested_by"/>
-                        <field name="e_approved_by"/>
+<!--                        <field name="e_requested_by"/>-->
+<!--                        <field name="e_approved_by"/>-->
                     </group>
                     <group>
                         <field name="e_task_id" domain="[('project_id', '=', e_project_id)]"/>
-                        <field name="e_requested_by_dept_id" force_save="1"/>
-                        <field name="e_approved_by_dept_id" force_save="1"/>
+<!--                        <field name="e_requested_by_dept_id" force_save="1"/>-->
+<!--                        <field name="e_approved_by_dept_id" force_save="1"/>-->
                     </group>
                 </group>
             </xpath>
             <xpath expr="//page[@name='miscellaneous']//group[1]//field[@name='picking_type_id']" position="attributes">
                 <attribute name="domain">[('code', '=', 'mrp_operation'), ('task_id', '=', e_task_id)]</attribute>
+            </xpath>
+            <xpath expr="//page[@name='components']" position="after">
+                <page string="Outwards">
+                    <field name="eram_outward_ids"/>
+                </page>
             </xpath>
         </field>
     </record>

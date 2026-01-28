@@ -1,2 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_eram_product_stock_item_user,access.eram.product.stock.item.user,model_eram_product_stock_item,base.group_user,1,1,1,1
+access_eram_outward_user,access.eram.outward.user,model_eram_outward,base.group_user,1,1,1,1
+access_eram_outward_line_user,access.eram.outward.line.user,model_eram_outward_line,base.group_user,1,1,1,1
