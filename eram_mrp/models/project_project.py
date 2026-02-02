@@ -79,14 +79,28 @@ class ProjectTask(models.Model):
             task.e_product_stock_item_ids = [(6, 0, stock_item_ids)]
 
 
-    def action_view_outwards(self):
+    def action_view_production(self):
         self.ensure_one()
         return {
             "type": "ir.actions.act_window",
             "res_model": "mrp.production",
-            "name": _("Outwards"),
+            "name": _("Manufacture"),
             "view_mode": "list,form",
             "domain": [('e_task_id', '=', self.id)],
+        }
+
+    def action_view_outwards(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "res_model": "stock.picking",
+            "name": _("Outwards"),
+            "view_mode": "list,form",
+            "views": [[self.env.ref("eram_mrp.view_picking_list_outward").id, "list"],
+                      [self.env.ref("eram_mrp.view_picking_form_outward").id, "form"]],
+            "domain": [('e_task_id', '=', self.id),
+                       ('picking_type_code', '=', 'internal'),
+                       ('picking_type_id.task_id', '=', self.id)],
         }
 
     def action_view_outward_items(self):
@@ -96,7 +110,8 @@ class ProjectTask(models.Model):
             "res_model": "stock.move",
             "name": _("Outwards"),
             "view_mode": "list,form",
-            "domain": [('raw_material_production_id.e_task_id', '=', self.id)],
+            "domain": ['|',('raw_material_production_id.e_task_id', '=', self.id),
+                       ('production_id.e_task_id', '=', self.id)],
         }
 
     def action_view_stock_moves(self):
@@ -134,6 +149,8 @@ class ProjectTask(models.Model):
                                                                         ('company_id', 'in', self.env.company.ids)], limit=1)
         move_vals = []
         for quant in stock_quant:
+            if quant.quantity < 1:
+                continue
             move_vals.append({
                 'name': quant.product_id.display_name or '/',
                 'product_uom': quant.product_id.uom_id.id,

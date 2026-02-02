@@ -1,52 +1,70 @@
 # -*- coding: utf-8 -*-
-from odoo import api, fields, models
+from odoo import _, api, fields, models
 
 
 class MrpProduction(models.Model):
     _inherit = 'mrp.production'
 
     name = fields.Char(readonly=False)
-    # e_date = fields.Date(string="Date")
-    # e_justification = fields.Char(string="Justification")
-    # e_requested_by = fields.Many2one("hr.employee",string="Requested by")
-    # e_approved_by = fields.Many2one("hr.employee",string="Approved by")
-    # e_requested_by_dept_id = fields.Many2one("hr.department",string="Dept",
-    #                                          related="e_requested_by.department_id", store=True)
-    # e_approved_by_dept_id = fields.Many2one("hr.department",string="Dept",
-    #                                         related="e_approved_by.department_id", store=True)
+    e_date = fields.Date(string="Date")
+    e_justification = fields.Char(string="Justification")
+    e_requested_by = fields.Many2one("hr.employee",string="Requested by")
+    e_approved_by = fields.Many2one("hr.employee",string="Approved by")
+    e_requested_by_dept_id = fields.Many2one("hr.department",string="Dept",
+                                             related="e_requested_by.department_id", store=True)
+    e_approved_by_dept_id = fields.Many2one("hr.department",string="Dept",
+                                            related="e_approved_by.department_id", store=True)
     e_project_id = fields.Many2one("project.project",string="Project")
     e_task_id = fields.Many2one("project.task",string="Task")
-    eram_outward_ids = fields.One2many("eram.outward", "production_id")
 
-    @api.onchange("eram_outward_ids")
-    def _onchange_eram_outward_ids(self):
-        if not self.product_id:
-            return
+    @api.constrains('project_id', 'task_id')
+    def _constrain_project_id(self):
+        if self.e_project_id and self.e_task_id and not self.e_task_id.project_id:
+            self.e_task_id.write({'project_id': self.e_project_id.id})
 
-        move_commands = []
+    @api.onchange('e_project_id', 'e_task_id')
+    def _onchange_e_task_id(self):
+        self.picking_type_id = False
 
-        for outward in self.eram_outward_ids:
-            for line in outward.line_ids:
-                if not line.product_id:
-                    continue
+    @api.model_create_multi
+    def create(self, vals_list):
+        today = fields.Date.today()
+        current_month = today.month
 
-                product_uom = line.uom_id or line.product_id.uom_id
+        if current_month >= 4:
+            current_fy_year = today.year
+            next_fy_year = today.year + 1
+        else:
+            current_fy_year = today.year - 1
+            next_fy_year = today.year
 
-                move_vals = {
-                    'name': f"{line.product_id.name} - {line.description or 'From Outward'}",
-                    'product_id': line.product_id.id,
-                    'product_uom_qty': line.qty,
-                    'product_uom': product_uom.id,
-                    'e_description_out': line.description,
-                    'e_uom_out_id': line.uom_id.id,
-                    'e_required_date': line.required_date,
-                    'e_remarks': line.remarks
-                }
+        for val in vals_list:
+            batch_size = 50
+            seq = self.env['ir.sequence'].sudo()
+            position_str = seq.next_by_code('mrp.production.position')
+            position = int(position_str)
+            batch_seq = seq.search([('code', '=', 'mrp.production.batch')], limit=1)
+            batch = batch_seq.number_next
+            if position > batch_size:
+                seq.next_by_code('mrp.production.batch')
+                position_seq = seq.search([('code', '=', 'mrp.production.position')], limit=1)
+                position_seq.write({'number_next': 2})
+                position = 1
+                batch += 1
+            middle = f"{batch:03d}"
+            last = f"{position:04d}"
+            val['name'] = f"BLR-MWF-{current_fy_year}-{next_fy_year}-R0-{middle}-{last}"
 
-                move_commands.append((0, 0, move_vals))
+        return super(MrpProduction, self).create(vals_list)
 
-        self.move_raw_ids = [(5, 0, 0)] + move_commands
-
+    def write(self, vals):
+        res = super().write(vals)
+        for rec in self:
+            rec.picking_ids.write({
+                'e_project_id': rec.e_project_id.id,
+                'e_task_id': rec.e_task_id,
+            })
+        return res
 
     def _get_move_raw_values(self, product, product_uom_qty, product_uom, operation_id=False, bom_line=False):
         data = super()._get_move_raw_values(product, product_uom_qty, product_uom, operation_id, bom_line)
@@ -73,11 +91,23 @@ class MrpProduction(models.Model):
                 move.stock_valuation_layer_ids.write({'task_id': move.task_id.id})
         return result
 
+    def action_view_outwards(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "res_model": "stock.picking",
+            "name": _("Outwards"),
+            "view_mode": "list,form",
+            "views": [[self.env.ref("eram_mrp.view_picking_list_outward").id, "list"], [self.env.ref("eram_mrp.view_picking_form_outward").id, "form"]],
+            "domain": [('id', 'in', self.picking_ids.ids)],
+        }
+
 
 class StockMove(models.Model):
     _inherit = 'stock.move'
 
     e_description_out = fields.Html("Description")
+    e_part_no_out = fields.Html(string="Part No")
     e_uom_out_id = fields.Many2one("uom.uom", "UOM")
     e_required_date = fields.Date(string="Required Date")
 

@@ -96,30 +96,41 @@ class ProjectTask(models.Model):
                         'usage': 'internal',
                         'task_id': rec.id,
                     }])
+                    pre_prod_location = self.env['stock.location'].search([('warehouse_id', '=', warehouse.id),
+                                                                           ('name', '=', "Pre-Production"),
+                                                                           ('location_id', '=', parent_location.id)])
                     delivery = self.env['stock.picking.type'].create([{
                         'name': f"{rec.name}: Delivery",
                         'code': 'outgoing',
                         'default_location_src_id': location.id,
-                        'sequence_code': f"{rec.name}OUT",
+                        'sequence_code': f"{rec.name}-OUT",
                         'task_id': rec.id
                     }])
-                    receipt = self.env['stock.picking.type'].create([{
+                    inward = self.env['stock.picking.type'].create([{
                         'name': f"{rec.name}: Inward",
                         'code': 'incoming',
                         'default_location_dest_id': location.id,
-                        'sequence_code': f"{rec.name}IN",
+                        'sequence_code': f"{rec.name}-IN",
                         'return_picking_type_id': delivery.id,
                         'task_id': rec.id
                     }])
                     delivery.write({
-                        'return_picking_type_id': receipt.id
+                        'return_picking_type_id': inward.id
                     })
                     manufacture = self.env['stock.picking.type'].create([{
-                        'name': f"{rec.name}: Outward",
+                        'name': f"{rec.name}: Manufacture",
                         'code': 'mrp_operation',
-                        'default_location_src_id': location.id,
+                        'default_location_src_id': pre_prod_location.id,
                         'default_location_dest_id': location.id,
-                        'sequence_code': f"{rec.name}MO",
+                        'sequence_code': f"{rec.name}-MO",
+                        'task_id': rec.id
+                    }])
+                    outward = self.env['stock.picking.type'].create([{
+                        'name': f"{rec.name}: Outward",
+                        'code': 'internal',
+                        'default_location_src_id': location.id,
+                        'default_location_dest_id': pre_prod_location.id,
+                        'sequence_code': f"{rec.name}-OW",
                         'task_id': rec.id
                     }])
         return res

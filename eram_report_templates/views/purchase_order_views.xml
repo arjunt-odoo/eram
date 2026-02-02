@@ -12,7 +12,7 @@
                 <field name="e_supplier_code" readonly="state == 'purchase'"/>
                 <field name="partner_id" widget="res_partner_many2one" context="{'res_partner_search_mode': 'supplier', 'show_vat': True}"
                                 placeholder="Name, TIN, Email, or Reference" string="Supplier"
-                             readonly="state in ['cancel', 'done', 'purchase']"/>
+                             readonly="state in ['cancel', 'done', 'purchase']" required="1"/>
                 <label for="street" string="Address"/>
                 <div class="o_address_format">
                     <field name="street" placeholder="Street..." class="o_address_street"/>

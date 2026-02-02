@@ -3,12 +3,12 @@
     <data>
         <record id="eram_material_withdrawal" model="ir.actions.report">
             <field name="name">Material Withdrawal</field>
-            <field name="model">eram.outward</field>
+            <field name="model">stock.picking</field>
             <field name="report_type">qweb-pdf</field>
             <field name="report_name">eram_mrp.eram_report_material_withdrawal</field>
             <field name="report_file">eram_mrp.eram_report_material_withdrawal</field>
             <field name="print_report_name">'Material Withdrawal - %s' % (object.name)</field>
-            <field name="binding_model_id" ref="eram_mrp.model_eram_outward"/>
+            <field name="binding_model_id" ref="stock.model_stock_picking"/>
             <field name="binding_type">report</field>
         </record>
     </data>

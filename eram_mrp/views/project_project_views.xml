@@ -20,7 +20,12 @@
         <field name="inherit_id" ref="project.view_task_form2"/>
         <field name="arch" type="xml">
             <xpath expr="//div[hasclass('oe_button_box')]" position="inside">
-                <button class="oe_stat_button" type="object" name="action_view_outwards" icon="fa-solid fa-outdent">
+                <button class="oe_stat_button" type="object" name="action_view_production" icon="fa-wrench">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_text">Manufacture</span>
+                    </div>
+                </button>
+                 <button class="oe_stat_button" type="object" name="action_view_outwards" icon="fa-list-ul">
                     <div class="o_field_widget o_stat_info">
                         <span class="o_stat_text">Outwards</span>
                     </div>

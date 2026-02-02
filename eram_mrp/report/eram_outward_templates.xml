@@ -35,12 +35,12 @@
                         </div>
                         <div class="text-end">
                             <span>Date:
-                                <span t-field="doc.date"/>
+                                <span t-field="doc.e_date"/>
                             </span>
                         </div>
                         <div class="text-end">
                             <span>Project Code:
-                                <span t-field="doc.project_id"/>
+                                <span t-field="doc.e_project_id"/>
                             </span>
                         </div>
                         <table class="table table-bordered">
@@ -56,30 +56,30 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <t t-foreach="doc.line_ids" t-as="line">
+                                <t t-foreach="doc.move_ids_without_package" t-as="line">
                                     <tr>
-                                        <td class="text-center" style="padding-left: 5px;"><span t-field="line.si_no"/></td>
+                                        <td class="text-center" style="padding-left: 5px;"><span t-field="line.e_si_no"/></td>
                                         <td class="text-center"><span t-field="line.product_id"/></td>
-                                        <td class="text-center"><span t-field="line.description"/></td>
-                                        <td class="text-center"><span t-field="line.uom_id"/></td>
-                                        <td class="text-center"><span t-field="line.qty"/></td>
-                                        <td class="text-center"><span t-field="line.required_date"/></td>
-                                        <td class="text-center" style="padding-right: 5px;"><span t-field="line.remarks"/></td>
+                                        <td class="text-center"><span t-field="line.e_description_out"/></td>
+                                        <td class="text-center"><span t-field="line.e_uom_out_id"/></td>
+                                        <td class="text-center"><span t-field="line.product_uom_qty"/></td>
+                                        <td class="text-center"><span t-field="line.e_required_date"/></td>
+                                        <td class="text-center" style="padding-right: 5px;"><span t-field="line.e_remarks"/></td>
                                     </tr>
                                 </t>
                             </tbody>
                         </table>
                         <div>
                             <div class="row">
-                               Justification: <span t-field="doc.justification"/>
+                               Justification: <span t-field="doc.e_justification"/>
                             </div>
                             <br/>
                             <div class="row">
                                 <div class="col-4">
-                                    Requested By: <span t-field="doc.requested_by_id"/>
+                                    Requested By: <span t-field="doc.e_requested_by"/>
                                 </div>
                                 <div class="col-4">
-                                    Dept: <span t-field="doc.requested_by_dept_id"/>
+                                    Dept: <span t-field="doc.e_requested_by_dept_id"/>
                                 </div>
                                 <div class="col-4">
                                     Signature:
@@ -88,10 +88,10 @@
                             <br/>
                             <div class="row">
                                 <div class="col-4">
-                                    Approved By: <span t-field="doc.approved_by_id"/>
+                                    Approved By: <span t-field="doc.e_approved_by"/>
                                 </div>
                                 <div class="col-4">
-                                    Dept: <span t-field="doc.approved_by_dept_id"/>
+                                    Dept: <span t-field="doc.e_approved_by_dept_id"/>
                                 </div>
                                 <div class="col-4">
                                     Signature:
