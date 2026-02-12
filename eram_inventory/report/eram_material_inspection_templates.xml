@@ -50,11 +50,18 @@
                                 </tr>
                                 <tr>
                                     <th style="padding-left: 5px;"><strong>P.R. No</strong></th>
-                                    <th><span t-field="doc.pr_no"/></th>
+                                    <th><span t-field="doc.pr_id"/></th>
                                 </tr>
                                 <tr>
                                     <th style="padding-left: 5px;"><strong>P.O.No</strong></th>
-                                    <th><span t-field="doc.purchase_id"/></th>
+                                    <th>
+                                        <t t-if="doc.purchase_id">
+                                            <span t-field="doc.purchase_id"/>
+                                        </t>
+                                        <t t-else="">
+                                            <span t-field="doc.picking_id.e_po_no"/>
+                                        </t>
+                                    </th>
                                 </tr>
                                 <tr>
                                     <th style="padding-left: 5px;"><strong>Invoice/DC No</strong></th>

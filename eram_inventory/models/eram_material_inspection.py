@@ -13,9 +13,10 @@ class EramMaterialInspection(models.Model):
     project_code = fields.Char(related="picking_id.e_project_code", readonly=False)
     project_id = fields.Many2one("project.project", related="picking_id.e_project_id", readonly=False)
     date_received = fields.Date(string="Date of item receival in inventory")
-    pr_no = fields.Char(related="picking_id.e_pr_no", readonly=False)
+    pr_id = fields.Many2one("eram.purchase.req", related="picking_id.e_pr_id", readonly=False)
     purchase_id = fields.Many2one("purchase.order", related="picking_id.purchase_id", readonly=False,
                                   string="P.O. No.")
+    po_no = fields.Char("PO. No:", related="picking_id.e_po_no", readonly=False)
     bill_id = fields.Many2one("account.move", related="picking_id.e_bill_id")
     picking_id = fields.Many2one("stock.picking")
     line_ids = fields.Many2many("stock.move", compute="_compute_line_ids", readonly=False)

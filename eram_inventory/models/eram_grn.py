@@ -11,8 +11,9 @@ class EramGrn(models.Model):
     project_code = fields.Char(related="picking_id.e_project_code", readonly=False)
     project_id = fields.Many2one("project.project")
     date_received = fields.Date()
-    pr_no = fields.Char(related="picking_id.e_pr_no", readonly=False)
+    pr_id = fields.Many2one("eram.purchase.req", related="picking_id.e_pr_id", readonly=False)
     purchase_id = fields.Many2one("purchase.order", related="picking_id.purchase_id")
+    po_no = fields.Char("PO. No:", related="picking_id.e_po_no", readonly=False)
     bill_id = fields.Many2one("account.move", related="picking_id.e_bill_id")
     picking_id = fields.Many2one("stock.picking")
     line_ids = fields.One2many("stock.move", "e_grn_id",

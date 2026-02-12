@@ -9,9 +9,9 @@ class StockPicking(models.Model):
     e_grn_id = fields.Many2one("eram.grn", string="Grn. No:")
     e_bill_id = fields.Many2one("account.move", "Invoice No:")
     e_pr_id = fields.Many2one("eram.purchase.req", related="purchase_id.e_supplier_quote_id.rfq_id.eram_pr_id",
-                          store=True, readonly=False)
-    e_pr_no = fields.Char("PR. No:", related="e_pr_id.pr_number",
-                          store=True)
+                          store=True, readonly=False, string="PR. No:")
+    # e_pr_no = fields.Char("PR. No:")
+    e_po_no = fields.Char("PO. No:")
     e_project_code = fields.Char("Project Code", readonly=False, store=True,
                                  related="purchase_id.e_supplier_quote_id.rfq_id.eram_pr_id.project_code")
     e_project_id = fields.Many2one("project.project", string="Project")
@@ -27,6 +27,16 @@ class StockPicking(models.Model):
     e_additional_charges = fields.Float("Additional Charges")
     department_id = fields.Many2one("hr.department")
     e_transfer_task_id = fields.Many2one("project.task")
+
+    @api.constrains('e_grn_id')
+    def _constrains_e_grn_id(self):
+        if self.e_grn_id:
+            self.e_grn_id.picking_id = self
+
+    @api.constrains('e_material_inspection_id')
+    def _constrains_e_material_inspection_id(self):
+        if self.e_material_inspection_id:
+            self.e_material_inspection_id.picking_id = self
 
     @api.constrains('e_project_id', 'e_task_id')
     def _constrain_project_id(self):
