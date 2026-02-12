@@ -36,14 +36,6 @@ class AccountMove(models.Model):
     e_sequence = fields.Integer("Sequence", defualt=1,
                                 help="The order in which the invoices are taken in sale order report")
 
-    @api.constrains('name', 'partner_id')
-    def _constrains_name_partner(self):
-        existing_record = self.search([('name', '=', self.name), ('name', '!=', False),
-                                       ('id', '!=', self.id),
-                                       ('partner_id', '=', self.partner_id.id)])
-        if existing_record:
-            raise ValidationError("A record with the same name already exists!")
-
     def _compute_tax_totals(self):
         """Override to sort tax groups alphabetically by group_name"""
         res = super()._compute_tax_totals()

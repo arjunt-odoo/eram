@@ -35,6 +35,8 @@
             </xpath>
             <field name="invoice_policy" position="after">
                 <field name="e_allow_inspection"/>
+                <field name="uom_id"/>
+                <field name="uom_category_id"/>
             </field>
         </field>
     </record>

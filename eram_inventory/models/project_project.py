@@ -99,6 +99,8 @@ class ProjectTask(models.Model):
                     pre_prod_location = self.env['stock.location'].search([('warehouse_id', '=', warehouse.id),
                                                                            ('name', '=', "Pre-Production"),
                                                                            ('location_id', '=', parent_location.id)])
+                    supplier_location = self.env['stock.location'].search([('name', '=', "Vendors"),
+                                                                           ('usage', '=', 'supplier')])
                     delivery = self.env['stock.picking.type'].create([{
                         'name': f"{rec.name}: Delivery",
                         'code': 'outgoing',
@@ -110,6 +112,7 @@ class ProjectTask(models.Model):
                         'name': f"{rec.name}: Inward",
                         'code': 'incoming',
                         'default_location_dest_id': location.id,
+                        'default_location_src_id': supplier_location.id,
                         'sequence_code': f"{rec.name}-IN",
                         'return_picking_type_id': delivery.id,
                         'task_id': rec.id

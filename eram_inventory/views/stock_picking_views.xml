@@ -54,7 +54,7 @@
             </xpath>
             <xpath expr="//notebook//page[@name='operations']//field[@name='quantity']" position="after">
                 <field name="currency_id" column_invisible="1"/>
-                <field name="e_price_unit" readonly="state == 'done'" column_invisible="parent.picking_type_code != 'incoming'"/>
+                <field name="price_unit" readonly="state == 'done'" column_invisible="parent.picking_type_code != 'incoming'"/>
                 <field name="e_tax_ids" readonly="state == 'done'" widget="many2many_tags" column_invisible="parent.picking_type_code != 'incoming'"/>
                 <field name="e_price_total" readonly="state == 'done'" column_invisible="parent.picking_type_code != 'incoming'"/>
                 <field name="e_discrepancy" readonly="state == 'done'" column_invisible="parent.picking_type_code != 'incoming'"/>
@@ -112,7 +112,7 @@
                 <field name="product_id"/>
                 <field name="date"/>
                 <field name="e_part_no"/>
-                <field name="e_price_unit"/>
+                <field name="price_unit"/>
                 <field name="quantity" sum="Total"/>
                 <field name="currency_id" column_invisible="1"/>
                 <field name="e_price_total" sum="Total"/>
@@ -127,7 +127,7 @@
             <xpath expr="//field[@name='reference']" position="after">
                 <field name="department_id" string="Department" optional="show"/>
                 <field name="project_id" string="Project Code" optional="show"/>
-                <field name="task_id" string="Task" optional="show"/>
+                <field name="task_id" string="Task" optional="show" domain="[('project_id', '=', project_id)]"/>
             </xpath>
             <xpath expr="//list" position="attributes">
                 <attribute name="editable">bottom</attribute>

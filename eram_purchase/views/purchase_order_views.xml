@@ -14,7 +14,7 @@
             <field name="currency_id" position="after">
                 <field name="e_supplier_quote_id" readonly="state == 'purchase'"/>
                 <field name="e_project_id" readonly="state == 'purchase'"/>
-                <field name="task_id" readonly="state == 'purchase'"/>
+                <field name="task_id" readonly="state == 'purchase'" domain="[('project_id', '=', e_project_id)]"/>
             </field>
             <xpath expr="//notebook" position="inside">
                 <page name="bills" string="Bills">

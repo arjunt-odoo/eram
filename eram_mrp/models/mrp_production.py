@@ -17,14 +17,14 @@ class MrpProduction(models.Model):
     e_project_id = fields.Many2one("project.project",string="Project")
     e_task_id = fields.Many2one("project.task",string="Task")
 
-    @api.constrains('project_id', 'task_id')
+    @api.constrains('e_project_id', 'e_task_id')
     def _constrain_project_id(self):
         if self.e_project_id and self.e_task_id and not self.e_task_id.project_id:
             self.e_task_id.write({'project_id': self.e_project_id.id})
 
     @api.onchange('e_project_id', 'e_task_id')
     def _onchange_e_task_id(self):
-        self.picking_type_id = False
+        self.picking_type_id = self.e_task_id.manufacture_type_id
 
     @api.model_create_multi
     def create(self, vals_list):

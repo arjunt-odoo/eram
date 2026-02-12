@@ -28,6 +28,21 @@ class StockPicking(models.Model):
     department_id = fields.Many2one("hr.department")
     e_transfer_task_id = fields.Many2one("project.task")
 
+    @api.constrains('e_project_id', 'e_task_id')
+    def _constrain_project_id(self):
+        if self.e_project_id and self.e_task_id:
+            self.e_task_id.write({'project_id': self.e_project_id.id})
+
+    @api.constrains('e_task_id')
+    def _constrains_e_task_id(self):
+        for rec in self.filtered(lambda p: p.state not in ('done', 'cancel')):
+            if rec.picking_type_code == 'incoming':
+                rec.picking_type_id = rec.e_task_id.receipt_type_id
+            elif rec.picking_type_code == 'outgoing':
+                rec.picking_type_id = rec.e_task_id.delivery_type_id
+            elif rec.picking_type_code == 'internal':
+                rec.picking_type_id = rec.e_task_id.internal_type_id
+
     @api.depends('move_ids_without_package.e_total_untaxed',
                  'move_ids_without_package.e_price_total', 'e_additional_charges')
     def _compute_amount(self):
@@ -63,7 +78,6 @@ class StockMove(models.Model):
     e_make = fields.Html("MAKE", related="purchase_line_id.e_supplier_quote_line_id.make", readonly=False)
     e_uom_id = fields.Many2one("uom.uom", "UOM", related="purchase_line_id.product_uom",
                                store=True, readonly=False)
-    e_price_unit = fields.Float("UNIT PRICE", related="purchase_line_id.price_unit")
     e_total_untaxed = fields.Monetary(compute="_compute_amount", store=True)
     e_tax_ids = fields.Many2many("account.tax", string="TAX", related="purchase_line_id.taxes_id")
     e_price_total = fields.Monetary("TOTAL PRICE",store=True,
@@ -102,11 +116,11 @@ class StockMove(models.Model):
             for index, line in enumerate(picking.move_ids, start=1):
                 line.e_si_no = index
 
-    @api.depends('product_id', 'product_id.lst_price', 'e_price_unit',
+    @api.depends('product_id', 'product_id.lst_price', 'price_unit',
                  'e_total_untaxed', 'e_tax_ids', 'quantity', 'product_uom_qty')
     def _compute_amount(self):
         for rec in self:
-            rec.e_total_untaxed = rec.quantity * rec.e_price_unit
+            rec.e_total_untaxed = rec.quantity * rec.price_unit
             if rec.e_tax_ids:
                 taxes = rec.e_tax_ids.compute_all(rec.e_total_untaxed)
                 rec.e_price_total = taxes["total_included"]
@@ -129,8 +143,6 @@ class StockMove(models.Model):
             move = self.filtered(lambda m: m.id == vals.get('stock_move_id', False))
             if move:
                 vals["department_id"] = move.move_line_ids[0].department_id.id if move.move_line_ids else False
-                # vals["project_id"] = move.move_line_ids[0].project_id.id if move.move_line_ids else False
-                # vals["task_id"] = move.move_line_ids[0].task_id.id if move.move_line_ids else False
         return svl_vals_list
 
     def _get_dropshipped_svl_vals(self, forced_quantity):
@@ -139,8 +151,6 @@ class StockMove(models.Model):
             move = self.filtered(lambda m: m.id == vals.get('stock_move_id', False))
             if move:
                 vals["department_id"] = move.move_line_ids[0].department_id.id if move.move_line_ids else False
-                # vals["project_id"] = move.move_line_ids[0].project_id.id if move.move_line_ids else False
-                # vals["task_id"] = move.move_line_ids[0].task_id.id if move.move_line_ids else False
         return svl_vals_list
 
 class StockMoveLine(models.Model):
