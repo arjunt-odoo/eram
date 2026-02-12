@@ -36,11 +36,11 @@ class StockPicking(models.Model):
     @api.constrains('e_task_id')
     def _constrains_e_task_id(self):
         for rec in self.filtered(lambda p: p.state not in ('done', 'cancel')):
-            if rec.picking_type_code == 'incoming':
+            if rec.picking_type_code == 'incoming' and rec.e_task_id.receipt_type_id:
                 rec.picking_type_id = rec.e_task_id.receipt_type_id
-            elif rec.picking_type_code == 'outgoing':
+            elif rec.picking_type_code == 'outgoing' and rec.e_task_id.delivery_type_id:
                 rec.picking_type_id = rec.e_task_id.delivery_type_id
-            elif rec.picking_type_code == 'internal':
+            elif rec.picking_type_code == 'internal' and rec.e_task_id.internal_type_id:
                 rec.picking_type_id = rec.e_task_id.internal_type_id
 
     @api.depends('move_ids_without_package.e_total_untaxed',
