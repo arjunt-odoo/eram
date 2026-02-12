@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from odoo import _, api, models
+from odoo import _, api, fields, models
 
 
 class ProjectProject(models.Model):
@@ -18,6 +18,13 @@ class ProjectProject(models.Model):
 
 class ProjectTask(models.Model):
     _inherit = "project.task"
+
+    e_location_id = fields.Many2one("stock.location")
+    e_prod_location_id = fields.Many2one("stock.location")
+    delivery_type_id = fields.Many2one("stock.picking.type")
+    receipt_type_id = fields.Many2one("stock.picking.type")
+    manufacture_type_id = fields.Many2one("stock.picking.type")
+    internal_type_id = fields.Many2one("stock.picking.type")
 
     def action_view_inwards(self):
         self.ensure_one()
@@ -98,6 +105,10 @@ class ProjectTask(models.Model):
                     }])
                     pre_prod_location = self.env['stock.location'].search([('warehouse_id', '=', warehouse.id),
                                                                            ('name', '=', "Pre-Production"),
+                                                                           ('usage', '=', 'internal'),
+                                                                           ('location_id', '=', parent_location.id)])
+                    post_prod_location = self.env['stock.location'].search([('name', '=', "Post-Production"),
+                                                                            ('usage', '=', 'internal'),
                                                                            ('location_id', '=', parent_location.id)])
                     supplier_location = self.env['stock.location'].search([('name', '=', "Vendors"),
                                                                            ('usage', '=', 'supplier')])
@@ -124,7 +135,7 @@ class ProjectTask(models.Model):
                         'name': f"{rec.name}: Manufacture",
                         'code': 'mrp_operation',
                         'default_location_src_id': pre_prod_location.id,
-                        'default_location_dest_id': location.id,
+                        'default_location_dest_id': post_prod_location.id,
                         'sequence_code': f"{rec.name}-MO",
                         'task_id': rec.id
                     }])
@@ -136,4 +147,10 @@ class ProjectTask(models.Model):
                         'sequence_code': f"{rec.name}-OW",
                         'task_id': rec.id
                     }])
+                    rec.write({
+                        'delivery_type_id': delivery.id,
+                        'receipt_type_id': inward.id,
+                        'manufacture_type_id': manufacture.id,
+                        'internal_type_id': outward.id
+                    })
         return res
