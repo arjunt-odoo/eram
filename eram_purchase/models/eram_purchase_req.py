@@ -53,6 +53,7 @@ class EramPurchaseReqLine(models.Model):
     sl_number = fields.Integer("Sl No", compute="_compute_sl_number", store=True)
     product_id = fields.Many2one("product.product", string="Item")
     description = fields.Html()
+    part_no = fields.Html("Part No")
     make = fields.Html()
     item_no = fields.Html()
     qty = fields.Float("Quantity")
@@ -73,7 +74,8 @@ class EramPurchaseReqLine(models.Model):
                 'description': line.description,
                 'qty': line.qty,
                 'item_no': line.item_no,
-                'purchase_req_line_id': line.id
+                'purchase_req_line_id': line.id,
+                'part_no': line.part_no
             }))
         self.request_id.write({
             'rfq_ids': [fields.Command.create({

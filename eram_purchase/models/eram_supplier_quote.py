@@ -53,7 +53,9 @@ class EramSupplierQuote(models.Model):
                 'e_description': line.description,
                 'product_qty': line.qty,
                 'price_unit': line.price_unit,
-                'e_supplier_quote_line_id': line.id
+                'e_supplier_quote_line_id': line.id,
+                'e_part_no': line.part_no,
+                'e_make': line.make
             }))
         self.purchase_id = self.purchase_id.create({
             'partner_id': self.partner_id.id,

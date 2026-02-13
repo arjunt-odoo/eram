@@ -11,7 +11,7 @@
                 <field name="purchase_id" string="P.O. No:" invisible="picking_type_code != 'incoming' or not purchase_id"/>
                 <field name="e_po_no" string="P.O. No:" invisible="picking_type_code != 'incoming' or purchase_id"/>
 <!--                <field name="e_pr_no" invisible="picking_type_code != 'incoming' or e_pr_id"/>-->
-                <field name="e_pr_id" invisible="picking_type_code != 'incoming' or not e_pr_id"/>
+                <field name="e_pr_id" invisible="picking_type_code != 'incoming'"/>
                 <field name="e_project_code" invisible="picking_type_code != 'incoming'"/>
                 <field name="e_project_id" invisible="picking_type_code != 'incoming'"/>
                 <field name="e_task_id" invisible="picking_type_code != 'incoming'" domain="[('project_id', '=', e_project_id)]"/>

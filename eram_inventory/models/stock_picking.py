@@ -84,8 +84,8 @@ class StockMove(models.Model):
                              compute="_compute_e_si_no")
     e_item_code = fields.Html("ITEM CODE", related="purchase_line_id.e_supplier_quote_line_id.item_code", readonly=False)
     e_description = fields.Html("DESCRIPTION")
-    e_part_no = fields.Html("PART NO.", related="purchase_line_id.e_supplier_quote_line_id.part_no", readonly=False)
-    e_make = fields.Html("MAKE", related="purchase_line_id.e_supplier_quote_line_id.make", readonly=False)
+    e_part_no = fields.Html("PART NO.")
+    e_make = fields.Html("MAKE")
     e_uom_id = fields.Many2one("uom.uom", "UOM", related="product_id.uom_id",
                                store=True, readonly=False)
     e_total_untaxed = fields.Monetary(compute="_compute_amount", store=True)

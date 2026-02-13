@@ -33,7 +33,7 @@ class AccountMove(models.Model):
     e_amount_total_words = fields.Char(
         string="Total amount in words",
     )
-    e_sequence = fields.Integer("Sequence", defualt=1,
+    e_sequence = fields.Integer("Sequence", default=1,
                                 help="The order in which the invoices are taken in sale order report")
 
     def _compute_tax_totals(self):
