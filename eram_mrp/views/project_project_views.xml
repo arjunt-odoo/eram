@@ -35,11 +35,11 @@
                         <span class="o_stat_text">Outward Items</span>
                     </div>
                 </button>
-                <button class="oe_stat_button" type="object" name="action_view_stock_moves" icon="fa-exchange">
-                    <div class="o_field_widget o_stat_info">
-                        <span class="o_stat_text">Moves</span>
-                    </div>
-                </button>
+<!--                <button class="oe_stat_button" type="object" name="action_view_stock_moves" icon="fa-exchange">-->
+<!--                    <div class="o_field_widget o_stat_info">-->
+<!--                        <span class="o_stat_text">Moves</span>-->
+<!--                    </div>-->
+<!--                </button>-->
                 <button class="oe_stat_button" type="object" name="action_view_internal_transfers" icon="fa-exchange">
                     <div class="o_field_widget o_stat_info">
                         <span class="o_stat_text">Transfers</span>

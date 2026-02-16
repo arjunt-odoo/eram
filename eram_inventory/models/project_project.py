@@ -107,9 +107,9 @@ class ProjectTask(models.Model):
                                                                            ('name', '=', "Pre-Production"),
                                                                            ('usage', '=', 'internal'),
                                                                            ('location_id', '=', parent_location.id)])
-                    post_prod_location = self.env['stock.location'].search([('name', '=', "Post-Production"),
-                                                                            ('usage', '=', 'internal'),
-                                                                           ('location_id', '=', parent_location.id)])
+                    # post_prod_location = self.env['stock.location'].search([('name', '=', "Post-Production"),
+                    #                                                         ('usage', '=', 'internal'),
+                    #                                                        ('location_id', '=', parent_location.id)])
                     supplier_location = self.env['stock.location'].search([('name', '=', "Vendors"),
                                                                            ('usage', '=', 'supplier')])
                     delivery = self.env['stock.picking.type'].create([{
@@ -135,7 +135,7 @@ class ProjectTask(models.Model):
                         'name': f"{rec.name}: Manufacture",
                         'code': 'mrp_operation',
                         'default_location_src_id': pre_prod_location.id,
-                        'default_location_dest_id': post_prod_location.id,
+                        'default_location_dest_id': location.id,
                         'sequence_code': f"{rec.name}-MO",
                         'task_id': rec.id
                     }])

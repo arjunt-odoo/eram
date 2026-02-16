@@ -190,12 +190,13 @@
                     </group>
                     <group>
                         <group>
-                            <field name="e_project_id" required="1"/>
+                            <field name="e_project_id" required="1" readonly="state not in ('draft', 'confirmed')"/>
 <!--                            <field name="e_requested_by"/>-->
 <!--                            <field name="e_approved_by"/>-->
                         </group>
                         <group>
-                            <field name="e_task_id" required="1" domain="[('project_id', '=', e_project_id)]"/>
+                            <field name="e_task_id" required="1" readonly="state not in ('draft', 'confirmed')"
+                                   domain="[('project_id', '=', e_project_id)]"/>
 <!--                            <field name="e_requested_by_dept_id"/>-->
 <!--                            <field name="e_approved_by_dept_id"/>-->
                         </group>
@@ -204,6 +205,7 @@
                         <group>
                             <field name="picking_type_id" domain="[('task_id', '=', e_task_id), ('code', '=', 'mrp_operation')]"
                                    readonly="state not in ('draft', 'confirmed')"/>
+                            <field name="extra_cost" readonly="state not in ('draft', 'confirmed')"/>
                         </group>
                         <group>
                             <field name="location_src_id" groups="stock.group_stock_multi_locations" options="{'no_create': True}" readonly="state != 'draft'"/>

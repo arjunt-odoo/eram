@@ -143,8 +143,6 @@ class StockMove(models.Model):
             move = self.filtered(lambda m: m.id == vals.get('stock_move_id', False))
             if move:
                 vals["department_id"] = move.move_line_ids[0].department_id.id if move.move_line_ids else False
-                # vals["project_id"] = move.move_line_ids[0].project_id.id if move.move_line_ids else False
-                # vals["task_id"] = move.move_line_ids[0].task_id.id if move.move_line_ids else False
         return svl_vals_list
 
     def _get_out_svl_vals(self, forced_quantity):

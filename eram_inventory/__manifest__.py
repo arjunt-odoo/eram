@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 {
-    'name': 'Hierarchical Product Variants',
+    'name': 'Eram Inventory',
     'version': '18.0.1.0.0',
     'category': 'Inventory',
     'summary': 'Infinite nested variants',

@@ -106,7 +106,8 @@
                                    groups="stock.group_stock_multi_locations"
                                    invisible="picking_type_code == 'incoming'" readonly="1"/>
                             <field name="location_dest_id" options="{'no_create': True}"
-                                   groups="stock.group_stock_multi_locations" domain="[('usage', '=','internal')]"
+                                   groups="stock.group_stock_multi_locations"
+                                   domain="[('usage', '=','internal')]"
                                    invisible="picking_type_code == 'outgoing'" readonly="state == 'done'"/>
                         </group>
                         <group>
@@ -315,7 +316,8 @@
                     </div>
                     <group>
                         <group>
-                            <field name="picking_type_id" domain="[('task_id', '=', e_task_id), ('code', '=', 'internal')]"/>
+                            <field name="picking_type_id" readonly="state == 'done'"
+                                   domain="[('task_id', '=', e_task_id), ('code', '=', 'internal')]"/>
                             <field name="location_id" groups="!stock.group_stock_multi_locations" invisible="1"
                                    readonly="state == 'done'"/>
                             <field name="location_dest_id" groups="!stock.group_stock_multi_locations" invisible="1"
@@ -334,12 +336,13 @@
                     </group>
                     <group>
                         <group>
-                            <field name="e_project_id"/>
+                            <field name="e_project_id" readonly="state == 'done'"/>
                             <field name="e_requested_by"/>
                             <field name="e_approved_by"/>
                         </group>
                         <group>
-                            <field name="e_task_id" domain="[('project_id', '=', e_project_id)]"/>
+                            <field name="e_task_id" readonly="state == 'done'"
+                                   domain="[('project_id', '=', e_project_id)]"/>
                             <field name="e_requested_by_dept_id"/>
                             <field name="e_approved_by_dept_id"/>
                         </group>
