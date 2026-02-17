@@ -30,7 +30,7 @@
                                     <field name="e_description" readonly="1"/>
                                     <field name="e_make" readonly="1"/>
                                     <field name="e_part_no" readonly="1"/>
-                                    <field name="e_uom_id" readonly="1"/>
+                                    <field name="product_uom" readonly="1"/>
                                     <field name="product_uom_qty" readonly="1"/>
                                     <field name="quantity" readonly="1"/>
                                     <field name="e_qty_accepted"/>

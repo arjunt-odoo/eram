@@ -86,8 +86,6 @@ class StockMove(models.Model):
     e_description = fields.Html("DESCRIPTION")
     e_part_no = fields.Html("PART NO.")
     e_make = fields.Html("MAKE")
-    e_uom_id = fields.Many2one("uom.uom", "UOM", related="product_id.uom_id",
-                               store=True, readonly=False)
     e_total_untaxed = fields.Monetary(compute="_compute_amount", store=True)
     e_tax_ids = fields.Many2many("account.tax", string="TAX", related="purchase_line_id.taxes_id")
     e_price_total = fields.Monetary("TOTAL PRICE",store=True,
@@ -103,6 +101,13 @@ class StockMove(models.Model):
     e_rejection_reason = fields.Char(string="Reason for Rejection")
     project_id = fields.Many2one("project.project", compute="_compute_project_task", store=True)
     task_id = fields.Many2one("project.task", compute="_compute_project_task", store=True)
+
+    # def _prepare_account_move_vals(self, credit_account_id, debit_account_id, journal_id, qty, description, svl_id,
+    #                                cost):
+    #     res = super()._prepare_account_move_vals(credit_account_id, debit_account_id, journal_id, qty, description, svl_id,
+    #                                cost)
+    #     res["value"] = self.e_total_untaxed
+    #     res["unit_cost"] = self.price_unit
 
     @api.depends('picking_id', 'production_id', 'raw_material_production_id')
     def _compute_project_task(self):

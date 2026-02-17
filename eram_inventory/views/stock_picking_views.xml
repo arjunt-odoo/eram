@@ -57,7 +57,7 @@
                 <field name="e_description" readonly="state == 'done'" column_invisible="parent.picking_type_code != 'incoming'"/>
                 <field name="e_part_no" readonly="state == 'done'" column_invisible="parent.picking_type_code != 'incoming'"/>
                 <field name="e_make" readonly="state == 'done'" column_invisible="parent.picking_type_code != 'incoming'"/>
-                <field name="e_uom_id" readonly="state == 'done'" column_invisible="parent.picking_type_code != 'incoming'"/>
+                <field name="product_uom" readonly="state == 'done'" column_invisible="parent.picking_type_code != 'incoming'"/>
             </xpath>
             <xpath expr="//notebook//page[@name='operations']//field[@name='product_uom_qty']" position="attributes">
                 <attribute name="string">P.O. QUANTITY</attribute>
