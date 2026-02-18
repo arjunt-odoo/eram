@@ -10,7 +10,6 @@ class EramMaterialInspection(models.Model):
     inspected_date = fields.Date("Inspected Date")
     partner_id = fields.Many2one("res.partner", related="picking_id.partner_id", readonly=False,
                                  string="Supplier Name")
-    project_code = fields.Char(related="picking_id.e_project_code", readonly=False)
     project_id = fields.Many2one("project.project", related="picking_id.e_project_id", readonly=False)
     date_received = fields.Date(string="Date of item receival in inventory")
     pr_id = fields.Many2one("eram.purchase.req", related="picking_id.e_pr_id", readonly=False)

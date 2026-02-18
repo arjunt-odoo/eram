@@ -26,36 +26,36 @@ class MrpProduction(models.Model):
     def _onchange_e_task_id(self):
         self.picking_type_id = self.e_task_id.manufacture_type_id
 
-    @api.model_create_multi
-    def create(self, vals_list):
-        today = fields.Date.today()
-        current_month = today.month
-
-        if current_month >= 4:
-            current_fy_year = today.year
-            next_fy_year = today.year + 1
-        else:
-            current_fy_year = today.year - 1
-            next_fy_year = today.year
-
-        for val in vals_list:
-            batch_size = 50
-            seq = self.env['ir.sequence'].sudo()
-            position_str = seq.next_by_code('mrp.production.position')
-            position = int(position_str)
-            batch_seq = seq.search([('code', '=', 'mrp.production.batch')], limit=1)
-            batch = batch_seq.number_next
-            if position > batch_size:
-                seq.next_by_code('mrp.production.batch')
-                position_seq = seq.search([('code', '=', 'mrp.production.position')], limit=1)
-                position_seq.write({'number_next': 2})
-                position = 1
-                batch += 1
-            middle = f"{batch:03d}"
-            last = f"{position:04d}"
-            val['name'] = f"BLR-MWF-{current_fy_year}-{next_fy_year}-R0-{middle}-{last}"
-
-        return super(MrpProduction, self).create(vals_list)
+    # @api.model_create_multi
+    # def create(self, vals_list):
+    #     today = fields.Date.today()
+    #     current_month = today.month
+    #
+    #     if current_month >= 4:
+    #         current_fy_year = today.year
+    #         next_fy_year = today.year + 1
+    #     else:
+    #         current_fy_year = today.year - 1
+    #         next_fy_year = today.year
+    #
+    #     for val in vals_list:
+    #         batch_size = 50
+    #         seq = self.env['ir.sequence'].sudo()
+    #         position_str = seq.next_by_code('mrp.production.position')
+    #         position = int(position_str)
+    #         batch_seq = seq.search([('code', '=', 'mrp.production.batch')], limit=1)
+    #         batch = batch_seq.number_next
+    #         if position > batch_size:
+    #             seq.next_by_code('mrp.production.batch')
+    #             position_seq = seq.search([('code', '=', 'mrp.production.position')], limit=1)
+    #             position_seq.write({'number_next': 2})
+    #             position = 1
+    #             batch += 1
+    #         middle = f"{batch:03d}"
+    #         last = f"{position:04d}"
+    #         val['name'] = f"BLR-MWF-{current_fy_year}-{next_fy_year}-R0-{middle}-{last}"
+    #
+    #     return super(MrpProduction, self).create(vals_list)
 
     def write(self, vals):
         res = super().write(vals)

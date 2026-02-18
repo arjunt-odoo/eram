@@ -25,16 +25,16 @@ class ProjectTask(models.Model):
 
     def _compute_e_product_stock_item_ids(self):
         for task in self:
-            source_location = self.env["stock.location"].search(
+            task_location = self.env["stock.location"].search(
                 [("task_id", "=", task.id)], limit=1
             )
-            if not source_location:
+            if not task_location:
                 task.e_product_stock_item_ids = False
                 continue
 
             quants = self.env["stock.quant"].search([
-                ("location_id", "=", source_location.id),
-                ("quantity", ">", 0),  # only positive stock
+                ("location_id", "=", task_location.id),
+                ("quantity", ">", 0),
             ])
 
             product_quant_map = {q.product_id.id: q.quantity for q in quants}
@@ -44,13 +44,7 @@ class ProjectTask(models.Model):
                 continue
 
             incoming_lines = self.env["stock.move.line"].search([
-                ("location_dest_id", "=", source_location.id),
-                ("location_id.usage", "!=", "internal"),  # or more precise conditions
-                "|", "|", "|",
-                ("picking_id.e_task_id", "=", task.id),
-                ("production_id.e_task_id", "=", task.id),
-                ("move_id.raw_material_production_id.e_task_id", "=", task.id),
-                ("move_id.production_id.e_task_id", "=", task.id),
+                ("location_dest_id", "=", task_location.id)
             ])
 
             product_data = {}

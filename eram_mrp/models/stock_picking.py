@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-from odoo import api, models, fields
+from odoo import models, fields
 
 
 class StockPicking(models.Model):
     _inherit = 'stock.picking'
 
+    name = fields.Char(readonly=False)
     e_date = fields.Date(string="Date")
     e_justification = fields.Char(string="Justification")
     e_requested_by = fields.Many2one("hr.employee", string="Requested by")

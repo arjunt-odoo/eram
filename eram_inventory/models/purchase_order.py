@@ -1,5 +1,15 @@
+# -*- coding: utf-8 -*-
+from odoo import api, models
 
-from odoo import models
+class PurchaseOrder(models.Model):
+    _inherit = 'purchase.order'
+
+    @api.constrains('e_project_id', 'task_id')
+    def _constrain_project_id(self):
+        res = super()._constrain_project_id()
+        if self.task_id and self.task_id.receipt_type_id:
+            self.picking_type_id = self.task_id.receipt_type_id
+        return res
 
 
 class PurchaseOrderLine(models.Model):

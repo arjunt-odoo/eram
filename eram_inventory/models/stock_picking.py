@@ -12,8 +12,6 @@ class StockPicking(models.Model):
                           store=True, readonly=False, string="PR. No:")
     # e_pr_no = fields.Char("PR. No:")
     e_po_no = fields.Char("PO. No:")
-    e_project_code = fields.Char("Project Code", readonly=False, store=True,
-                                 related="purchase_id.e_supplier_quote_id.rfq_id.eram_pr_id.project_code")
     e_project_id = fields.Many2one("project.project", string="Project")
     e_task_id = fields.Many2one("project.task", string="Task")
     e_invoice_date = fields.Date("Invoice Date", related="e_bill_id.invoice_date")

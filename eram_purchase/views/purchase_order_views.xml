@@ -5,6 +5,12 @@
         <field name="model">purchase.order</field>
         <field name="inherit_id" ref="purchase.purchase_order_form"/>
         <field name="arch" type="xml">
+            <xpath expr="//button[@name='button_confirm'][1]" position="attributes">
+                <attribute name="confirm">Are you sure you want to confirm this order?</attribute>
+            </xpath>
+            <xpath expr="//button[@name='button_confirm'][2]" position="attributes">
+                <attribute name="confirm">Are you sure you want to confirm this order?</attribute>
+            </xpath>
             <field name="partner_id" position="attributes">
                 <attribute name="required">state == 'purchase'</attribute>
             </field>

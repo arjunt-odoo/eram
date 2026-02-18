@@ -8,7 +8,7 @@
     'depends': ['eram_inventory'],
     'data': [
         'security/ir.model.access.csv',
-        'data/ir_sequence.xml',
+        # 'data/ir_sequence.xml',
         'views/hr_department_views.xml',
         'views/mrp_production_views.xml',
         'views/project_project_views.xml',

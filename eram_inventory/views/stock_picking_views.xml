@@ -19,7 +19,6 @@
                 <field name="purchase_id" string="P.O. No:" invisible="picking_type_code != 'incoming' or not purchase_id"/>
                 <field name="e_po_no" string="P.O. No:" invisible="picking_type_code != 'incoming' or purchase_id"/>
                 <field name="e_pr_id" readonly="state == 'done'" invisible="picking_type_code != 'incoming'"/>
-                <field name="e_project_code" readonly="state == 'done'" invisible="picking_type_code != 'incoming'"/>
                 <field name="e_project_id" required="picking_type_code == 'incoming'"
                        readonly="state == 'done'" invisible="picking_type_code != 'incoming'"/>
                 <field name="e_task_id"  required="picking_type_code == 'incoming'" readonly="state == 'done'"

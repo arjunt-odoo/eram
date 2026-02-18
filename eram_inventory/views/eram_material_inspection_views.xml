@@ -13,7 +13,6 @@
                         <group>
                             <field name="name"/>
                             <field name="partner_id"/>
-                            <field name="project_code"/>
                             <field name="project_id"/>
                             <field name="pr_id"/>
                             <field name="purchase_id" invisible="not purchase_id"/>

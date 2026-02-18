@@ -12,9 +12,11 @@
                             type="object" class="oe_highlight" groups="base.group_user" data-hotkey="w"/>
                     <button name="button_validate" invisible="state in ('draft', 'confirmed', 'done', 'cancel')"
                             string="Validate" type="object" class="oe_highlight" groups="stock.group_stock_user"
+                            confirm="Are you sure you want to validate this transfer? Once you validate, you cannot reset it!"
                             data-hotkey="v"/>
                     <button name="button_validate" invisible="state in ('waiting', 'assigned', 'done', 'cancel')"
                             string="Validate" type="object" groups="stock.group_stock_user" class="o_btn_validate"
+                            confirm="Are you sure you want to validate this transfer? Once you validate, you cannot reset it!"
                             data-hotkey="v"/>
                     <button name="%(stock.act_stock_return_picking)d" string="Return" invisible="state != 'done'"
                             type="action" groups="base.group_user" data-hotkey="k"/>
@@ -111,7 +113,7 @@
                                    invisible="picking_type_code == 'outgoing'" readonly="state == 'done'"/>
                         </group>
                         <group>
-                            <field name="e_transfer_task_id" string="Task"/>
+                            <field name="e_transfer_task_id" string="Task" readonly="1"/>
                         </group>
                     </group>
                     <field name="picking_properties" columns="2"/>
@@ -220,9 +222,11 @@
                             type="object" class="oe_highlight" groups="base.group_user" data-hotkey="w"/>
                     <button name="button_validate" invisible="state in ('draft', 'confirmed', 'done', 'cancel')"
                             string="Validate" type="object" class="oe_highlight" groups="stock.group_stock_user"
+                            confirm="Are you sure you want to validate this transfer? Once you validate, you cannot reset it!"
                             data-hotkey="v"/>
                     <button name="button_validate" invisible="state in ('waiting', 'assigned', 'done', 'cancel')"
                             string="Validate" type="object" groups="stock.group_stock_user" class="o_btn_validate"
+                            confirm="Are you sure you want to validate this transfer? Once you validate, you cannot reset it!"
                             data-hotkey="v"/>
                     <widget name="signature" string="Sign" highlight="1"
                             invisible="not id or picking_type_code != 'outgoing' or state != 'done' or is_signed"

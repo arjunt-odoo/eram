@@ -13,6 +13,11 @@ class PurchaseOrder(models.Model):
                                    related="e_supplier_quote_id.rfq_id.eram_pr_id.project_id")
     task_id = fields.Many2one("project.task", string="Task", readonly=False, store=True,
                                    related="e_supplier_quote_id.rfq_id.eram_pr_id.task_id")
+    e_charge_code = fields.Char(compute="_compute_e_charge_code")
+
+    def _compute_e_charge_code(self):
+        for rec in self:
+            rec.e_charge_code = f"{rec.e_project_id.name} - {rec.task_id.name}"
 
     @api.constrains('e_project_id', 'task_id')
     def _constrain_project_id(self):

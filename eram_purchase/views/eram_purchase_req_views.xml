@@ -22,7 +22,6 @@
                             <field name="pr_number"/>
                             <field name="pr_date"/>
                             <field name="closing_date"/>
-                            <field name="project_code"/>
                             <field name="project_id"/>
                             <field name="task_id" domain="[('project_id', '=', project_id)]"/>
                         </group>
@@ -54,7 +53,6 @@
                 <field name="pr_number"/>
                 <field name="pr_date"/>
                 <field name="closing_date"/>
-                <field name="project_code"/>
                 <field name="project_id"/>
             </list>
         </field>
