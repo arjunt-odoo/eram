@@ -34,7 +34,6 @@ class ProjectTask(models.Model):
 
             quants = self.env["stock.quant"].search([
                 ("location_id", "=", task_location.id),
-                ("quantity", ">", 0),
             ])
 
             product_quant_map = {q.product_id.id: q.quantity for q in quants}
