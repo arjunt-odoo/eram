@@ -45,6 +45,11 @@
                         <span class="o_stat_text">Transfers</span>
                     </div>
                 </button>
+                 <button class="oe_stat_button" type="object" name="action_view_operation_types" icon="fa-exchange">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_text">Operation Types</span>
+                    </div>
+                </button>
             </xpath>
             <xpath expr="//header" position="inside">
                 <button name="action_transfer_left_overs" class="btn btn-primary" string="Move Items" type="object"/>

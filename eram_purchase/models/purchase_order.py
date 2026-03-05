@@ -3,6 +3,8 @@ from odoo import _, api, fields, models
 
 class PurchaseOrder(models.Model):
     _inherit = 'purchase.order'
+    _sql_constraints = [('name_uniq', "unique(name)",
+                         "There is a purchase order already exist with the same name.")]
 
     partner_id = fields.Many2one("res.partner", required=False)
     state = fields.Selection(selection_add=[('draft', "Draft"),

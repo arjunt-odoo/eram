@@ -87,10 +87,21 @@ class ProjectTask(models.Model):
             "domain": [('task_id', '=', self.id)],
         }
 
+    def action_view_operation_types(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "res_model": "stock.picking.type",
+            "name": _("Operation Types"),
+            "view_mode": "list,form",
+            "domain": [('task_id', '=', self.id)],
+        }
+
     @api.model_create_multi
     def create(self, vals):
         res = super().create(vals)
         for rec in res:
+            project_name = rec.project_id.name
             warehouse = self.env['stock.warehouse'].search([('company_id', '=', self.env.company.id)], limit=1)
             if warehouse:
                 parent_location = self.env['stock.location'].search([('warehouse_id', '=', warehouse.id),
@@ -116,7 +127,7 @@ class ProjectTask(models.Model):
                         'name': f"{rec.name}: Delivery",
                         'code': 'outgoing',
                         'default_location_src_id': location.id,
-                        'sequence_code': f"{rec.name}-OUT",
+                        'sequence_code': f"{project_name}-{rec.name}-OUT",
                         'task_id': rec.id
                     }])
                     inward = self.env['stock.picking.type'].create([{
@@ -124,7 +135,7 @@ class ProjectTask(models.Model):
                         'code': 'incoming',
                         'default_location_dest_id': location.id,
                         'default_location_src_id': supplier_location.id,
-                        'sequence_code': f"{rec.name}-IN",
+                        'sequence_code': f"{project_name}-{rec.name}-IN",
                         'return_picking_type_id': delivery.id,
                         'task_id': rec.id
                     }])
@@ -136,7 +147,7 @@ class ProjectTask(models.Model):
                         'code': 'mrp_operation',
                         'default_location_src_id': pre_prod_location.id,
                         'default_location_dest_id': location.id,
-                        'sequence_code': f"{rec.name}-MO",
+                        'sequence_code': f"{project_name}-{rec.name}-MO",
                         'task_id': rec.id
                     }])
                     outward = self.env['stock.picking.type'].create([{
@@ -144,7 +155,7 @@ class ProjectTask(models.Model):
                         'code': 'internal',
                         'default_location_src_id': location.id,
                         'default_location_dest_id': pre_prod_location.id,
-                        'sequence_code': f"{rec.name}-OW",
+                        'sequence_code': f"{project_name}-{rec.name}-OW",
                         'task_id': rec.id
                     }])
                     rec.write({

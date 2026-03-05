@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 {
-    'name': 'Eram Reports',
+    'name': 'Eram Sales',
     'version': '18.0.1.0.0',
     'category': 'sale',
     'summary': 'Eram Reports',

@@ -5,6 +5,10 @@ from odoo import api, models, fields
 class StockPicking(models.Model):
     _inherit = 'stock.picking'
 
+    _sql_constraints = [
+        ('name_uniq', 'unique(name, e_project_id, e_task_id)', 'Reference must be unique per project!'),
+    ]
+
     active = fields.Boolean("Active", default=True)
     e_grn_id = fields.Many2one("eram.grn", string="Grn. No:")
     e_bill_id = fields.Many2one("account.move", "Invoice No:")
