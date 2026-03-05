@@ -165,3 +165,22 @@ class ProjectTask(models.Model):
                         'internal_type_id': outward.id
                     })
         return res
+
+    def write(self, vals):
+        res = super().write(vals)
+        if vals.get('project_id'):
+            for rec in self:
+                project_name = rec.project_id.name
+                rec.delivery_type_id.write({
+                    'sequence_code': f"{project_name}-{rec.name}-OUT",
+                })
+                rec.receipt_type_id.write({
+                    'sequence_code': f"{project_name}-{rec.name}-IN",
+                })
+                rec.manufacture_type_id.write({
+                    'sequence_code': f"{project_name}-{rec.name}-MO",
+                })
+                rec.internal_type_id.write({
+                    'sequence_code': f"{project_name}-{rec.name}-OW",
+                })
+        return res

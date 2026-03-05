@@ -118,7 +118,7 @@ class EramReport(models.TransientModel):
                 worksheet.write(row, col, picking.e_invoice_date or '', cell_format); col += 1
                 worksheet.write(row, col, picking.date_done.date() if picking.date_done else '', cell_format); col += 1
                 worksheet.write(row, col, project_code, cell_format); col += 1
-                worksheet.write(row, col, picking.e_pr_id.name if picking.e_pr_id else '', cell_format); col += 1
+                worksheet.write(row, col, picking.e_pr_id.pr_number if picking.e_pr_id else '', cell_format); col += 1
                 worksheet.write(row, col, po_number, cell_format); col += 1
                 worksheet.write(row, col, invoice_number, cell_format); col += 1
                 worksheet.write(row, col, move.e_description or move.product_id.name or '', cell_format); col += 1
