@@ -141,6 +141,10 @@
                 <field name="project_id" string="Project Code" optional="show"/>
                 <field name="task_id" string="Task" optional="show" domain="[('project_id', '=', project_id)]"/>
             </xpath>
+            <xpath expr="//field[@name='value']" position="after">
+                <field name="total_taxed"/>
+                <field name="tax_ids" widget="many2many_tags"/>
+            </xpath>
             <xpath expr="//list" position="attributes">
                 <attribute name="editable">bottom</attribute>
             </xpath>

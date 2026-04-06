@@ -89,7 +89,7 @@ class StockMove(models.Model):
     e_part_no = fields.Html("PART NO.")
     e_make = fields.Html("MAKE")
     e_total_untaxed = fields.Monetary(compute="_compute_amount", store=True)
-    e_tax_ids = fields.Many2many("account.tax", string="TAX", related="purchase_line_id.taxes_id")
+    e_tax_ids = fields.Many2many("account.tax", string="TAX", compute="_compute_e_tax_ids", store=True)
     e_price_total = fields.Monetary("TOTAL PRICE",store=True,
                                     compute="_compute_amount")
     e_discrepancy = fields.Html("DISCREPANCY DETAILS")
@@ -103,13 +103,7 @@ class StockMove(models.Model):
     e_rejection_reason = fields.Char(string="Reason for Rejection")
     project_id = fields.Many2one("project.project", compute="_compute_project_task", store=True)
     task_id = fields.Many2one("project.task", compute="_compute_project_task", store=True)
-
-    # def _prepare_account_move_vals(self, credit_account_id, debit_account_id, journal_id, qty, description, svl_id,
-    #                                cost):
-    #     res = super()._prepare_account_move_vals(credit_account_id, debit_account_id, journal_id, qty, description, svl_id,
-    #                                cost)
-    #     res["value"] = self.e_total_untaxed
-    #     res["unit_cost"] = self.price_unit
+    eram_valuation_ids = fields.One2many("stock.valuation.layer", "eram_ow_move_id")
 
     @api.depends('picking_id', 'production_id', 'raw_material_production_id')
     def _compute_project_task(self):
@@ -144,21 +138,72 @@ class StockMove(models.Model):
             else:
                 rec.e_price_total = rec.e_total_untaxed
 
+    @api.depends('purchase_line_id.taxes_id')
+    def _compute_e_tax_ids(self):
+        """For purchase/receipt moves → take from PO line.
+        For MRP consumption (outgoing) moves → we set it manually in _get_out_svl_vals below."""
+        for rec in self:
+            if rec.purchase_line_id:
+                rec.e_tax_ids = rec.purchase_line_id.taxes_id
+
+    def _get_out_move_tax_ids(self):
+        """Fallback for average/standard costing (union of all remaining layers)."""
+        self.ensure_one()
+        svls = self.env['stock.valuation.layer'].search([
+            ('product_id', '=', self.product_id.id),
+            ('remaining_qty', '>', 0.0),
+            ('company_id', '=', self.company_id.id),
+        ], order='create_date asc')
+        return svls.mapped('tax_ids') if svls else self.env['account.tax']
+
     def _get_in_svl_vals(self, forced_quantity):
         svl_vals_list = super()._get_in_svl_vals(forced_quantity)
         for vals in svl_vals_list:
             move = self.filtered(lambda m: m.id == vals.get('stock_move_id', False))
             if move:
                 vals["department_id"] = move.move_line_ids[0].department_id.id if move.move_line_ids else False
+                vals["tax_ids"] = [(6, 0, move.e_tax_ids.ids)]
         return svl_vals_list
 
     def _get_out_svl_vals(self, forced_quantity):
         svl_vals_list = super()._get_out_svl_vals(forced_quantity)
+        if not svl_vals_list:
+            return svl_vals_list
+        final_svl_vals = []
         for vals in svl_vals_list:
-            move = self.filtered(lambda m: m.id == vals.get('stock_move_id', False))
-            if move:
-                vals["department_id"] = move.move_line_ids[0].department_id.id if move.move_line_ids else False
-        return svl_vals_list
+            product_id = vals.get('product_id', False)
+            stock_move_id = vals.get('stock_move_id', False)
+            if product_id and stock_move_id:
+                stock_move = self.browse([stock_move_id])
+                project_id = stock_move.project_id
+                task_id = stock_move.task_id
+                on_hand_svl = self.env['stock.valuation.layer'].search([('product_id', '=', product_id),
+                                                                        ('is_empty', '=', False),
+                                                                        ('company_id', '=', self.company_id.id),
+                                                                        ('project_id', '=', project_id.id),
+                                                                        ('task_id', '=', task_id.id),])
+                for sm in stock_move.move_orig_ids:
+                    total_qty = sm.quantity
+                    qty_done = 0
+                    for svl in on_hand_svl:
+                        if total_qty > 0 and total_qty != qty_done:
+                            qty = min(svl.quantity - svl.qty_moved, total_qty-qty_done)
+                            final_svl_vals.append({
+                                'product_id': product_id,
+                                'value': -(qty * svl.unit_cost),
+                                'unit_cost': svl.unit_cost,
+                                'quantity': -qty,
+                                'lot_id': vals.get('lot_id', False),
+                                'remaining_qty': qty,
+                                'stock_move_id': stock_move_id,
+                                'eram_ow_move_id': sm.id,
+                                'company_id': self.company_id.id,
+                                'description': vals.get('description', ''),
+                                'tax_ids': [fields.Command.set(svl.tax_ids.ids)],
+                            })
+                            qty_done += qty
+                            svl.qty_moved += qty
+        return final_svl_vals
 
     def _get_dropshipped_svl_vals(self, forced_quantity):
         svl_vals_list = super()._get_dropshipped_svl_vals(forced_quantity)
@@ -166,7 +211,11 @@ class StockMove(models.Model):
             move = self.filtered(lambda m: m.id == vals.get('stock_move_id', False))
             if move:
                 vals["department_id"] = move.move_line_ids[0].department_id.id if move.move_line_ids else False
+                tax_ids = move.e_tax_ids
+                move.e_tax_ids = tax_ids
+                vals["tax_ids"] = [(6, 0, tax_ids.ids)]
         return svl_vals_list
+
 
 class StockMoveLine(models.Model):
     _inherit = 'stock.move.line'

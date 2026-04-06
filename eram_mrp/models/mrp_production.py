@@ -91,6 +91,33 @@ class MrpProduction(models.Model):
                 move.stock_valuation_layer_ids.write({'task_id': move.task_id.id})
         return result
 
+    def _cal_price(self, consumed_moves):
+        res = super()._cal_price(consumed_moves)
+        finished_move = self.move_finished_ids.filtered(
+            lambda x: x.product_id == self.product_id
+                      and x.quantity > 0
+                      and x.state not in ('done', 'cancel')
+        )
+        if finished_move:
+            finished_move.ensure_one()
+
+            total_component_cost = sum(
+                svl.total_taxed for svl in consumed_moves.sudo().stock_valuation_layer_ids
+            ) if consumed_moves else 0.0
+
+            work_center_cost = sum(wo._cal_cost() for wo in self.workorder_ids)
+            quantity = finished_move.product_uom._compute_quantity(
+                finished_move.quantity, finished_move.product_id.uom_id
+            )
+            extra_cost = self.extra_cost * quantity
+
+            total_cost_tax_incl = -total_component_cost + work_center_cost + extra_cost
+
+            if finished_move.product_id.cost_method in ('fifo', 'average'):
+                finished_move.price_unit = total_cost_tax_incl / quantity
+
+        return res
+
     def action_view_outwards(self):
         self.ensure_one()
         return {
