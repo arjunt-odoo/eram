@@ -18,7 +18,7 @@ class StockPicking(models.Model):
     e_po_no = fields.Char("PO. No:")
     e_project_id = fields.Many2one("project.project", string="Project")
     e_task_id = fields.Many2one("project.task", string="Task")
-    e_invoice_date = fields.Date("Invoice Date", related="e_bill_id.invoice_date")
+    e_invoice_date = fields.Date("Invoice Date", related="e_bill_id.invoice_date", store=True)
     e_invoice_received_date = fields.Date("Invoice Received Date", related="e_bill_id.e_invoice_received_date",
                                           readonly=False)
     currency_id = fields.Many2one("res.currency",

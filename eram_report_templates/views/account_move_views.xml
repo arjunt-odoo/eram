@@ -38,6 +38,7 @@
                                invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
                         <field name="currency_id" readonly="state == 'posted'"
                                invisible="move_type not in ('out_invoice', 'out_refund', 'out_receipt')"/>
+                        <field name="l10n_in_state_id"/>
                     </group>
                     <group>
                         <field name="e_transport_mode" readonly="state == 'posted'"

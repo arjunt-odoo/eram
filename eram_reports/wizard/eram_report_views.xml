@@ -8,8 +8,8 @@
                 <sheet>
                     <group>
                         <group>
-                            <field name="from_date"/>
-                            <field name="to_date"/>
+                            <field name="month"/>
+                            <field name="year"/>
                         </group>
                         <group/>
                     </group>
