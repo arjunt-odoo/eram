@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        Add "Import GRN Inventory" under the Inventory > Operations menu.
+        Adjust the parent menu id if your Inventory menu structure differs.
+    -->
+    <menuitem
+        id="menu_grn_import_wizard"
+        name="Import GRN Inventory"
+        action="eram_inventory_import.action_grn_import_wizard"
+        parent="stock.menu_stock_warehouse_mgmt"
+        sequence="100"/>
+
+</odoo>

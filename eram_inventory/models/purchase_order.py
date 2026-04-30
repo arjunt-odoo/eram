@@ -4,6 +4,13 @@ from odoo import api, models
 class PurchaseOrder(models.Model):
     _inherit = 'purchase.order'
 
+    def _prepare_picking(self):
+        picking_data = super()._prepare_picking()
+        picking_data.update({
+            'e_pr_id': self.e_supplier_quote_id.rfq_id.eram_pr_id.id or False,
+        })
+        return picking_data
+
     @api.constrains('e_project_id', 'task_id')
     def _constrain_project_id(self):
         res = super()._constrain_project_id()
