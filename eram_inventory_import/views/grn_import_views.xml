@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ================================================================
+         GRN Import Queue — List
+    ================================================================ -->
+    <record id="view_grn_import_queue_list" model="ir.ui.view">
+        <field name="name">grn.import.queue.list</field>
+        <field name="model">grn.import.queue</field>
+        <field name="arch" type="xml">
+            <list string="GRN Import Queues"
+                  decoration-success="state == 'done'"
+                  decoration-warning="state == 'in_progress'"
+                  decoration-danger="state == 'partial'"
+                  decoration-muted="state == 'draft'">
+                <field name="name"/>
+                <field name="file_name"/>
+                <field name="create_date" string="Uploaded"/>
+                <field name="user_id"/>
+                <field name="total_lines" string="GRNs"/>
+                <field name="done_lines"  string="Done"/>
+                <field name="error_lines" string="Errors"
+                       decoration-danger="error_lines > 0"/>
+                <field name="pending_lines" string="Pending"/>
+                <field name="progress" widget="progressbar"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'done'"
+                       decoration-warning="state == 'in_progress'"
+                       decoration-danger="state == 'partial'"
+                       decoration-muted="state == 'draft'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ================================================================
+         GRN Import Queue — Form
+    ================================================================ -->
+    <record id="view_grn_import_queue_form" model="ir.ui.view">
+        <field name="name">grn.import.queue.form</field>
+        <field name="model">grn.import.queue</field>
+        <field name="arch" type="xml">
+            <form string="GRN Import Queue">
+                <header>
+                    <button string="Retry Errors"
+                            name="action_reset_errors"
+                            type="object"
+                            class="btn-warning"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,in_progress,done"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+
+                    <group>
+                        <group string="Source">
+                            <field name="file_name"/>
+                            <field name="user_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="create_date" string="Uploaded At"/>
+                        </group>
+                        <group string="Progress">
+                            <field name="total_lines"   string="Total GRNs"/>
+                            <field name="pending_lines" string="Pending"/>
+                            <field name="done_lines"    string="Done"/>
+                            <field name="error_lines"   string="Errors"
+                                   decoration-danger="error_lines > 0"/>
+                            <field name="progress" widget="progressbar"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Queue Lines" name="lines">
+                            <field name="line_ids" nolabel="1">
+                                <list string="Lines"
+                                      decoration-success="state == 'done'"
+                                      decoration-warning="state == 'running'"
+                                      decoration-danger="state == 'error'"
+                                      decoration-muted="state == 'pending'">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="grn_no"/>
+                                    <field name="line_count" string="Rows"/>
+                                    <field name="state" widget="badge"
+                                           decoration-success="state == 'done'"
+                                           decoration-warning="state == 'running'"
+                                           decoration-danger="state == 'error'"
+                                           decoration-muted="state == 'pending'"/>
+                                    <field name="picking_id"/>
+                                    <field name="processed_at"/>
+                                    <field name="error_message"
+                                           optional="show"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_grn_import_queue" model="ir.actions.act_window">
+        <field name="name">GRN Import Queues</field>
+        <field name="res_model">grn.import.queue</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ================================================================
+         GRN Import Queue Line — Form (standalone, for detailed error view)
+    ================================================================ -->
+    <record id="view_grn_import_queue_line_form" model="ir.ui.view">
+        <field name="name">grn.import.queue.line.form</field>
+        <field name="model">grn.import.queue.line</field>
+        <field name="arch" type="xml">
+            <form string="Queue Line">
+                <header>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="pending,running,done"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="queue_id"/>
+                            <field name="grn_no"/>
+                            <field name="line_count" string="Excel Rows"/>
+                            <field name="sequence"/>
+                        </group>
+                        <group>
+                            <field name="state" widget="badge"
+                                   decoration-success="state == 'done'"
+                                   decoration-warning="state == 'running'"
+                                   decoration-danger="state == 'error'"
+                                   decoration-muted="state == 'pending'"/>
+                            <field name="picking_id"/>
+                            <field name="processed_at"/>
+                        </group>
+                    </group>
+                    <group string="Error Detail" invisible="not error_message">
+                        <field name="error_message" nolabel="1" widget="text"
+                               style="color: #dc3545; font-family: monospace;"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ================================================================
+         Import Wizard
+    ================================================================ -->
+    <record id="view_grn_import_wizard_form" model="ir.ui.view">
+        <field name="name">grn.import.wizard.form</field>
+        <field name="model">grn.import.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Import GRN Inward Inventory">
+                <sheet>
+                    <group invisible="queue_ids">
+                        <group string="Upload Excel File">
+                            <field name="file_data" filename="file_name" widget="binary"/>
+                            <field name="file_name" invisible="1"/>
+                        </group>
+                        <group string="How it works">
+                            <div class="alert alert-info" role="alert">
+                                <p><strong>Expected Excel Format:</strong></p>
+                                <ul>
+                                    <li>Row 1 — Title (ignored)</li>
+                                    <li>Row 2 — Column headers</li>
+                                    <li>Row 3 — Blank (ignored)</li>
+                                    <li>Row 4+ — Data rows</li>
+                                </ul>
+                                <p>Rows sharing the same <strong>GRN NO.</strong>
+                                become one queue line (= one Receipt).</p>
+                                <p>Each queue holds up to <strong>100 lines</strong>.
+                                Larger files are split automatically.</p>
+                                <p>The <strong>scheduled action</strong> processes
+                                one line per minute — no server overload.</p>
+                            </div>
+                        </group>
+                    </group>
+
+                    <group invisible="not queue_ids">
+                        <div class="alert alert-success" role="alert">
+                            <field name="info_msg" nolabel="1"/>
+                        </div>
+                        <field name="queue_ids" nolabel="1">
+                            <list string="Created Queues">
+                                <field name="name"/>
+                                <field name="total_lines" string="GRN Lines"/>
+                                <field name="state" widget="badge"
+                                       decoration-success="state == 'done'"
+                                       decoration-warning="state == 'in_progress'"
+                                       decoration-danger="state == 'partial'"
+                                       decoration-muted="state == 'draft'"/>
+                            </list>
+                        </field>
+                    </group>
+                </sheet>
+
+                <footer>
+                    <button string="Import"
+                            name="action_import"
+                            type="object"
+                            class="btn-primary"
+                            invisible="queue_ids"/>
+                    <button string="View Queue(s)"
+                            name="action_view_queues"
+                            type="object"
+                            class="btn-secondary"
+                            invisible="not queue_ids"/>
+                    <button string="Close" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_grn_import_wizard" model="ir.actions.act_window">
+        <field name="name">Import GRN Inventory</field>
+        <field name="res_model">grn.import.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

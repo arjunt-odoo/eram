@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
 {
-    'name': 'ERAM Inventory Import',
-    'version': '18.0.1.0.0',
+    'name': 'ERAM GRN Import Queue',
+    'version': '18.0.3.0.0',
     'category': 'Inventory',
-    'summary': 'Bulk import GRN Inward Inventory from Excel',
+    'summary': 'Queue-based bulk import of GRN Inward Inventory from Excel',
     'description': """
-        Import stock.picking (receipts) records in bulk from a structured
-        Excel file matching the GRN Inward Inventory format.
+        Upload a GRN Inward Inventory Excel file.  The wizard parses it and
+        creates one or more import queues (max 100 GRN lines each).
+
+        A permanent scheduled action processes exactly ONE queue line per run
+        (default: every minute), creating the corresponding stock.picking and
+        stock.moves without ever blocking an HTTP worker or hitting a timeout.
     """,
     'author': 'ERAM',
     'depends': [
@@ -14,7 +18,8 @@
     ],
     'data': [
         'security/ir.model.access.csv',
-        'wizard/grn_import_wizard_view.xml',
+        'data/grn_import_cron.xml',
+        'views/grn_import_views.xml',
         'views/menu.xml',
     ],
     'installable': True,

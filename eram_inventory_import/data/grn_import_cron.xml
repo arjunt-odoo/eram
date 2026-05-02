@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Permanent scheduled action: runs every 1 minute and processes
+        exactly ONE pending grn.import.queue.line per execution.
+        This guarantees the server is never overloaded regardless of
+        queue depth.  Adjust interval_number / interval_type as needed.
+    -->
+    <record id="ir_cron_grn_import_queue" model="ir.cron">
+        <field name="name">GRN Import Queue Processor</field>
+        <field name="model_id" ref="model_grn_import_queue_line"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_process_next(env)</field>
+        <field name="interval_number">5</field>
+        <field name="interval_type">minutes</field>
+        <field name="active" eval="True"/>
+    </record>
+
+    <!-- Sequence for queue names -->
+    <record id="seq_grn_import_queue" model="ir.sequence">
+        <field name="name">GRN Import Queue</field>
+        <field name="code">grn.import.queue</field>
+        <field name="prefix">GRNQ/%(year)s/%(month)s/</field>
+        <field name="padding">4</field>
+    </record>
+</odoo>

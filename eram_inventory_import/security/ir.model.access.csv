@@ -1,3 +1,6 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_grn_import_wizard_user,grn.import.wizard user,model_grn_import_wizard,stock.group_stock_user,1,1,1,1
-access_grn_import_wizard_manager,grn.import.wizard manager,model_grn_import_wizard,stock.group_stock_manager,1,1,1,1
+access_grn_import_queue_user,grn.import.queue user,model_grn_import_queue,stock.group_stock_user,1,1,1,0
+access_grn_import_queue_manager,grn.import.queue manager,model_grn_import_queue,stock.group_stock_manager,1,1,1,1
+access_grn_import_queue_line_user,grn.import.queue.line user,model_grn_import_queue_line,stock.group_stock_user,1,1,1,0
+access_grn_import_queue_line_manager,grn.import.queue.line manager,model_grn_import_queue_line,stock.group_stock_manager,1,1,1,1
