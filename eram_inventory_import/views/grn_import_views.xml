@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- ================================================================
-         GRN Import Queue — List
-    ================================================================ -->
+    <!-- GRN Import Queue - List -->
     <record id="view_grn_import_queue_list" model="ir.ui.view">
         <field name="name">grn.import.queue.list</field>
         <field name="model">grn.import.queue</field>
@@ -17,12 +15,11 @@
                 <field name="file_name"/>
                 <field name="create_date" string="Uploaded"/>
                 <field name="user_id"/>
-                <field name="total_lines" string="GRNs"/>
-                <field name="done_lines"  string="Done"/>
-                <field name="error_lines" string="Errors"
-                       decoration-danger="error_lines > 0"/>
+                <field name="total_lines"   string="GRNs"/>
+                <field name="done_lines"    string="Done"/>
+                <field name="error_lines"   string="Errors" decoration-danger="error_lines > 0"/>
                 <field name="pending_lines" string="Pending"/>
-                <field name="progress" widget="progressbar"/>
+                <field name="progress"      widget="progressbar"/>
                 <field name="state" widget="badge"
                        decoration-success="state == 'done'"
                        decoration-warning="state == 'in_progress'"
@@ -32,27 +29,18 @@
         </field>
     </record>
 
-    <!-- ================================================================
-         GRN Import Queue — Form
-    ================================================================ -->
+    <!-- GRN Import Queue - Form -->
     <record id="view_grn_import_queue_form" model="ir.ui.view">
         <field name="name">grn.import.queue.form</field>
         <field name="model">grn.import.queue</field>
         <field name="arch" type="xml">
             <form string="GRN Import Queue">
                 <header>
-                    <button string="Retry Errors"
-                            name="action_reset_errors"
-                            type="object"
-                            class="btn-warning"/>
                     <field name="state" widget="statusbar"
                            statusbar_visible="draft,in_progress,done"/>
                 </header>
                 <sheet>
-                    <div class="oe_title">
-                        <h1><field name="name"/></h1>
-                    </div>
-
+                    <div class="oe_title"><h1><field name="name"/></h1></div>
                     <group>
                         <group string="Source">
                             <field name="file_name"/>
@@ -64,12 +52,10 @@
                             <field name="total_lines"   string="Total GRNs"/>
                             <field name="pending_lines" string="Pending"/>
                             <field name="done_lines"    string="Done"/>
-                            <field name="error_lines"   string="Errors"
-                                   decoration-danger="error_lines > 0"/>
+                            <field name="error_lines"   string="Errors" decoration-danger="error_lines > 0"/>
                             <field name="progress" widget="progressbar"/>
                         </group>
                     </group>
-
                     <notebook>
                         <page string="Queue Lines" name="lines">
                             <field name="line_ids" nolabel="1">
@@ -88,8 +74,7 @@
                                            decoration-muted="state == 'pending'"/>
                                     <field name="picking_id"/>
                                     <field name="processed_at"/>
-                                    <field name="error_message"
-                                           optional="show"/>
+                                    <field name="error_message" optional="show"/>
                                 </list>
                             </field>
                         </page>
@@ -105,9 +90,7 @@
         <field name="view_mode">list,form</field>
     </record>
 
-    <!-- ================================================================
-         GRN Import Queue Line — Form (standalone, for detailed error view)
-    ================================================================ -->
+    <!-- GRN Import Queue Line - Form -->
     <record id="view_grn_import_queue_line_form" model="ir.ui.view">
         <field name="name">grn.import.queue.line.form</field>
         <field name="model">grn.import.queue.line</field>
@@ -144,9 +127,7 @@
         </field>
     </record>
 
-    <!-- ================================================================
-         Import Wizard
-    ================================================================ -->
+    <!-- Import Wizard -->
     <record id="view_grn_import_wizard_form" model="ir.ui.view">
         <field name="name">grn.import.wizard.form</field>
         <field name="model">grn.import.wizard</field>
@@ -167,16 +148,13 @@
                                     <li>Row 3 — Blank (ignored)</li>
                                     <li>Row 4+ — Data rows</li>
                                 </ul>
-                                <p>Rows sharing the same <strong>GRN NO.</strong>
-                                become one queue line (= one Receipt).</p>
-                                <p>Each queue holds up to <strong>100 lines</strong>.
-                                Larger files are split automatically.</p>
-                                <p>The <strong>scheduled action</strong> processes
-                                one line per minute — no server overload.</p>
+                                <p>Rows sharing the same <strong>GRN NO.</strong> become one queue line (= one Receipt).</p>
+                                <p>Each queue holds up to <strong>100 lines</strong>. Larger files split automatically.</p>
+                                <p>The <strong>scheduled action</strong> processes one line per minute.</p>
+                                <p>If <strong>PO NUMBER</strong> matches a Purchase Order, moves are linked to its lines automatically.</p>
                             </div>
                         </group>
                     </group>
-
                     <group invisible="not queue_ids">
                         <div class="alert alert-success" role="alert">
                             <field name="info_msg" nolabel="1"/>
@@ -194,18 +172,11 @@
                         </field>
                     </group>
                 </sheet>
-
                 <footer>
-                    <button string="Import"
-                            name="action_import"
-                            type="object"
-                            class="btn-primary"
-                            invisible="queue_ids"/>
-                    <button string="View Queue(s)"
-                            name="action_view_queues"
-                            type="object"
-                            class="btn-secondary"
-                            invisible="not queue_ids"/>
+                    <button string="Import" name="action_import" type="object"
+                            class="btn-primary" invisible="queue_ids"/>
+                    <button string="View Queue(s)" name="action_view_queues" type="object"
+                            class="btn-secondary" invisible="not queue_ids"/>
                     <button string="Close" class="btn-secondary" special="cancel"/>
                 </footer>
             </form>
@@ -217,6 +188,19 @@
         <field name="res_model">grn.import.wizard</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>
+    </record>
+
+    <!-- ================================================================
+         Server Action: bulk-validate selected Ready Receipts
+         Appears in the Action menu of the stock.picking list view.
+    ================================================================ -->
+    <record id="action_validate_inward_pickings" model="ir.actions.server">
+        <field name="name">Validate Selected Receipts</field>
+        <field name="model_id" ref="stock.model_stock_picking"/>
+        <field name="binding_model_id" ref="stock.model_stock_picking"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">records.action_bulk_validate()</field>
     </record>
 
 </odoo>

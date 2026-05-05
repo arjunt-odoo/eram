@@ -200,15 +200,12 @@ class GrnImportQueue(models.Model):
 
         # Split into batches of MAX_QUEUE_LINES
         created_queues = self.env['grn.import.queue']
-        batch_num  = 1
         batch_grns = []
 
         def _flush(batch):
-            nonlocal batch_num
-            seq = self.env['ir.sequence'].next_by_code('grn.import.queue') or \
-                  f'GRNQ-{fields.Datetime.now():%Y%m%d%H%M%S}-{batch_num:02d}'
+            seq = self.env['ir.sequence'].next_by_code('grn.import.queue')
             queue = self.create({
-                'name':      f"{seq} (batch {batch_num})" if batch_num > 1 else seq,
+                'name': seq,
                 'file_name': file_name,
                 'company_id': company.id,
                 'user_id':   self.env.uid,
@@ -225,7 +222,6 @@ class GrnImportQueue(models.Model):
                     'line_count': len(rows_data),
                 })
             self.env['grn.import.queue.line'].create(line_vals)
-            batch_num += 1
             return queue
 
         for grn_name in grn_order:

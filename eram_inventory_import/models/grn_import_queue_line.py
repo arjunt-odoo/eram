@@ -28,7 +28,8 @@ class GrnImportQueueLine(models.Model):
     sequence      = fields.Integer(default=10)
     grn_no        = fields.Char(string='GRN No.', required=True)
     line_count    = fields.Integer(string='Excel Rows')
-    payload       = fields.Text(string='Row Data (JSON)', help='Serialised list of Excel row dicts')
+    payload       = fields.Text(string='Row Data (JSON)',
+                                help='Serialised list of Excel row dicts')
     state         = fields.Selection([
         ('pending', 'Pending'),
         ('running', 'Running'),
@@ -109,7 +110,7 @@ class GrnImportQueueLine(models.Model):
         self.env.cr.commit()
 
     # ------------------------------------------------------------------
-    # Search-or-create helpers (same logic as before, scoped to this model)
+    # Search-or-create helpers
     # ------------------------------------------------------------------
 
     def _get_or_create_partner(self, name):
@@ -186,10 +187,10 @@ class GrnImportQueueLine(models.Model):
         tmpl = self.env['product.template'].search([('name', 'ilike', name)], limit=1)
         if not tmpl:
             tmpl = self.env['product.template'].create({
-                'name':       name,
-                'type':       'consu',
-                'uom_id':     uom.id if uom else False,
-                'uom_po_id':  uom.id if uom else False,
+                'name':        name,
+                'type':        'consu',
+                'uom_id':      uom.id if uom else False,
+                'uom_po_id':   uom.id if uom else False,
                 'purchase_ok': True,
             })
         return tmpl.product_variant_ids[:1]
@@ -209,7 +210,7 @@ class GrnImportQueueLine(models.Model):
             ('company_id',   '=', company_id),
         ], limit=1)
         if not tax:
-            # tax_group_id is NOT NULL in Odoo 18 — find or create a GST group
+            # tax_group_id is NOT NULL in Odoo 18 — find an existing group
             tax_group = self.env['account.tax.group'].search([
                 ('name', 'ilike', 'GST'),
                 ('company_id', '=', company_id),
@@ -232,7 +233,6 @@ class GrnImportQueueLine(models.Model):
                                partner, move_vals_list, company):
         if not invoice_number:
             return False
-
         invoice = self.env['account.move'].search([
             ('name',      '=', invoice_number),
             ('move_type', '=', 'in_invoice'),
@@ -243,24 +243,86 @@ class GrnImportQueueLine(models.Model):
         line_cmds = []
         for mv in move_vals_list:
             line_cmds.append(fields.Command.create({
-                'product_id':    mv.get('product_id'),
-                'name':          mv.get('description') or '/',
-                'quantity':      mv.get('quantity', 1.0),
-                'price_unit':    mv.get('price_unit', 0.0),
-                'tax_ids':       [fields.Command.set(mv.get('tax_ids', []))],
+                'product_id':  mv.get('product_id'),
+                'name':        mv.get('description') or '/',
+                'quantity':    mv.get('quantity', 1.0),
+                'price_unit':  mv.get('price_unit', 0.0),
+                'tax_ids':     [fields.Command.set(mv.get('tax_ids', []))],
                 **(({'product_uom_id': mv['product_uom_id']}
                     if mv.get('product_uom_id') else {})),
             }))
-
         invoice = self.env['account.move'].create({
-            'move_type':         'in_invoice',
-            'partner_id':        partner.id if partner else False,
-            'invoice_date':      invoice_date,
-            'company_id':        company.id,
-            'invoice_line_ids':  line_cmds,
+            'move_type':        'in_invoice',
+            'partner_id':       partner.id if partner else False,
+            'invoice_date':     invoice_date,
+            'company_id':       company.id,
+            'invoice_line_ids': line_cmds,
         })
         invoice.write({'name': invoice_number})
         return invoice
+
+    # ------------------------------------------------------------------
+    # PO matching helper
+    # ------------------------------------------------------------------
+
+    def _resolve_po(self, po_number):
+        """
+        Search for a confirmed purchase.order whose name matches po_number.
+
+        Returns (purchase_order | empty, po_line_index)
+        po_line_index: dict keyed by (product_id, uom_id) -> purchase.order.line
+        If no PO is found, returns (empty, {}).
+        """
+        if not po_number:
+            return self.env['purchase.order'], {}
+
+        po = self.env['purchase.order'].search([
+            ('name', '=', po_number),
+        ], limit=1)
+
+        if not po:
+            return self.env['purchase.order'], {}
+
+        # Build an index: (product_id, uom_id) -> list of po lines
+        # (list because a PO can have the same product twice at different prices)
+        index = {}
+        for line in po.order_line:
+            key = (line.product_id.id, line.product_uom.id)
+            index.setdefault(key, []).append(line)
+
+        return po, index
+
+    def _match_po_line(self, po_line_index, product, uom, quantity):
+        """
+        Given the PO line index, find the best matching PO line for a stock move.
+        Matching priority:
+          1. Same product + same UoM + qty_received still has room
+          2. Same product + any UoM (unit conversion)
+          3. Same product regardless of UoM / qty (last resort)
+        Returns a purchase.order.line or empty recordset.
+        """
+        if not product or not po_line_index:
+            return self.env['purchase.order.line']
+
+        # Priority 1 — exact product + uom match
+        key = (product.id, uom.id if uom else False)
+        candidates = po_line_index.get(key, [])
+
+        if not candidates:
+            # Priority 2 — same product, any uom
+            candidates = [
+                line for (pid, _uid), lines in po_line_index.items()
+                if pid == product.id
+                for line in lines
+            ]
+
+        if not candidates:
+            return self.env['purchase.order.line']
+
+        # Among candidates prefer the one whose ordered qty is closest to ours
+        best = min(candidates,
+                   key=lambda l: abs(l.product_qty - quantity))
+        return best
 
     # ------------------------------------------------------------------
     # Core: build one stock.picking from the row list
@@ -269,7 +331,18 @@ class GrnImportQueueLine(models.Model):
     def _build_picking(self, grn_name, row_list, company):
         """
         Create stock.picking + stock.moves for a single GRN.
-        row_list is a list of row dicts as stored in the payload JSON.
+
+        PO matching logic:
+        - If a purchase.order with name == po_number exists:
+            * Link the picking to that PO (purchase_id)
+            * For each stock.move, find the best matching PO line by
+              (product_id, uom_id, qty) and set purchase_line_id
+            * Do NOT set e_po_no (the PO name comes from the PO record itself)
+        - If no PO found:
+            * Set e_po_no = po_number on the picking (plain text reference)
+
+        After all moves are created, call action_confirm() to move the
+        picking to the "Ready / Waiting" state (mark as To Do).
         """
         first = row_list[0]
 
@@ -281,16 +354,14 @@ class GrnImportQueueLine(models.Model):
         invoice_number = first.get('invoice_number')
         supplier_name  = first.get('supplier')
 
-        partner             = self._get_or_create_partner(supplier_name)
-        grn                 = self._get_or_create_grn(grn_name)
-        project, task       = self._get_or_create_project_task(project_code)
-        pr                  = self._get_or_create_pr(pr_number) if pr_number \
-                              else self.env['eram.purchase.req']
+        partner       = self._get_or_create_partner(supplier_name)
+        grn           = self._get_or_create_grn(grn_name)
+        project, task = self._get_or_create_project_task(project_code)
+        pr            = self._get_or_create_pr(pr_number) if pr_number \
+                        else self.env['eram.purchase.req']
 
         # --- Resolve operation type ---
-        picking_type = (task.receipt_type_id
-                        if task and task.receipt_type_id else False)
-
+        picking_type = task.receipt_type_id if task and task.receipt_type_id else False
         if not picking_type and task and project:
             picking_type = self.env['stock.picking.type'].search([
                 ('name',          '=', f"{task.name}: Inward"),
@@ -310,6 +381,10 @@ class GrnImportQueueLine(models.Model):
                 task.name    if task    else '?',
             ))
 
+        # --- Resolve Purchase Order ---
+        po, po_line_index = self._resolve_po(po_number)
+        po_found = bool(po)
+
         # --- Build move value dicts ---
         move_vals_list = []
         for row in row_list:
@@ -326,6 +401,11 @@ class GrnImportQueueLine(models.Model):
             product = self._get_or_create_product(description, uom)
             tax     = self._find_closest_tax(gst_amount, subtotal, company.id)
 
+            # Match against PO lines when a PO was found
+            po_line = self._match_po_line(
+                po_line_index, product, uom, received_qty or po_qty
+            ) if po_found else self.env['purchase.order.line']
+
             move_vals_list.append({
                 'description':    description,
                 'part_no':        part_no,
@@ -338,6 +418,7 @@ class GrnImportQueueLine(models.Model):
                 'uom':            uom,
                 'product':        product,
                 'tax':            tax,
+                'po_line':        po_line,   # may be empty recordset
             })
 
         # --- Create vendor bill ---
@@ -351,11 +432,17 @@ class GrnImportQueueLine(models.Model):
             'partner_id':      partner.id if partner else False,
             'scheduled_date':  received_date or fields.Datetime.now(),
             'company_id':      company.id,
-            'e_grn_id':        grn.id if grn else False,
-            'e_project_id':    project.id if project else False,
-            'e_task_id':       task.id    if task    else False,
-            'e_po_no':         po_number,
+            'e_grn_id':        grn.id      if grn      else False,
+            'e_project_id':    project.id  if project  else False,
+            'e_task_id':       task.id     if task     else False,
         }
+        if po_found:
+            # Link to the PO so Odoo draws the full Receipt ↔ PO chain
+            picking_vals['purchase_id'] = po.id
+        else:
+            # No matching PO — store the raw text reference
+            picking_vals['e_po_no'] = po_number
+
         if pr:
             picking_vals['e_pr_id'] = pr.id
         if invoice:
@@ -373,7 +460,8 @@ class GrnImportQueueLine(models.Model):
         for mv in move_vals_list:
             if not mv['product']:
                 continue
-            self.env['stock.move'].create({
+
+            move_vals = {
                 'name':             mv['description'],
                 'picking_id':       picking.id,
                 'product_id':       mv['product'].id,
@@ -387,6 +475,16 @@ class GrnImportQueueLine(models.Model):
                 'e_part_no':        mv['part_no'] or '',
                 'e_tax_ids':        [fields.Command.set(mv['tax'].ids)],
                 'state':            'draft',
-            })
+            }
+            # Link to the matched PO line when available
+            if mv['po_line']:
+                move_vals['purchase_line_id'] = mv['po_line'].id
+
+            self.env['stock.move'].create(move_vals)
+
+        # --- Mark picking as To Do (confirm → Waiting / Ready state) ---
+        # action_confirm() transitions draft → waiting/confirmed and is
+        # idempotent (no-op if already confirmed).
+        picking.action_confirm()
 
         return picking

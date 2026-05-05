@@ -65,6 +65,14 @@ class StockPicking(models.Model):
         for rec in self:
             rec.e_bill_ids = rec.purchase_id.invoice_ids
 
+    def action_bulk_validate(self):
+        records = self.filtered(lambda p: p.state == 'assigned')
+        for picking in records:
+            for move in picking.move_ids.filtered(lambda m: m.state not in ('done', 'cancel')):
+                if not move.quantity:
+                    move.quantity = move.product_uom_qty
+            picking.button_validate()
+
 
 class StockPickingType(models.Model):
     _inherit = 'stock.picking.type'
