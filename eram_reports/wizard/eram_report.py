@@ -109,6 +109,7 @@ class EramReport(models.TransientModel):
         domain_in = [
             ('picking_type_id.code', '=', 'incoming'),
             ('e_invoice_date', '<', cutoff_str),
+            ('state', '=', 'done')
         ]
         prev_inwards = self.env['stock.picking'].sudo().search(domain_in)
 
@@ -317,9 +318,6 @@ class EramReport(models.TransientModel):
                           pw_title_fmt)
 
         # Headers – row 1
-        # Col:  2=SL.No  3=Projects  4=Total Stock Until [prev month]
-        #        5=Inward [month]  6=Total Stock [month]
-        #        7=Outward [month]  8=Closing Stock [month]
         col_headers = [
             'SL.No',
             'Projects',
@@ -387,11 +385,10 @@ class EramReport(models.TransientModel):
             ws_pw.set_column(col, col, w)
 
         # ══════════════════════════════════════════════════════════════════════
-        # SHEET 3 – INWARDS  (existing logic, unchanged structure)
+        # SHEET 3 – INWARDS
         # ══════════════════════════════════════════════════════════════════════
         ws_in = workbook.add_worksheet('Inwards')
 
-        # Reuse formats from workbook (already defined above)
         ws_in.merge_range(0, 0, 0, 17, f'INWARD REPORT - {period_title}', title_fmt)
 
         headers_in = [
@@ -411,6 +408,21 @@ class EramReport(models.TransientModel):
             valid_moves = picking.move_ids.filtered(lambda m: m.state != 'cancel')
             if not valid_moves:
                 continue
+
+            # ── FIX 1: format date fields safely ──────────────────────────
+            inv_date = picking.e_invoice_date
+            inv_date_str = (
+                inv_date.strftime('%Y-%m-%d') if hasattr(inv_date, 'strftime') else (inv_date or '')
+            )
+            inv_recv_date = picking.e_invoice_received_date
+            inv_recv_date_str = (
+                inv_recv_date.strftime('%Y-%m-%d') if hasattr(inv_recv_date, 'strftime') else (inv_recv_date or '')
+            )
+
+            # ── FIX 2: track per-picking row range for Grand Total merge ──
+            picking_start_row = row
+            picking_total = 0.0
+
             for move in valid_moves:
                 project_code = f"{picking.e_project_id.name or ''}-{picking.e_task_id.name or ''}".strip('-')
                 po_number = picking.purchase_id.name if picking.purchase_id else (picking.e_po_no or '')
@@ -420,12 +432,13 @@ class EramReport(models.TransientModel):
 
                 gst_amount = (move.e_price_total or 0.0) - (move.e_total_untaxed or 0.0)
                 line_total = move.e_price_total or 0.0
+                picking_total += line_total
                 grand_total_in += line_total
 
                 ws_in.write(row, 0,  si_no,                                            center_fmt)
                 ws_in.write(row, 1,  picking.e_grn_id.name or '',                     cell_fmt)
-                ws_in.write(row, 2,  picking.e_invoice_date or '',                    cell_fmt)
-                ws_in.write(row, 3,  picking.e_invoice_received_date or '',           cell_fmt)
+                ws_in.write(row, 2,  inv_date_str,                                     cell_fmt)
+                ws_in.write(row, 3,  inv_recv_date_str,                                cell_fmt)
                 ws_in.write(row, 4,  project_code,                                     cell_fmt)
                 ws_in.write(row, 5,  picking.e_pr_id.pr_number if picking.e_pr_id else '', cell_fmt)
                 ws_in.write(row, 6,  po_number,                                        cell_fmt)
@@ -438,11 +451,22 @@ class EramReport(models.TransientModel):
                 ws_in.write(row, 13, move.price_unit or 0.0,                          money_fmt)
                 ws_in.write(row, 14, gst_amount,                                       money_fmt)
                 ws_in.write(row, 15, line_total,                                       money_fmt)
-                ws_in.write(row, 16, '',                                               cell_fmt)
+                # col 16 (Grand Total) written after all moves for this picking
                 ws_in.write(row, 17, picking.partner_id.name or '',                   cell_fmt)
 
                 row += 1
                 si_no += 1
+
+            # Write Grand Total for this picking in col 16.
+            # Merge rows if the picking has multiple move lines; single write otherwise.
+            picking_end_row = row - 1
+            if picking_start_row < picking_end_row:
+                ws_in.merge_range(
+                    picking_start_row, 16, picking_end_row, 16,
+                    picking_total, money_fmt
+                )
+            else:
+                ws_in.write(picking_start_row, 16, picking_total, money_fmt)
 
         if row > 2:
             row += 1
@@ -459,7 +483,7 @@ class EramReport(models.TransientModel):
             ws_in.set_column(col, col, w)
 
         # ══════════════════════════════════════════════════════════════════════
-        # SHEET 4 – OUTWARDS  (existing logic, unchanged structure)
+        # SHEET 4 – OUTWARDS  (unchanged)
         # ══════════════════════════════════════════════════════════════════════
         ws_out = workbook.add_worksheet('Outwards')
 

@@ -184,16 +184,19 @@ class GrnImportQueueLine(models.Model):
 
     def _get_or_create_product(self, description, uom):
         name = (description or 'Unknown Product').strip()
-        tmpl = self.env['product.template'].search([('name', 'ilike', name)], limit=1)
-        if not tmpl:
-            tmpl = self.env['product.template'].create({
-                'name':        name,
-                'type':        'consu',
-                'uom_id':      uom.id if uom else False,
-                'uom_po_id':   uom.id if uom else False,
-                'purchase_ok': True,
-            })
-        return tmpl.product_variant_ids[:1]
+        product_id = self.env['product.product'].search([('name', 'ilike', name)], limit=1)
+        if not product_id:
+            tmpl = self.env['product.template'].search([('name', 'ilike', name)], limit=1)
+            if not tmpl:
+                tmpl = self.env['product.template'].create({
+                    'name':        name,
+                    'type':        'consu',
+                    'uom_id':      uom.id if uom else False,
+                    'uom_po_id':   uom.id if uom else False,
+                    'purchase_ok': True,
+                })
+                product_id = tmpl.product_variant_ids[0]
+        return product_id
 
     def _find_closest_tax(self, gst_amount, subtotal, company_id):
         if not subtotal or not gst_amount:

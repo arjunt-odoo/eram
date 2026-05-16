@@ -6,6 +6,13 @@ from odoo.exceptions import ValidationError
 class ProjectProject(models.Model):
     _inherit = "project.project"
 
+    total_additional_charges = fields.Float(compute="_compute_total_additional_charges",
+                                            string="Total Additional Charges")
+
+    def _compute_total_additional_charges(self):
+        for rec in self:
+            rec.total_additional_charges = sum(rec.task_ids.mapped("total_additional_charges"))
+
     def action_view_outwards(self):
         self.ensure_one()
         return {
@@ -20,8 +27,15 @@ class ProjectProject(models.Model):
 class ProjectTask(models.Model):
     _inherit = "project.task"
 
+    total_additional_charges = fields.Float(compute="_compute_total_additional_charges",)
     e_product_stock_item_ids = fields.Many2many("eram.product.stock.item", string="Stock Items",
                                                 compute="_compute_e_product_stock_item_ids")
+
+    def _compute_total_additional_charges(self):
+        for rec in self:
+            rec.total_additional_charges = sum(self.env['stock.picking'].search(
+                [('picking_type_id', '=', rec.receipt_type_id.id),
+                 ('state', '=', 'done')]).mapped('e_additional_charges'))
 
     def _compute_e_product_stock_item_ids(self):
         for task in self:
@@ -43,7 +57,8 @@ class ProjectTask(models.Model):
                 continue
 
             incoming_lines = self.env["stock.move.line"].search([
-                ("location_dest_id", "=", task_location.id)
+                ("location_dest_id", "=", task_location.id),
+                ('state', '=', 'done'),
             ])
 
             product_data = {}
