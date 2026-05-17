@@ -63,6 +63,8 @@
                             <field name="total_received" decoration-success="1"/>
                             <field name="total_consumed" decoration-danger="1"/>
                             <field name="balance" decoration-info="1"/>
+                            <field name="total_received_value" decoration-success="1"/>
+                            <field name="remaining_value" decoration-info="1"/>
                         </list>
                     </field>
                 </page>

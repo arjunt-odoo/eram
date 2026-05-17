@@ -11,6 +11,8 @@ class EramProductStockItem(models.TransientModel):
     total_received = fields.Float(string="Total Received")
     total_consumed = fields.Float(string="Total Consumed")
     balance = fields.Float(string="Balance")
+    total_received_value = fields.Float(string="Total Received Value")
+    remaining_value = fields.Float(string="Remaining Value")
 
     def _compute_description(self):
         for rec in self:

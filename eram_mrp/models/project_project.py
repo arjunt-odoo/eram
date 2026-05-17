@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from odoo import _, fields, models
+from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
 
@@ -8,6 +8,16 @@ class ProjectProject(models.Model):
 
     total_additional_charges = fields.Float(compute="_compute_total_additional_charges",
                                             string="Total Additional Charges")
+
+    @api.constrains("name")
+    def _constrains_name(self):
+        for record in self:
+            domain = [('name', '=', record.name), ('id', '!=', record.id)]
+            if record.company_id:
+                domain.append(('company_id', '=', record.company_id.id))
+
+            if self.search_count(domain) > 0:
+                raise ValidationError("The name must be unique per project!")
 
     def _compute_total_additional_charges(self):
         for rec in self:
@@ -69,21 +79,40 @@ class ProjectTask(models.Model):
                     product_data[product_id] = {
                         "product_id": product_id,
                         "total_received": 0.0,
+                        "total_received_value": 0.0,
                         "balance": 0.0,
                         "total_consumed": 0.0,
+                        "remaining_value": 0.0,
                     }
-                product_data[product_id]["total_received"] += line.quantity
+
+                line_qty = line.quantity
+                product_data[product_id]["total_received"] += line_qty
+
+                # Derive unit price from the related stock.move
+                move = line.move_id
+                if move and move.quantity:
+                    unit_price = move.e_price_total / move.quantity
+                else:
+                    unit_price = 0.0
+
+                product_data[product_id]["total_received_value"] += unit_price * line_qty
 
             stock_item_ids = []
 
             for product_id, data in product_data.items():
                 current_balance = product_quant_map.get(product_id, 0.0)
                 data["balance"] = current_balance
-
                 data["total_consumed"] = data["total_received"] - current_balance
 
                 if data["total_consumed"] < 0:
                     data["total_consumed"] = 0.0
+
+                # Unit price derived from total received value / total received qty
+                avg_unit_price = (
+                    data["total_received_value"] / data["total_received"]
+                    if data["total_received"] else 0.0
+                )
+                data["remaining_value"] = avg_unit_price * current_balance
 
                 stock_item = self.env["eram.product.stock.item"].search([
                     ("product_id", "=", product_id),
@@ -94,6 +123,8 @@ class ProjectTask(models.Model):
                     "total_received": data["total_received"],
                     "total_consumed": data["total_consumed"],
                     "balance": data["balance"],
+                    "total_received_value": data["total_received_value"],
+                    "remaining_value": data["remaining_value"],
                 }
 
                 if not stock_item:
