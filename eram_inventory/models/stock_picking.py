@@ -28,6 +28,8 @@ class StockPicking(models.Model):
     e_additional_charges = fields.Float("Additional Charges")
     department_id = fields.Many2one("hr.department")
     e_transfer_task_id = fields.Many2one("project.task")
+    e_move_to_project_id = fields.Many2one("project.project", string="Project")
+    e_move_to_task_id = fields.Many2one("project.task", string="Task")
 
     @api.constrains('e_grn_id')
     def _constrains_e_grn_id(self):

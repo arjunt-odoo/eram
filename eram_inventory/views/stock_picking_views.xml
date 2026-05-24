@@ -101,6 +101,14 @@
                     </div>
                 </div>
             </xpath>
+            <xpath expr="//sheet/group/group" position="inside">
+                <field name="e_transfer_task_id" string="Move from Task" readonly="1"
+                       invisible="picking_type_code != 'internal'"/>
+                <field name="e_move_to_project_id" string="Move to Project" readonly="1"
+                       invisible="picking_type_code != 'internal'"/>
+                <field name="e_move_to_task_id" string="Move to Task" readonly="1"
+                       invisible="picking_type_code != 'internal'"/>
+            </xpath>
         </field>
     </record>
     <record id="view_stock_move_operations_inherit_eram" model="ir.ui.view">
